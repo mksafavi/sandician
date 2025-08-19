@@ -18,8 +18,24 @@
             rust-analyzer
             rustPackages.clippy
             rustup
+            pkg-config
+            libGL
+            libglvnd
+            wayland
+            alsa-lib
+            udev
+            libxkbcommon
+            xorg.libX11
+            xorg.libXcursor
+            xorg.libXrandr
+            xorg.libXi
+            vulkan-tools
+            vulkan-headers
+            vulkan-loader
+            vulkan-validation-layers
           ];
           RUST_SRC_PATH = rustPlatform.rustLibSrc;
+          LD_LIBRARY_PATH = "${ pkgs.lib.makeLibraryPath [ pkgs.libxkbcommon pkgs.vulkan-loader ] }";
         };
     };
 }
