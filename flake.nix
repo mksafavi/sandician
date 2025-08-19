@@ -35,7 +35,7 @@
             vulkan-validation-layers
           ];
           RUST_SRC_PATH = rustPlatform.rustLibSrc;
-          LD_LIBRARY_PATH = "${ pkgs.lib.makeLibraryPath [ pkgs.libxkbcommon pkgs.vulkan-loader ] }";
+          LD_LIBRARY_PATH = "${ with pkgs; lib.makeLibraryPath [ libxkbcommon vulkan-loader xorg.libX11 xorg.libXcursor xorg.libXi ] }";
         };
     };
 }
