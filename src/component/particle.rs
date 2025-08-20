@@ -82,16 +82,11 @@ impl Grid {
         }
     }
 
-    fn init_grid_system(
-        mut commands: Commands,
-        config: Res<ConfigResource>,
-        mut images: ResMut<Assets<Image>>,
-    ) {
-        commands.spawn(Grid::new(config.width, config.height));
+    fn create_output_frame(width: usize, height: usize) -> Image {
         let image = Image::new_fill(
             Extent3d {
-                width: config.width as u32,
-                height: config.height as u32,
+                width: width as u32,
+                height: height as u32,
                 depth_or_array_layers: 1,
             },
             TextureDimension::D2,
@@ -99,7 +94,16 @@ impl Grid {
             TextureFormat::Rgba8UnormSrgb,
             RenderAssetUsages::MAIN_WORLD | RenderAssetUsages::RENDER_WORLD,
         );
-        let handle = images.add(image);
+        image
+    }
+
+    fn init_grid_system(
+        mut commands: Commands,
+        config: Res<ConfigResource>,
+        mut images: ResMut<Assets<Image>>,
+    ) {
+        commands.spawn(Grid::new(config.width, config.height));
+        let handle = images.add(Grid::create_output_frame(config.width, config.height));
         commands.spawn(Sprite::from_image(handle.clone()));
         commands.insert_resource(OutputFrameHandle(handle));
     }
