@@ -114,6 +114,30 @@ impl Grid {
         }
     }
 
+    fn draw_grid(&self, image: &mut Image) {
+        for particle in self.cells.iter() {
+            match particle {
+                Some(p) => match p.particle_type {
+                    ParticleType::Sand => image
+                        .set_color_at(
+                            p.position.x as u32,
+                            p.position.y as u32,
+                            Color::srgb(1., 1., 1.),
+                        )
+                        .expect("temp: TODO: panic"),
+                    ParticleType::Water => image
+                        .set_color_at(
+                            p.position.x as u32,
+                            p.position.y as u32,
+                            Color::srgb(0., 0., 1.),
+                        )
+                        .expect("temp: TODO: panic"),
+                },
+                _ => (),
+            }
+        }
+    }
+
     fn draw_grid_system(
         grid: Query<&Grid>,
         output_frame_handle: Res<OutputFrameHandle>,
@@ -124,29 +148,7 @@ impl Grid {
             .expect("Image not found");
 
         match grid.iter().last() {
-            Some(g) => {
-                for particle in g.cells.iter() {
-                    match particle {
-                        Some(p) => match p.particle_type {
-                            ParticleType::Sand => image
-                                .set_color_at(
-                                    p.position.x as u32,
-                                    p.position.y as u32,
-                                    Color::srgb(1., 1., 1.),
-                                )
-                                .expect("temp: TODO: panic"),
-                            ParticleType::Water => image
-                                .set_color_at(
-                                    p.position.x as u32,
-                                    p.position.y as u32,
-                                    Color::srgb(0., 0., 1.),
-                                )
-                                .expect("temp: TODO: panic"),
-                        },
-                        _ => (),
-                    }
-                }
-            }
+            Some(g) => g.draw_grid(image),
             None => todo!(),
         }
     }
