@@ -115,7 +115,7 @@ impl Grid {
     }
 
     fn draw_grid(&self, image: &mut Image) {
-        for particle in self.cells.iter() {
+        for (index, particle) in self.cells.iter().enumerate() {
             match particle {
                 Some(p) => match p.particle_type {
                     ParticleType::Sand => image
@@ -133,7 +133,13 @@ impl Grid {
                         )
                         .expect("temp: TODO: panic"),
                 },
-                _ => (),
+                _ => {
+                    let x: u32 = index as u32 % self.width as u32;
+                    let y: u32 = (index as u32 - x) / self.width as u32;
+                    image
+                        .set_color_at(x, y, Color::srgb(0., 0., 0.))
+                        .expect("temp: TODO: panic");
+                }
             }
         }
     }
@@ -320,6 +326,67 @@ mod tests_grid {
             g.cells[2]
         );
         assert_eq!(None, g.cells[3]);
+    }
+
+    #[test]
+    fn test_draw_grid() {
+        let mut g = Grid::new(2, 2);
+        let mut image = Grid::create_output_frame(2, 2);
+        g.draw_grid(&mut image);
+        assert_eq!(
+            vec![
+                Color::srgb(0., 0., 0.),
+                Color::srgb(0., 0., 0.),
+                Color::srgb(0., 0., 0.),
+                Color::srgb(0., 0., 0.)
+            ],
+            vec![
+                image.get_color_at(0, 0).unwrap(),
+                image.get_color_at(1, 0).unwrap(),
+                image.get_color_at(0, 1).unwrap(),
+                image.get_color_at(1, 1).unwrap()
+            ]
+        );
+
+        g.spawn_particle(Particle {
+            position: Position { x: 0, y: 0 },
+            particle_type: ParticleType::Sand,
+        });
+        g.draw_grid(&mut image);
+        assert_eq!(
+            vec![
+                Color::srgb(1., 1., 1.),
+                Color::srgb(0., 0., 0.),
+                Color::srgb(0., 0., 0.),
+                Color::srgb(0., 0., 0.)
+            ],
+            vec![
+                image.get_color_at(0, 0).unwrap(),
+                image.get_color_at(1, 0).unwrap(),
+                image.get_color_at(0, 1).unwrap(),
+                image.get_color_at(1, 1).unwrap()
+            ]
+        );
+        g.spawn_particle(Particle {
+            position: Position { x: 1, y: 0 },
+            particle_type: ParticleType::Sand,
+        });
+        g.cells[0] = None;
+        g.draw_grid(&mut image);
+        assert_eq!(
+            vec![
+                Color::srgb(0., 0., 0.),
+                Color::srgb(1., 1., 1.),
+                Color::srgb(0., 0., 0.),
+                Color::srgb(0., 0., 0.)
+            ],
+            vec![
+                image.get_color_at(0, 0).unwrap(),
+                image.get_color_at(1, 0).unwrap(),
+                image.get_color_at(0, 1).unwrap(),
+                image.get_color_at(1, 1).unwrap()
+            ]
+        );
     }
 
     #[test]
