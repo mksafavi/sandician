@@ -1,4 +1,26 @@
-use bevy::ecs::component::Component;
+use bevy::{
+    app::{App, Startup, Update},
+    asset::{Assets, Handle, RenderAssetUsages},
+    color::{palettes::css, Color, ColorToPacked},
+    ecs::{
+        component::Component,
+        resource::Resource,
+        system::{Commands, Query, Res, ResMut},
+    },
+    image::Image,
+    prelude::IntoScheduleConfigs,
+    render::render_resource::{Extent3d, TextureDimension, TextureFormat},
+    sprite::Sprite,
+};
+
+#[derive(Resource)]
+struct ConfigResource {
+    width: usize,
+    height: usize,
+}
+
+#[derive(Resource)]
+struct OutputFrameHandle(Handle<Image>);
 
 #[derive(Component, Clone, PartialEq, Debug)]
 struct Position {
@@ -40,11 +62,70 @@ impl Grid {
             self.cells[index] = Some(p);
         }
     }
+
+    fn init_grid_system(
+        mut commands: Commands,
+        config: Res<ConfigResource>,
+        mut images: ResMut<Assets<Image>>,
+    ) {
+        commands.spawn(Grid::new(config.width, config.height));
+        let image = Image::new_fill(
+            Extent3d {
+                width: config.width as u32,
+                height: config.height as u32,
+                depth_or_array_layers: 1,
+            },
+            TextureDimension::D2,
+            &(css::BLACK.to_u8_array()),
+            TextureFormat::Rgba8UnormSrgb,
+            RenderAssetUsages::MAIN_WORLD | RenderAssetUsages::RENDER_WORLD,
+        );
+        let handle = images.add(image);
+        commands.spawn(Sprite::from_image(handle.clone()));
+        commands.insert_resource(OutputFrameHandle(handle));
+    }
+
+    fn draw_grid_system(
+        grid: Query<&Grid>,
+        output_frame_handle: Res<OutputFrameHandle>,
+        mut images: ResMut<Assets<Image>>,
+    ) {
+        let image = images
+            .get_mut(&output_frame_handle.0)
+            .expect("Image not found");
+
+        match grid.iter().last() {
+            Some(g) => {
+                for particle in g.cells.iter() {
+                    match particle {
+                        Some(p) => match p.particle_type {
+                            ParticleType::Sand => image
+                                .set_color_at(
+                                    p.position.x as u32,
+                                    p.position.y as u32,
+                                    Color::srgb(1., 1., 1.),
+                                )
+                                .expect("temp: TODO: panic"),
+                            ParticleType::Water => image
+                                .set_color_at(
+                                    p.position.x as u32,
+                                    p.position.y as u32,
+                                    Color::srgb(0., 0., 1.),
+                                )
+                                .expect("temp: TODO: panic"),
+                        },
+                        _ => (),
+                    }
+                }
+            }
+            None => todo!(),
+        }
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{Particle, ParticleType, Position};
+    use super::*;
 
     #[test]
     fn test_particle_entity_has_position() {
@@ -128,5 +209,78 @@ mod tests_grid {
             Some(p) => assert_eq!(ParticleType::Sand, p.particle_type),
             None => assert!(false),
         }
+    }
+
+    #[test]
+    fn test_init_grid_system_creates_a_n_by_m_grid() {
+        let mut app = App::new();
+        app.insert_resource(ConfigResource {
+            width: 2,
+            height: 3,
+        });
+        app.init_resource::<Assets<Image>>();
+        app.add_systems(Startup, Grid::init_grid_system);
+        app.update();
+        assert_eq!(1, app.world_mut().query::<&Grid>().iter(app.world()).len());
+        for g in app.world_mut().query::<&Grid>().iter(app.world()) {
+            assert_eq!(2, g.width);
+            assert_eq!(3, g.height);
+        }
+    }
+
+    #[test]
+    fn test_draw_grid_system() {
+        fn fixture_spawn_particle_system(mut grid: Query<&mut Grid>) {
+            let mut g: &mut Grid = &mut grid.iter_mut().last().unwrap();
+            g.spawn_particle(Particle {
+                position: Position { x: 0, y: 0 },
+                particle_type: ParticleType::Sand,
+            });
+            g.spawn_particle(Particle {
+                position: Position { x: 1, y: 0 },
+                particle_type: ParticleType::Water,
+            });
+        }
+
+        fn assert_read_output_frame_system(
+            output_frame_handle: Res<OutputFrameHandle>,
+            images: ResMut<Assets<Image>>,
+        ) {
+            let image = images.get(&output_frame_handle.0).expect("Image not found");
+            assert_eq!(
+                vec![
+                    Color::srgb(1., 1., 1.),
+                    Color::srgb(0., 0., 1.),
+                    Color::srgb(0., 0., 0.),
+                    Color::srgb(0., 0., 0.)
+                ],
+                vec![
+                    image.get_color_at(0, 0).unwrap(),
+                    image.get_color_at(1, 0).unwrap(),
+                    image.get_color_at(0, 1).unwrap(),
+                    image.get_color_at(1, 1).unwrap()
+                ]
+            );
+        }
+
+        let mut app = App::new();
+        app.insert_resource(ConfigResource {
+            width: 5,
+            height: 6,
+        });
+        app.init_resource::<Assets<Image>>();
+
+        //app.insert_resource(OutputFrameHandle);
+        app.add_systems(Startup, Grid::init_grid_system);
+        app.add_systems(
+            Update,
+            (
+                fixture_spawn_particle_system,
+                Grid::draw_grid_system,
+                assert_read_output_frame_system,
+            )
+                .chain(),
+        );
+        app.update();
     }
 }
