@@ -2,8 +2,8 @@ use bevy::ecs::component::Component;
 
 #[derive(Component)]
 struct Position {
-    x: u32,
-    y: u32,
+    x: usize,
+    y: usize,
 }
 
 #[derive(Component, PartialEq, Debug)]
