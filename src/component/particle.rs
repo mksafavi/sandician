@@ -68,13 +68,29 @@ impl Grid {
             for x in 0..self.width {
                 if let Some(p) = &self.cells[y * self.width + x] {
                     if y + 1 < self.height {
-                        if self.cells[(y + 1) * self.width + x].is_none() {
-                            self.cells[(y + 1) * self.width + x] = Some({
-                                let mut np = p.clone();
-                                np.position.y = np.position.y + 1;
-                                np
-                            });
-                            self.cells[y * self.width + x] = None;
+                        match self.cells[(y + 1) * self.width + x] {
+                            Some(_) => {
+                                match self.cells[(y + 1) * self.width + (x + 1)] {
+                                    Some(_) => (),
+                                    None => {
+                                        self.cells[(y + 1) * self.width + (x + 1)] = Some({
+                                            let mut np = p.clone();
+                                            np.position.y = np.position.y + 1;
+                                            np.position.x = np.position.x + 1;
+                                            np
+                                        });
+                                        self.cells[y * self.width + x] = None;
+                                    }
+                                };
+                            }
+                            None => {
+                                self.cells[(y + 1) * self.width + x] = Some({
+                                    let mut np = p.clone();
+                                    np.position.y = np.position.y + 1;
+                                    np
+                                });
+                                self.cells[y * self.width + x] = None;
+                            }
                         }
                     }
                 }
@@ -290,13 +306,8 @@ mod tests_grid {
     }
 
     #[test]
-    fn test_update_grid_sand_falling_down() {
+    fn test_update_grid_sand_falls_down_when_bottom_cell_is_empty() {
         let mut g = Grid::new(2, 2);
-
-        assert_eq!(None, g.cells[0]);
-        assert_eq!(None, g.cells[1]);
-        assert_eq!(None, g.cells[2]);
-        assert_eq!(None, g.cells[3]);
 
         g.spawn_particle(Particle {
             position: Position { x: 0, y: 0 },
@@ -326,6 +337,41 @@ mod tests_grid {
             g.cells[2]
         );
         assert_eq!(None, g.cells[3]);
+    }
+
+    #[test]
+    fn test_update_grid_sand_falls_bottom_right_when_bottom_cell_is_full_but_bottom_right_is_empty()
+    {
+        let mut g = Grid::new(2, 2);
+
+        g.spawn_particle(Particle {
+            position: Position { x: 0, y: 0 },
+            particle_type: ParticleType::Sand,
+        });
+
+        g.spawn_particle(Particle {
+            position: Position { x: 0, y: 1 },
+            particle_type: ParticleType::Sand,
+        });
+
+        g.update_grid();
+
+        assert_eq!(None, g.cells[0]);
+        assert_eq!(None, g.cells[1]);
+        assert_eq!(
+            Some(Particle {
+                position: Position { x: 0, y: 1 },
+                particle_type: ParticleType::Sand,
+            }),
+            g.cells[2]
+        );
+        assert_eq!(
+            Some(Particle {
+                position: Position { x: 1, y: 1 },
+                particle_type: ParticleType::Sand,
+            }),
+            g.cells[3]
+        );
     }
 
     #[test]
