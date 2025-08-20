@@ -250,6 +250,9 @@ mod tests_grid {
         for g in app.world_mut().query::<&Grid>().iter(app.world()) {
             assert_eq!(2, g.width);
             assert_eq!(3, g.height);
+            for p in &g.cells {
+                assert!(p.is_none());
+            }
         }
     }
 
@@ -312,10 +315,11 @@ mod tests_grid {
         );
         assert_eq!(None, g.cells[3]);
     }
+
     #[test]
     fn test_draw_grid_system() {
         fn fixture_spawn_particle_system(mut grid: Query<&mut Grid>) {
-            let mut g: &mut Grid = &mut grid.iter_mut().last().unwrap();
+            let mut g = grid.iter_mut().last().unwrap();
             g.spawn_particle(Particle {
                 position: Position { x: 0, y: 0 },
                 particle_type: ParticleType::Sand,
