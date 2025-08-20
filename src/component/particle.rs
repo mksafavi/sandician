@@ -1,17 +1,18 @@
 use bevy::ecs::component::Component;
 
-#[derive(Component)]
+#[derive(Component, Clone, PartialEq, Debug)]
 struct Position {
     x: usize,
     y: usize,
 }
 
-#[derive(Component, PartialEq, Debug)]
+#[derive(Component, Clone, PartialEq, Debug)]
 enum ParticleType {
     Sand,
     Water,
 }
 
+#[derive(Component, Clone, PartialEq, Debug)]
 struct Particle {
     position: Position,
     particle_type: ParticleType,
