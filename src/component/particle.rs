@@ -12,6 +12,7 @@ use bevy::{
     render::render_resource::{Extent3d, TextureDimension, TextureFormat},
     sprite::Sprite,
 };
+use rand::random_range;
 
 #[derive(Resource)]
 struct ConfigResource {
@@ -34,6 +35,11 @@ enum ParticleType {
     Water,
 }
 
+enum ParticleDirection {
+    BottomLeft = -1,
+    BottomRight = 1,
+}
+
 #[derive(Component, Clone, PartialEq, Debug)]
 struct Particle {
     position: Position,
@@ -45,14 +51,31 @@ struct Grid {
     cells: Vec<Option<Particle>>,
     width: usize,
     height: usize,
+    random: fn() -> ParticleDirection,
 }
 
 impl Grid {
     fn new(width: usize, height: usize) -> Self {
+        fn random() -> ParticleDirection {
+            match random_range(0..=1) {
+                0 => ParticleDirection::BottomLeft,
+                _ => ParticleDirection::BottomRight,
+            }
+        }
         Self {
             cells: (0..width * height).map(|_| None).collect(),
             width: width,
             height: height,
+            random: random,
+        }
+    }
+
+    fn new_with_rand(width: usize, height: usize, random: fn() -> ParticleDirection) -> Self {
+        Self {
+            cells: (0..width * height).map(|_| None).collect(),
+            width: width,
+            height: height,
+            random: random,
         }
     }
 
@@ -133,7 +156,21 @@ impl Grid {
                             });
                             self.cells[index] = None;
                         }
-                        (Some(_), None, Some(_)) => todo!(/*right or left random*/),
+                        (Some(l), None, Some(r)) => {
+                            let direction = (self.random)();
+                            let i = match direction {
+                                ParticleDirection::BottomLeft => l,
+                                ParticleDirection::BottomRight => r,
+                            };
+                            self.cells[i] = Some({
+                                let mut np = p.clone();
+                                np.position.y = np.position.y + 1;
+                                np.position.x =
+                                    (np.position.x as isize + direction as isize) as usize;
+                                np
+                            });
+                            self.cells[index] = None;
+                        }
                     }
                 }
             }
@@ -448,6 +485,79 @@ mod tests_grid {
                 particle_type: ParticleType::Sand,
             }),
             g.cells[3]
+        );
+    }
+
+    #[test]
+    fn test_update_grid_sand_falls_bottom_left_or_bottom_right_when_bottom_cell_is_full_and_both_bottom_right_and_bottom_left_are_empty_for_testing_forced_left(
+    ) {
+        let mut g = Grid::new_with_rand(3, 2, || ParticleDirection::BottomLeft);
+
+        g.spawn_particle(Particle {
+            position: Position { x: 1, y: 0 },
+            particle_type: ParticleType::Sand,
+        });
+
+        g.spawn_particle(Particle {
+            position: Position { x: 1, y: 1 },
+            particle_type: ParticleType::Sand,
+        });
+
+        g.update_grid();
+
+        assert_eq!(None, g.cells[0]);
+        assert_eq!(None, g.cells[1]);
+        assert_eq!(None, g.cells[2]);
+        assert_eq!(
+            Some(Particle {
+                position: Position { x: 0, y: 1 },
+                particle_type: ParticleType::Sand,
+            }),
+            g.cells[3]
+        );
+        assert_eq!(
+            Some(Particle {
+                position: Position { x: 1, y: 1 },
+                particle_type: ParticleType::Sand,
+            }),
+            g.cells[4]
+        );
+        assert_eq!(None, g.cells[5]);
+    }
+    #[test]
+    fn test_update_grid_sand_falls_bottom_left_or_bottom_right_when_bottom_cell_is_full_and_both_bottom_right_and_bottom_left_are_empty_for_testing_forced_right(
+    ) {
+        let mut g = Grid::new_with_rand(3, 2, || ParticleDirection::BottomRight);
+
+        g.spawn_particle(Particle {
+            position: Position { x: 1, y: 0 },
+            particle_type: ParticleType::Sand,
+        });
+
+        g.spawn_particle(Particle {
+            position: Position { x: 1, y: 1 },
+            particle_type: ParticleType::Sand,
+        });
+
+        g.update_grid();
+
+        assert_eq!(None, g.cells[0]);
+        assert_eq!(None, g.cells[1]);
+        assert_eq!(None, g.cells[2]);
+        assert_eq!(None, g.cells[3]);
+        assert_eq!(
+            Some(Particle {
+                position: Position { x: 1, y: 1 },
+                particle_type: ParticleType::Sand,
+            }),
+            g.cells[4]
+        );
+        assert_eq!(
+            Some(Particle {
+                position: Position { x: 2, y: 1 },
+                particle_type: ParticleType::Sand,
+            }),
+            g.cells[5]
         );
     }
 
