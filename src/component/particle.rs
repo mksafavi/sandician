@@ -50,6 +50,15 @@ struct Particle {
     particle_type: ParticleType,
 }
 
+impl Particle {
+    fn new(x: usize, y: usize, particle_type: ParticleType) -> Self {
+        Self {
+            position: Position { x, y },
+            particle_type,
+        }
+    }
+}
+
 #[derive(Component, Clone, PartialEq, Debug)]
 struct Grid {
     cells: Vec<Option<Particle>>,
@@ -360,15 +369,9 @@ mod tests_grid {
     #[test]
     fn test_grid_spawn_particle_to_grid() {
         let mut g = Grid::new(2, 3);
-        g.spawn_particle(Particle {
-            position: Position { x: 0, y: 0 },
-            particle_type: ParticleType::Sand,
-        });
+        g.spawn_particle(Particle::new(0, 0, ParticleType::Sand));
 
-        g.spawn_particle(Particle {
-            position: Position { x: 1, y: 1 },
-            particle_type: ParticleType::Water,
-        });
+        g.spawn_particle(Particle::new(1, 1, ParticleType::Water));
 
         match &g.cells[0] {
             Some(p) => assert_eq!(ParticleType::Sand, p.particle_type),
@@ -384,15 +387,9 @@ mod tests_grid {
     #[test]
     fn test_grid_spawn_particle_to_non_empty_location_silently_fails() {
         let mut g = Grid::new(2, 3);
-        g.spawn_particle(Particle {
-            position: Position { x: 0, y: 0 },
-            particle_type: ParticleType::Sand,
-        });
+        g.spawn_particle(Particle::new(0, 0, ParticleType::Sand));
 
-        g.spawn_particle(Particle {
-            position: Position { x: 0, y: 0 },
-            particle_type: ParticleType::Water,
-        });
+        g.spawn_particle(Particle::new(0, 0, ParticleType::Water));
 
         match &g.cells[0] {
             Some(p) => assert_eq!(ParticleType::Sand, p.particle_type),
@@ -423,21 +420,12 @@ mod tests_grid {
     #[test]
     fn test_update_grid_sand_falling_down_at_last_row_stays_there() {
         let mut g = Grid::new(2, 2);
-        g.spawn_particle(Particle {
-            position: Position { x: 0, y: 1 },
-            particle_type: ParticleType::Sand,
-        });
+        g.spawn_particle(Particle::new(0, 1, ParticleType::Sand));
 
         g.update_grid(); /* should stay at the last line*/
         assert_eq!(None, g.cells[0]);
         assert_eq!(None, g.cells[1]);
-        assert_eq!(
-            Some(Particle {
-                position: Position { x: 0, y: 1 },
-                particle_type: ParticleType::Sand,
-            }),
-            g.cells[2]
-        );
+        assert_eq!(Some(Particle::new(0, 1, ParticleType::Sand)), g.cells[2]);
         assert_eq!(None, g.cells[3]);
     }
 
@@ -445,18 +433,9 @@ mod tests_grid {
     fn test_update_grid_sand_falls_down_when_bottom_cell_is_empty() {
         let mut g = Grid::new(2, 2);
 
-        g.spawn_particle(Particle {
-            position: Position { x: 0, y: 0 },
-            particle_type: ParticleType::Sand,
-        });
+        g.spawn_particle(Particle::new(0, 0, ParticleType::Sand));
 
-        assert_eq!(
-            Some(Particle {
-                position: Position { x: 0, y: 0 },
-                particle_type: ParticleType::Sand,
-            }),
-            g.cells[0]
-        );
+        assert_eq!(Some(Particle::new(0, 0, ParticleType::Sand)), g.cells[0]);
         assert_eq!(None, g.cells[1]);
         assert_eq!(None, g.cells[2]);
         assert_eq!(None, g.cells[3]);
@@ -465,13 +444,7 @@ mod tests_grid {
 
         assert_eq!(None, g.cells[0]);
         assert_eq!(None, g.cells[1]);
-        assert_eq!(
-            Some(Particle {
-                position: Position { x: 0, y: 1 },
-                particle_type: ParticleType::Sand,
-            }),
-            g.cells[2]
-        );
+        assert_eq!(Some(Particle::new(0, 1, ParticleType::Sand)), g.cells[2]);
         assert_eq!(None, g.cells[3]);
     }
 
@@ -480,34 +453,16 @@ mod tests_grid {
     ) {
         let mut g = Grid::new(2, 2);
 
-        g.spawn_particle(Particle {
-            position: Position { x: 0, y: 0 },
-            particle_type: ParticleType::Sand,
-        });
+        g.spawn_particle(Particle::new(0, 0, ParticleType::Sand));
 
-        g.spawn_particle(Particle {
-            position: Position { x: 0, y: 1 },
-            particle_type: ParticleType::Sand,
-        });
+        g.spawn_particle(Particle::new(0, 1, ParticleType::Sand));
 
         g.update_grid();
 
         assert_eq!(None, g.cells[0]);
         assert_eq!(None, g.cells[1]);
-        assert_eq!(
-            Some(Particle {
-                position: Position { x: 0, y: 1 },
-                particle_type: ParticleType::Sand,
-            }),
-            g.cells[2]
-        );
-        assert_eq!(
-            Some(Particle {
-                position: Position { x: 1, y: 1 },
-                particle_type: ParticleType::Sand,
-            }),
-            g.cells[3]
-        );
+        assert_eq!(Some(Particle::new(0, 1, ParticleType::Sand)), g.cells[2]);
+        assert_eq!(Some(Particle::new(1, 1, ParticleType::Sand)), g.cells[3]);
     }
 
     #[test]
@@ -515,34 +470,16 @@ mod tests_grid {
     ) {
         let mut g = Grid::new(2, 2);
 
-        g.spawn_particle(Particle {
-            position: Position { x: 1, y: 0 },
-            particle_type: ParticleType::Sand,
-        });
+        g.spawn_particle(Particle::new(1, 0, ParticleType::Sand));
 
-        g.spawn_particle(Particle {
-            position: Position { x: 1, y: 1 },
-            particle_type: ParticleType::Sand,
-        });
+        g.spawn_particle(Particle::new(1, 1, ParticleType::Sand));
 
         g.update_grid();
 
         assert_eq!(None, g.cells[0]);
         assert_eq!(None, g.cells[1]);
-        assert_eq!(
-            Some(Particle {
-                position: Position { x: 0, y: 1 },
-                particle_type: ParticleType::Sand,
-            }),
-            g.cells[2]
-        );
-        assert_eq!(
-            Some(Particle {
-                position: Position { x: 1, y: 1 },
-                particle_type: ParticleType::Sand,
-            }),
-            g.cells[3]
-        );
+        assert_eq!(Some(Particle::new(0, 1, ParticleType::Sand)), g.cells[2]);
+        assert_eq!(Some(Particle::new(1, 1, ParticleType::Sand)), g.cells[3]);
     }
 
     #[test]
@@ -550,35 +487,17 @@ mod tests_grid {
     ) {
         let mut g = Grid::new_with_rand(3, 2, || ParticleHorizontalDirection::Left);
 
-        g.spawn_particle(Particle {
-            position: Position { x: 1, y: 0 },
-            particle_type: ParticleType::Sand,
-        });
+        g.spawn_particle(Particle::new(1, 0, ParticleType::Sand));
 
-        g.spawn_particle(Particle {
-            position: Position { x: 1, y: 1 },
-            particle_type: ParticleType::Sand,
-        });
+        g.spawn_particle(Particle::new(1, 1, ParticleType::Sand));
 
         g.update_grid();
 
         assert_eq!(None, g.cells[0]);
         assert_eq!(None, g.cells[1]);
         assert_eq!(None, g.cells[2]);
-        assert_eq!(
-            Some(Particle {
-                position: Position { x: 0, y: 1 },
-                particle_type: ParticleType::Sand,
-            }),
-            g.cells[3]
-        );
-        assert_eq!(
-            Some(Particle {
-                position: Position { x: 1, y: 1 },
-                particle_type: ParticleType::Sand,
-            }),
-            g.cells[4]
-        );
+        assert_eq!(Some(Particle::new(0, 1, ParticleType::Sand)), g.cells[3]);
+        assert_eq!(Some(Particle::new(1, 1, ParticleType::Sand)), g.cells[4]);
         assert_eq!(None, g.cells[5]);
     }
 
@@ -587,15 +506,9 @@ mod tests_grid {
     ) {
         let mut g = Grid::new_with_rand(3, 2, || ParticleHorizontalDirection::Right);
 
-        g.spawn_particle(Particle {
-            position: Position { x: 1, y: 0 },
-            particle_type: ParticleType::Sand,
-        });
+        g.spawn_particle(Particle::new(1, 0, ParticleType::Sand));
 
-        g.spawn_particle(Particle {
-            position: Position { x: 1, y: 1 },
-            particle_type: ParticleType::Sand,
-        });
+        g.spawn_particle(Particle::new(1, 1, ParticleType::Sand));
 
         g.update_grid();
 
@@ -603,94 +516,46 @@ mod tests_grid {
         assert_eq!(None, g.cells[1]);
         assert_eq!(None, g.cells[2]);
         assert_eq!(None, g.cells[3]);
-        assert_eq!(
-            Some(Particle {
-                position: Position { x: 1, y: 1 },
-                particle_type: ParticleType::Sand,
-            }),
-            g.cells[4]
-        );
-        assert_eq!(
-            Some(Particle {
-                position: Position { x: 2, y: 1 },
-                particle_type: ParticleType::Sand,
-            }),
-            g.cells[5]
-        );
+        assert_eq!(Some(Particle::new(1, 1, ParticleType::Sand)), g.cells[4]);
+        assert_eq!(Some(Particle::new(2, 1, ParticleType::Sand)), g.cells[5]);
     }
 
     #[test]
-    fn test_update_grid_water_moves_right_when_bottom_cell_and_left_is_full_and_right_cell_is_empty()
-    {
-        let mut g = Grid::new(3, 2);
-
-        g.spawn_particle(Particle {
-            position: Position { x: 0, y: 1 },
-            particle_type: ParticleType::Sand,
-        });
-
-        g.spawn_particle(Particle {
-            position: Position { x: 1, y: 1 },
-            particle_type: ParticleType::Water,
-        });
-
-        g.update_grid();
-
-        assert_eq!(None, g.cells[0]);
-        assert_eq!(None, g.cells[1]);
-        assert_eq!(None, g.cells[2]);
-        assert_eq!(
-            Some(Particle {
-                position: Position { x: 0, y: 1 },
-                particle_type: ParticleType::Sand,
-            }),
-            g.cells[3]
-        );
-        assert_eq!(None, g.cells[4]);
-        assert_eq!(
-            Some(Particle {
-                position: Position { x: 2, y: 1 },
-                particle_type: ParticleType::Water,
-            }),
-            g.cells[5]
-        );
-    }
-
-    #[test]
-    fn test_update_grid_water_moves_left_when_bottom_cell_and_right_is_full_and_left_cell_is_empty(
+    fn test_update_grid_water_moves_right_when_bottom_cell_and_left_is_full_and_right_cell_is_empty(
     ) {
         let mut g = Grid::new(3, 2);
 
-        g.spawn_particle(Particle {
-            position: Position { x: 1, y: 1 },
-            particle_type: ParticleType::Water,
-        });
+        g.spawn_particle(Particle::new(0, 1, ParticleType::Sand));
 
-        g.spawn_particle(Particle {
-            position: Position { x: 2, y: 1 },
-            particle_type: ParticleType::Sand,
-        });
+        g.spawn_particle(Particle::new(1, 1, ParticleType::Water));
 
         g.update_grid();
 
         assert_eq!(None, g.cells[0]);
         assert_eq!(None, g.cells[1]);
         assert_eq!(None, g.cells[2]);
-        assert_eq!(
-            Some(Particle {
-                position: Position { x: 0, y: 1 },
-                particle_type: ParticleType::Water,
-            }),
-            g.cells[3]
-        );
+        assert_eq!(Some(Particle::new(0, 1, ParticleType::Sand)), g.cells[3]);
         assert_eq!(None, g.cells[4]);
-        assert_eq!(
-            Some(Particle {
-                position: Position { x: 2, y: 1 },
-                particle_type: ParticleType::Sand,
-            }),
-            g.cells[5]
-        );
+        assert_eq!(Some(Particle::new(2, 1, ParticleType::Water)), g.cells[5]);
+    }
+
+    #[test]
+    fn test_update_grid_water_moves_left_when_bottom_cell_and_right_is_full_and_left_cell_is_empty()
+    {
+        let mut g = Grid::new(3, 2);
+
+        g.spawn_particle(Particle::new(1, 1, ParticleType::Water));
+
+        g.spawn_particle(Particle::new(2, 1, ParticleType::Sand));
+
+        g.update_grid();
+
+        assert_eq!(None, g.cells[0]);
+        assert_eq!(None, g.cells[1]);
+        assert_eq!(None, g.cells[2]);
+        assert_eq!(Some(Particle::new(0, 1, ParticleType::Water)), g.cells[3]);
+        assert_eq!(None, g.cells[4]);
+        assert_eq!(Some(Particle::new(2, 1, ParticleType::Sand)), g.cells[5]);
     }
 
     #[test]
@@ -698,10 +563,7 @@ mod tests_grid {
     ) {
         let mut g = Grid::new_with_rand(3, 2, || ParticleHorizontalDirection::Right);
 
-        g.spawn_particle(Particle {
-            position: Position { x: 1, y: 1 },
-            particle_type: ParticleType::Water,
-        });
+        g.spawn_particle(Particle::new(1, 1, ParticleType::Water));
 
         g.update_grid();
 
@@ -710,38 +572,22 @@ mod tests_grid {
         assert_eq!(None, g.cells[2]);
         assert_eq!(None, g.cells[3]);
         assert_eq!(None, g.cells[4]);
-        assert_eq!(
-            Some(Particle {
-                position: Position { x: 2, y: 1 },
-                particle_type: ParticleType::Water,
-            }),
-            g.cells[5]
-        );
+        assert_eq!(Some(Particle::new(2, 1, ParticleType::Water)), g.cells[5]);
     }
-
 
     #[test]
     fn test_update_grid_water_moves_left_or_right_when_bottom_cell_is_empty_and_both_right_and_left_are_empty_forced_left(
     ) {
         let mut g = Grid::new_with_rand(3, 2, || ParticleHorizontalDirection::Left);
 
-        g.spawn_particle(Particle {
-            position: Position { x: 1, y: 1 },
-            particle_type: ParticleType::Water,
-        });
+        g.spawn_particle(Particle::new(1, 1, ParticleType::Water));
 
         g.update_grid();
 
         assert_eq!(None, g.cells[0]);
         assert_eq!(None, g.cells[1]);
         assert_eq!(None, g.cells[2]);
-        assert_eq!(
-            Some(Particle {
-                position: Position { x: 0, y: 1 },
-                particle_type: ParticleType::Water,
-            }),
-            g.cells[3]
-        );
+        assert_eq!(Some(Particle::new(0, 1, ParticleType::Water)), g.cells[3]);
         assert_eq!(None, g.cells[4]);
         assert_eq!(None, g.cells[5]);
     }
@@ -766,10 +612,7 @@ mod tests_grid {
             ]
         );
 
-        g.spawn_particle(Particle {
-            position: Position { x: 0, y: 0 },
-            particle_type: ParticleType::Sand,
-        });
+        g.spawn_particle(Particle::new(0, 0, ParticleType::Sand));
         g.draw_grid(&mut image);
         assert_eq!(
             vec![
@@ -785,10 +628,7 @@ mod tests_grid {
                 image.get_color_at(1, 1).unwrap()
             ]
         );
-        g.spawn_particle(Particle {
-            position: Position { x: 1, y: 0 },
-            particle_type: ParticleType::Sand,
-        });
+        g.spawn_particle(Particle::new(1, 0, ParticleType::Sand));
         g.cells[0] = None;
         g.draw_grid(&mut image);
         assert_eq!(
@@ -811,14 +651,8 @@ mod tests_grid {
     fn test_draw_grid_system() {
         fn fixture_spawn_particle_system(mut grid: Query<&mut Grid>) {
             let mut g = grid.iter_mut().last().unwrap();
-            g.spawn_particle(Particle {
-                position: Position { x: 0, y: 0 },
-                particle_type: ParticleType::Sand,
-            });
-            g.spawn_particle(Particle {
-                position: Position { x: 1, y: 0 },
-                particle_type: ParticleType::Water,
-            });
+            g.spawn_particle(Particle::new(0, 0, ParticleType::Sand));
+            g.spawn_particle(Particle::new(1, 0, ParticleType::Water));
         }
 
         fn assert_read_output_frame_system(
