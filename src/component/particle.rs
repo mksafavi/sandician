@@ -37,6 +37,7 @@ enum ParticleType {
 
 enum ParticleDirection {
     BottomLeft = -1,
+    Bottom = 0,
     BottomRight = 1,
 }
 
@@ -127,51 +128,32 @@ impl Grid {
                             None
                         }
                     };
-
-                    match (index_bottom_left, index_bottom, index_bottom_right) {
-                        (None, None, None) => (),
-                        (_, Some(i), _) => {
-                            self.cells[i] = Some({
-                                let mut np = p.clone();
-                                np.position.y = np.position.y + 1;
-                                np
-                            });
-                            self.cells[index] = None;
-                        }
-                        (None, None, Some(i)) => {
-                            self.cells[i] = Some({
-                                let mut np = p.clone();
-                                np.position.y = np.position.y + 1;
-                                np.position.x = np.position.x + 1;
-                                np
-                            });
-                            self.cells[index] = None;
-                        }
-                        (Some(i), None, None) => {
-                            self.cells[i] = Some({
-                                let mut np = p.clone();
-                                np.position.y = np.position.y + 1;
-                                np.position.x = np.position.x - 1;
-                                np
-                            });
-                            self.cells[index] = None;
-                        }
+                    let (i, direction) = match (index_bottom_left, index_bottom, index_bottom_right)
+                    {
+                        (None, None, None) => (None, None),
+                        (_, Some(i), _) => (Some(i), Some(ParticleDirection::Bottom)),
+                        (None, None, Some(i)) => (Some(i), Some(ParticleDirection::BottomRight)),
+                        (Some(i), None, None) => (Some(i), Some(ParticleDirection::BottomLeft)),
                         (Some(l), None, Some(r)) => {
                             let direction = (self.random)();
                             let i = match direction {
                                 ParticleDirection::BottomLeft => l,
                                 ParticleDirection::BottomRight => r,
+                                ParticleDirection::Bottom => 0,
                             };
-                            self.cells[i] = Some({
-                                let mut np = p.clone();
-                                np.position.y = np.position.y + 1;
-                                np.position.x =
-                                    (np.position.x as isize + direction as isize) as usize;
-                                np
-                            });
-                            self.cells[index] = None;
+                            (Some(i), Some(direction))
                         }
-                    }
+                    };
+
+                    if let (Some(i), Some(direction)) = (i, direction) {
+                        self.cells[i] = Some({
+                            let mut np = p.clone();
+                            np.position.y = np.position.y + 1;
+                            np.position.x = (np.position.x as isize + direction as isize) as usize;
+                            np
+                        });
+                        self.cells[index] = None;
+                    };
                 }
             }
         }
