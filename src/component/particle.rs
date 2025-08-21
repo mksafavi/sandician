@@ -33,10 +33,15 @@ enum ParticleType {
     Water,
 }
 
-enum ParticleDirection {
-    BottomLeft = -1,
-    Bottom = 0,
-    BottomRight = 1,
+enum ParticleHorizontalDirection {
+    Stay = 0,
+    Left = -1,
+    Right = 1,
+}
+
+enum ParticleVerticalDirection {
+    Stay = 0,
+    Bottom = 1,
 }
 
 #[derive(Component, Clone, PartialEq, Debug)]
@@ -50,15 +55,15 @@ struct Grid {
     cells: Vec<Option<Particle>>,
     width: usize,
     height: usize,
-    random: fn() -> ParticleDirection,
+    random: fn() -> ParticleHorizontalDirection,
 }
 
 impl Grid {
     fn new(width: usize, height: usize) -> Self {
-        fn random() -> ParticleDirection {
+        fn random() -> ParticleHorizontalDirection {
             match random_range(0..=1) {
-                0 => ParticleDirection::BottomLeft,
-                _ => ParticleDirection::BottomRight,
+                0 => ParticleHorizontalDirection::Left,
+                _ => ParticleHorizontalDirection::Right,
             }
         }
         Self {
@@ -69,7 +74,11 @@ impl Grid {
         }
     }
 
-    fn new_with_rand(width: usize, height: usize, random: fn() -> ParticleDirection) -> Self {
+    fn new_with_rand(
+        width: usize,
+        height: usize,
+        random: fn() -> ParticleHorizontalDirection,
+    ) -> Self {
         Self {
             cells: (0..width * height).map(|_| None).collect(),
             width: width,
@@ -90,6 +99,21 @@ impl Grid {
             for x in 0..self.width {
                 let index = y * self.width + x;
                 if let Some(p) = &self.cells[index] {
+                    let index_right = {
+                        if (x + 1 < self.width) && self.cells[y * self.width + (x + 1)].is_none() {
+                            Some(y * self.width + (x + 1))
+                        } else {
+                            None
+                        }
+                    };
+                    let index_left = {
+                        if (0 <= x as isize - 1) && (self.cells[y * self.width + (x - 1)].is_none())
+                        {
+                            Some(y * self.width + (x - 1))
+                        } else {
+                            None
+                        }
+                    };
                     let index_bottom = {
                         if (y + 1 < self.height) && self.cells[(y + 1) * self.width + x].is_none() {
                             Some((y + 1) * self.width + x)
@@ -117,30 +141,119 @@ impl Grid {
                             None
                         }
                     };
-                    let (next_location_index, direction) =
-                        match (index_bottom_left, index_bottom, index_bottom_right) {
-                            (None, None, None) => (None, None),
-                            (_, Some(i), _) => (Some(i), Some(ParticleDirection::Bottom)),
-                            (None, None, Some(i)) => {
-                                (Some(i), Some(ParticleDirection::BottomRight))
+                    let (next_location_index, direction) = match p.particle_type {
+                        ParticleType::Sand => {
+                            match (index_bottom_left, index_bottom, index_bottom_right) {
+                                (None, None, None) => (None, None),
+                                (_, Some(i), _) => (
+                                    Some(i),
+                                    Some((
+                                        ParticleHorizontalDirection::Stay,
+                                        ParticleVerticalDirection::Bottom,
+                                    )),
+                                ),
+                                (None, None, Some(i)) => (
+                                    Some(i),
+                                    Some((
+                                        ParticleHorizontalDirection::Right,
+                                        ParticleVerticalDirection::Bottom,
+                                    )),
+                                ),
+                                (Some(i), None, None) => (
+                                    Some(i),
+                                    Some((
+                                        ParticleHorizontalDirection::Left,
+                                        ParticleVerticalDirection::Bottom,
+                                    )),
+                                ),
+                                (Some(l), None, Some(r)) => {
+                                    let direction = (self.random)();
+                                    let i = match direction {
+                                        ParticleHorizontalDirection::Left => l,
+                                        ParticleHorizontalDirection::Right => r,
+                                        ParticleHorizontalDirection::Stay => 0,
+                                    };
+                                    (
+                                        Some(i),
+                                        Some((direction, ParticleVerticalDirection::Bottom)),
+                                    )
+                                }
                             }
-                            (Some(i), None, None) => (Some(i), Some(ParticleDirection::BottomLeft)),
-                            (Some(l), None, Some(r)) => {
-                                let direction = (self.random)();
-                                let i = match direction {
-                                    ParticleDirection::BottomLeft => l,
-                                    ParticleDirection::BottomRight => r,
-                                    ParticleDirection::Bottom => 0,
-                                };
-                                (Some(i), Some(direction))
+                        }
+                        ParticleType::Water => {
+                            match (
+                                index_left,
+                                index_bottom_left,
+                                index_bottom,
+                                index_bottom_right,
+                                index_right,
+                            ) {
+                                (None, None, None, None, None) => (None, None),
+                                (_, _, Some(i), _, _) => (
+                                    Some(i),
+                                    Some((
+                                        ParticleHorizontalDirection::Stay,
+                                        ParticleVerticalDirection::Bottom,
+                                    )),
+                                ),
+                                (_, None, None, Some(i), _) => (
+                                    Some(i),
+                                    Some((
+                                        ParticleHorizontalDirection::Right,
+                                        ParticleVerticalDirection::Bottom,
+                                    )),
+                                ),
+                                (_, Some(i), None, None, _) => (
+                                    Some(i),
+                                    Some((
+                                        ParticleHorizontalDirection::Left,
+                                        ParticleVerticalDirection::Bottom,
+                                    )),
+                                ),
+                                (_, Some(l), None, Some(r), _) => {
+                                    let direction = (self.random)();
+                                    let i = match direction {
+                                        ParticleHorizontalDirection::Left => l,
+                                        ParticleHorizontalDirection::Right => r,
+                                        ParticleHorizontalDirection::Stay => 0,
+                                    };
+                                    (
+                                        Some(i),
+                                        Some((direction, ParticleVerticalDirection::Bottom)),
+                                    )
+                                }
+                                (None, None, None, None, Some(i)) => (
+                                    Some(i),
+                                    Some((
+                                        ParticleHorizontalDirection::Right,
+                                        ParticleVerticalDirection::Stay,
+                                    )),
+                                ),
+                                (Some(i), None, None, None, None) => (
+                                    Some(i),
+                                    Some((
+                                        ParticleHorizontalDirection::Left,
+                                        ParticleVerticalDirection::Stay,
+                                    )),
+                                ),
+                                (Some(l), None, None, None, Some(r)) => {
+                                    let direction = (self.random)();
+                                    let i = match direction {
+                                        ParticleHorizontalDirection::Left => l,
+                                        ParticleHorizontalDirection::Right => r,
+                                        ParticleHorizontalDirection::Stay => 0,
+                                    };
+                                    (Some(i), Some((direction, ParticleVerticalDirection::Stay)))
+                                }
                             }
-                        };
+                        }
+                    };
 
-                    if let (Some(i), Some(direction)) = (next_location_index, direction) {
+                    if let (Some(i), Some((hd, vd))) = (next_location_index, direction) {
                         self.cells[i] = Some({
                             let mut np = p.clone();
-                            np.position.y = np.position.y + 1;
-                            np.position.x = (np.position.x as isize + direction as isize) as usize;
+                            np.position.y = np.position.y + vd as usize;
+                            np.position.x = (np.position.x as isize + hd as isize) as usize;
                             np
                         });
                         self.cells[index] = None;
@@ -435,7 +548,7 @@ mod tests_grid {
     #[test]
     fn test_update_grid_sand_falls_bottom_left_or_bottom_right_when_bottom_cell_is_full_and_both_bottom_right_and_bottom_left_are_empty_for_testing_forced_left(
     ) {
-        let mut g = Grid::new_with_rand(3, 2, || ParticleDirection::BottomLeft);
+        let mut g = Grid::new_with_rand(3, 2, || ParticleHorizontalDirection::Left);
 
         g.spawn_particle(Particle {
             position: Position { x: 1, y: 0 },
@@ -468,10 +581,11 @@ mod tests_grid {
         );
         assert_eq!(None, g.cells[5]);
     }
+
     #[test]
     fn test_update_grid_sand_falls_bottom_left_or_bottom_right_when_bottom_cell_is_full_and_both_bottom_right_and_bottom_left_are_empty_for_testing_forced_right(
     ) {
-        let mut g = Grid::new_with_rand(3, 2, || ParticleDirection::BottomRight);
+        let mut g = Grid::new_with_rand(3, 2, || ParticleHorizontalDirection::Right);
 
         g.spawn_particle(Particle {
             position: Position { x: 1, y: 0 },
@@ -503,6 +617,133 @@ mod tests_grid {
             }),
             g.cells[5]
         );
+    }
+
+    #[test]
+    fn test_update_grid_water_moves_right_when_bottom_cell_and_left_is_full_and_right_cell_is_empty()
+    {
+        let mut g = Grid::new(3, 2);
+
+        g.spawn_particle(Particle {
+            position: Position { x: 0, y: 1 },
+            particle_type: ParticleType::Sand,
+        });
+
+        g.spawn_particle(Particle {
+            position: Position { x: 1, y: 1 },
+            particle_type: ParticleType::Water,
+        });
+
+        g.update_grid();
+
+        assert_eq!(None, g.cells[0]);
+        assert_eq!(None, g.cells[1]);
+        assert_eq!(None, g.cells[2]);
+        assert_eq!(
+            Some(Particle {
+                position: Position { x: 0, y: 1 },
+                particle_type: ParticleType::Sand,
+            }),
+            g.cells[3]
+        );
+        assert_eq!(None, g.cells[4]);
+        assert_eq!(
+            Some(Particle {
+                position: Position { x: 2, y: 1 },
+                particle_type: ParticleType::Water,
+            }),
+            g.cells[5]
+        );
+    }
+
+    #[test]
+    fn test_update_grid_water_moves_left_when_bottom_cell_and_right_is_full_and_left_cell_is_empty(
+    ) {
+        let mut g = Grid::new(3, 2);
+
+        g.spawn_particle(Particle {
+            position: Position { x: 1, y: 1 },
+            particle_type: ParticleType::Water,
+        });
+
+        g.spawn_particle(Particle {
+            position: Position { x: 2, y: 1 },
+            particle_type: ParticleType::Sand,
+        });
+
+        g.update_grid();
+
+        assert_eq!(None, g.cells[0]);
+        assert_eq!(None, g.cells[1]);
+        assert_eq!(None, g.cells[2]);
+        assert_eq!(
+            Some(Particle {
+                position: Position { x: 0, y: 1 },
+                particle_type: ParticleType::Water,
+            }),
+            g.cells[3]
+        );
+        assert_eq!(None, g.cells[4]);
+        assert_eq!(
+            Some(Particle {
+                position: Position { x: 2, y: 1 },
+                particle_type: ParticleType::Sand,
+            }),
+            g.cells[5]
+        );
+    }
+
+    #[test]
+    fn test_update_grid_water_moves_left_or_right_when_bottom_cell_is_empty_and_both_right_and_left_are_empty_forced_right(
+    ) {
+        let mut g = Grid::new_with_rand(3, 2, || ParticleHorizontalDirection::Right);
+
+        g.spawn_particle(Particle {
+            position: Position { x: 1, y: 1 },
+            particle_type: ParticleType::Water,
+        });
+
+        g.update_grid();
+
+        assert_eq!(None, g.cells[0]);
+        assert_eq!(None, g.cells[1]);
+        assert_eq!(None, g.cells[2]);
+        assert_eq!(None, g.cells[3]);
+        assert_eq!(None, g.cells[4]);
+        assert_eq!(
+            Some(Particle {
+                position: Position { x: 2, y: 1 },
+                particle_type: ParticleType::Water,
+            }),
+            g.cells[5]
+        );
+    }
+
+
+    #[test]
+    fn test_update_grid_water_moves_left_or_right_when_bottom_cell_is_empty_and_both_right_and_left_are_empty_forced_left(
+    ) {
+        let mut g = Grid::new_with_rand(3, 2, || ParticleHorizontalDirection::Left);
+
+        g.spawn_particle(Particle {
+            position: Position { x: 1, y: 1 },
+            particle_type: ParticleType::Water,
+        });
+
+        g.update_grid();
+
+        assert_eq!(None, g.cells[0]);
+        assert_eq!(None, g.cells[1]);
+        assert_eq!(None, g.cells[2]);
+        assert_eq!(
+            Some(Particle {
+                position: Position { x: 0, y: 1 },
+                particle_type: ParticleType::Water,
+            }),
+            g.cells[3]
+        );
+        assert_eq!(None, g.cells[4]);
+        assert_eq!(None, g.cells[5]);
     }
 
     #[test]
