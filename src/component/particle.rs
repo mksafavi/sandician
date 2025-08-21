@@ -266,7 +266,7 @@ impl Grid {
                         self.cells[i] = Some({
                             let mut np = p.clone();
                             np.simulated = true;
-                            np.position.y = np.position.y + vd as usize;
+                            np.position.y += vd as usize;
                             np.position.x = (np.position.x as isize + hd as isize) as usize;
                             np
                         });
