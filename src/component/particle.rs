@@ -121,8 +121,7 @@ impl Grid {
                         }
                     };
                     let index_left = {
-                        if (0 <= x as isize - 1) && (self.cells[y * self.width + (x - 1)].is_none())
-                        {
+                        if (0 < x) && (self.cells[y * self.width + (x - 1)].is_none()) {
                             Some(y * self.width + (x - 1))
                         } else {
                             None
@@ -147,7 +146,7 @@ impl Grid {
                     };
                     let index_bottom_left = {
                         if (y + 1 < self.height)
-                            && (0 <= x as isize - 1)
+                            && (0 < x)
                             && (self.cells[(y + 1) * self.width + (x - 1)].is_none())
                         {
                             Some((y + 1) * self.width + (x - 1))
