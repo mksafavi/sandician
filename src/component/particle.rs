@@ -48,6 +48,7 @@ enum ParticleVerticalDirection {
 struct Particle {
     position: Position,
     particle_type: ParticleType,
+    simulated: bool,
 }
 
 impl Particle {
@@ -55,6 +56,7 @@ impl Particle {
         Self {
             position: Position { x, y },
             particle_type,
+            simulated: false,
         }
     }
 }
@@ -108,6 +110,9 @@ impl Grid {
             for x in 0..self.width {
                 let index = y * self.width + x;
                 if let Some(p) = &self.cells[index] {
+                    if p.simulated {
+                        continue;
+                    }
                     let index_right = {
                         if (x + 1 < self.width) && self.cells[y * self.width + (x + 1)].is_none() {
                             Some(y * self.width + (x + 1))
@@ -261,6 +266,7 @@ impl Grid {
                     if let (Some(i), Some((hd, vd))) = (next_location_index, direction) {
                         self.cells[i] = Some({
                             let mut np = p.clone();
+                            np.simulated = true;
                             np.position.y = np.position.y + vd as usize;
                             np.position.x = (np.position.x as isize + hd as isize) as usize;
                             np
@@ -270,6 +276,11 @@ impl Grid {
                 }
             }
         }
+        self.cells.iter_mut().for_each(|x| {
+            if let Some(x) = x {
+                x.simulated = false
+            }
+        });
     }
 
     fn create_output_frame(width: usize, height: usize) -> Image {
