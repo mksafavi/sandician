@@ -10,8 +10,24 @@ use bevy::{
     image::Image,
     render::render_resource::{Extent3d, TextureDimension, TextureFormat},
     sprite::Sprite,
+    time::{Fixed, Time},
 };
 use rand::random_range;
+
+// TODO: remove all unwrap and expects
+
+pub struct GridPlugin {
+    pub config: ConfigResource,
+}
+impl Plugin for GridPlugin {
+    fn build(&self, app: &mut App) {
+        app.insert_resource(self.config.clone())
+            .insert_resource(Time::<Fixed>::from_hz(self.config.update_rate))
+            .add_systems(Startup, Grid::init_grid_system)
+            .add_systems(FixedUpdate, Grid::update_grid_system)
+            .add_systems(Update, Grid::draw_grid_system);
+    }
+}
 
 #[derive(Resource, Clone)]
 pub struct ConfigResource {
