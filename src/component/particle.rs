@@ -1,5 +1,4 @@
 use bevy::{
-    app::{App, Startup, Update},
     asset::{Assets, Handle, RenderAssetUsages},
     color::{palettes::css, Color, ColorToPacked},
     ecs::{
@@ -8,7 +7,6 @@ use bevy::{
         system::{Commands, Query, Res, ResMut},
     },
     image::Image,
-    prelude::IntoScheduleConfigs,
     render::render_resource::{Extent3d, TextureDimension, TextureFormat},
     sprite::Sprite,
 };
@@ -266,6 +264,9 @@ mod tests {
 mod tests_grid {
 
     use super::*;
+
+    use bevy::app::{App, Startup, Update};
+    use bevy::prelude::IntoScheduleConfigs;
 
     #[test]
     fn test_create_grid() {
