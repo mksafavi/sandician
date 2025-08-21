@@ -283,7 +283,7 @@ impl Grid {
     }
 
     fn create_output_frame(width: usize, height: usize) -> Image {
-        let image = Image::new_fill(
+        Image::new_fill(
             Extent3d {
                 width: width as u32,
                 height: height as u32,
@@ -293,8 +293,7 @@ impl Grid {
             &(css::BLACK.to_u8_array()),
             TextureFormat::Rgba8UnormSrgb,
             RenderAssetUsages::MAIN_WORLD | RenderAssetUsages::RENDER_WORLD,
-        );
-        image
+        )
     }
 
     fn init_grid_system(
