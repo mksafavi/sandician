@@ -384,12 +384,12 @@ mod tests_grid {
 
         match &g.cells[0] {
             Some(p) => assert_eq!(ParticleType::Sand, p.particle_type),
-            None => assert!(false),
+            None => panic!(),
         }
 
         match &g.cells[3] {
             Some(p) => assert_eq!(ParticleType::Water, p.particle_type),
-            None => assert!(false),
+            None => panic!(),
         }
     }
 
@@ -402,7 +402,7 @@ mod tests_grid {
 
         match &g.cells[0] {
             Some(p) => assert_eq!(ParticleType::Sand, p.particle_type),
-            None => assert!(false),
+            None => panic!(),
         }
     }
 
