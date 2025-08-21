@@ -1,0 +1,19 @@
+name: Build
+
+on:
+  workflow_dispatch:
+  push:
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: "-Dwarnings" # Make sure CI fails on all warnings
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: rrbutani/use-nix-shell-action@v1
+      - run: cargo build --verbose
+      - run: cargo test --verbose
