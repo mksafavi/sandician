@@ -79,9 +79,9 @@ impl Grid {
         }
         Self {
             cells: (0..width * height).map(|_| None).collect(),
-            width: width,
-            height: height,
-            random: random,
+            width,
+            height,
+            random,
         }
     }
 
@@ -92,9 +92,9 @@ impl Grid {
     ) -> Self {
         Self {
             cells: (0..width * height).map(|_| None).collect(),
-            width: width,
-            height: height,
-            random: random,
+            width,
+            height,
+            random,
         }
     }
 
