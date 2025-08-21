@@ -1,4 +1,5 @@
 use bevy::{
+    app::{App, FixedUpdate, Plugin, Startup, Update},
     asset::{Assets, Handle, RenderAssetUsages},
     color::{palettes::css, Color, ColorToPacked},
     ecs::{
@@ -12,10 +13,20 @@ use bevy::{
 };
 use rand::random_range;
 
-#[derive(Resource)]
-struct ConfigResource {
+#[derive(Resource, Clone)]
+pub struct ConfigResource {
     width: usize,
     height: usize,
+    update_rate: f64,
+}
+impl ConfigResource {
+    pub fn new(width: usize, height: usize, update_rate: f64) -> Self {
+        Self {
+            width,
+            height,
+            update_rate,
+        }
+    }
 }
 
 #[derive(Resource)]
@@ -409,10 +420,7 @@ mod tests_grid {
     #[test]
     fn test_init_grid_system_creates_a_n_by_m_grid() {
         let mut app = App::new();
-        app.insert_resource(ConfigResource {
-            width: 2,
-            height: 3,
-        });
+        app.insert_resource(ConfigResource::new(2, 3, 100.));
         app.init_resource::<Assets<Image>>();
         app.add_systems(Startup, Grid::init_grid_system);
         app.update();
@@ -686,10 +694,7 @@ mod tests_grid {
         }
 
         let mut app = App::new();
-        app.insert_resource(ConfigResource {
-            width: 5,
-            height: 6,
-        });
+        app.insert_resource(ConfigResource::new(5, 6, 100.));
         app.init_resource::<Assets<Image>>();
 
         //app.insert_resource(OutputFrameHandle);
