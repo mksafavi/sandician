@@ -92,60 +92,53 @@ impl Grid {
             for x in 0..self.width {
                 let index = y * self.width + x;
                 if let Some(p) = &self.cells[index] {
-                    if y + 1 == self.height {
-                        continue;
-                    }
                     let index_bottom = {
-                        if y + 1 < self.height {
-                            if self.cells[(y + 1) * self.width + x].is_none() {
-                                Some((y + 1) * self.width + x)
-                            } else {
-                                None
-                            }
+                        if (y + 1 < self.height) && self.cells[(y + 1) * self.width + x].is_none() {
+                            Some((y + 1) * self.width + x)
                         } else {
                             None
                         }
                     };
                     let index_bottom_right = {
-                        if x + 1 < self.width {
-                            if self.cells[(y + 1) * self.width + (x + 1)].is_none() {
-                                Some((y + 1) * self.width + (x + 1))
-                            } else {
-                                None
-                            }
+                        if (y + 1 < self.height)
+                            && (x + 1 < self.width)
+                            && (self.cells[(y + 1) * self.width + (x + 1)].is_none())
+                        {
+                            Some((y + 1) * self.width + (x + 1))
                         } else {
                             None
                         }
                     };
                     let index_bottom_left = {
-                        if 0 <= x as isize - 1 {
-                            if self.cells[(y + 1) * self.width + (x - 1)].is_none() {
-                                Some((y + 1) * self.width + (x - 1))
-                            } else {
-                                None
-                            }
+                        if (y + 1 < self.height)
+                            && (0 <= x as isize - 1)
+                            && (self.cells[(y + 1) * self.width + (x - 1)].is_none())
+                        {
+                            Some((y + 1) * self.width + (x - 1))
                         } else {
                             None
                         }
                     };
-                    let (i, direction) = match (index_bottom_left, index_bottom, index_bottom_right)
-                    {
-                        (None, None, None) => (None, None),
-                        (_, Some(i), _) => (Some(i), Some(ParticleDirection::Bottom)),
-                        (None, None, Some(i)) => (Some(i), Some(ParticleDirection::BottomRight)),
-                        (Some(i), None, None) => (Some(i), Some(ParticleDirection::BottomLeft)),
-                        (Some(l), None, Some(r)) => {
-                            let direction = (self.random)();
-                            let i = match direction {
-                                ParticleDirection::BottomLeft => l,
-                                ParticleDirection::BottomRight => r,
-                                ParticleDirection::Bottom => 0,
-                            };
-                            (Some(i), Some(direction))
-                        }
-                    };
+                    let (next_location_index, direction) =
+                        match (index_bottom_left, index_bottom, index_bottom_right) {
+                            (None, None, None) => (None, None),
+                            (_, Some(i), _) => (Some(i), Some(ParticleDirection::Bottom)),
+                            (None, None, Some(i)) => {
+                                (Some(i), Some(ParticleDirection::BottomRight))
+                            }
+                            (Some(i), None, None) => (Some(i), Some(ParticleDirection::BottomLeft)),
+                            (Some(l), None, Some(r)) => {
+                                let direction = (self.random)();
+                                let i = match direction {
+                                    ParticleDirection::BottomLeft => l,
+                                    ParticleDirection::BottomRight => r,
+                                    ParticleDirection::Bottom => 0,
+                                };
+                                (Some(i), Some(direction))
+                            }
+                        };
 
-                    if let (Some(i), Some(direction)) = (i, direction) {
+                    if let (Some(i), Some(direction)) = (next_location_index, direction) {
                         self.cells[i] = Some({
                             let mut np = p.clone();
                             np.position.y = np.position.y + 1;
