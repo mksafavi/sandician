@@ -71,6 +71,11 @@ enum ParticleVerticalDirection {
     Bottom = 1,
 }
 
+enum RowUpdateDirection {
+    Forward = 0,
+    Reverse = 1,
+}
+
 #[derive(Component, Clone, PartialEq, Debug)]
 struct Particle {
     position: Position,
@@ -93,35 +98,51 @@ struct Grid {
     cells: Vec<Option<Particle>>,
     width: usize,
     height: usize,
-    random: fn() -> ParticleHorizontalDirection,
+    water_direction: fn() -> ParticleHorizontalDirection,
+    row_update_direction: fn() -> RowUpdateDirection,
 }
 
 impl Grid {
     fn new(width: usize, height: usize) -> Self {
-        fn random() -> ParticleHorizontalDirection {
+        fn random_water_direction() -> ParticleHorizontalDirection {
             match random_range(0..=1) {
                 0 => ParticleHorizontalDirection::Left,
                 _ => ParticleHorizontalDirection::Right,
+            }
+        }
+        fn random_row_update_direction() -> RowUpdateDirection {
+            match random_range(0..=1) {
+                0 => RowUpdateDirection::Forward,
+                _ => RowUpdateDirection::Reverse,
             }
         }
         Self {
             cells: (0..width * height).map(|_| None).collect(),
             width,
             height,
-            random,
+            water_direction: random_water_direction,
+            row_update_direction: random_row_update_direction,
         }
     }
 
     fn new_with_rand(
         width: usize,
         height: usize,
-        random: fn() -> ParticleHorizontalDirection,
+        water_direction: Option<fn() -> ParticleHorizontalDirection>,
+        row_update_direction: Option<fn() -> RowUpdateDirection>,
     ) -> Self {
         Self {
             cells: (0..width * height).map(|_| None).collect(),
             width,
             height,
-            random,
+            water_direction: match water_direction {
+                Some(f) => f,
+                None => || ParticleHorizontalDirection::Stay,
+            },
+            row_update_direction: match row_update_direction {
+                Some(f) => f,
+                None => || RowUpdateDirection::Forward,
+            },
         }
     }
 
@@ -134,7 +155,11 @@ impl Grid {
 
     fn update_grid(&mut self) {
         for y in (0..self.height).rev() {
-            for x in 0..self.width {
+            let it = match (self.row_update_direction)() {
+                RowUpdateDirection::Forward => (0..self.width).collect::<Vec<_>>(),
+                RowUpdateDirection::Reverse => (0..self.width).rev().collect::<Vec<_>>(),
+            };
+            for x in it {
                 let index = y * self.width + x;
                 if let Some(p) = &self.cells[index] {
                     if p.simulated {
@@ -207,7 +232,7 @@ impl Grid {
                                     )),
                                 ),
                                 (Some(l), None, Some(r)) => {
-                                    let direction = (self.random)();
+                                    let direction = (self.water_direction)();
                                     let i = match direction {
                                         ParticleHorizontalDirection::Left => l,
                                         ParticleHorizontalDirection::Right => r,
@@ -251,7 +276,7 @@ impl Grid {
                                     )),
                                 ),
                                 (_, Some(l), None, Some(r), _) => {
-                                    let direction = (self.random)();
+                                    let direction = (self.water_direction)();
                                     let i = match direction {
                                         ParticleHorizontalDirection::Left => l,
                                         ParticleHorizontalDirection::Right => r,
@@ -277,7 +302,7 @@ impl Grid {
                                     )),
                                 ),
                                 (Some(l), None, None, None, Some(r)) => {
-                                    let direction = (self.random)();
+                                    let direction = (self.water_direction)();
                                     let i = match direction {
                                         ParticleHorizontalDirection::Left => l,
                                         ParticleHorizontalDirection::Right => r,
@@ -518,7 +543,7 @@ mod tests_grid {
     #[test]
     fn test_update_grid_sand_falls_bottom_left_or_bottom_right_when_bottom_cell_is_full_and_both_bottom_right_and_bottom_left_are_empty_for_testing_forced_left(
     ) {
-        let mut g = Grid::new_with_rand(3, 2, || ParticleHorizontalDirection::Left);
+        let mut g = Grid::new_with_rand(3, 2, Some(|| ParticleHorizontalDirection::Left), None);
 
         g.spawn_particle(Particle::new(1, 0, ParticleType::Sand));
 
@@ -537,7 +562,7 @@ mod tests_grid {
     #[test]
     fn test_update_grid_sand_falls_bottom_left_or_bottom_right_when_bottom_cell_is_full_and_both_bottom_right_and_bottom_left_are_empty_for_testing_forced_right(
     ) {
-        let mut g = Grid::new_with_rand(3, 2, || ParticleHorizontalDirection::Right);
+        let mut g = Grid::new_with_rand(3, 2, Some(|| ParticleHorizontalDirection::Right), None);
 
         g.spawn_particle(Particle::new(1, 0, ParticleType::Sand));
 
@@ -594,7 +619,7 @@ mod tests_grid {
     #[test]
     fn test_update_grid_water_moves_left_or_right_when_bottom_cell_is_empty_and_both_right_and_left_are_empty_forced_right(
     ) {
-        let mut g = Grid::new_with_rand(3, 2, || ParticleHorizontalDirection::Right);
+        let mut g = Grid::new_with_rand(3, 2, Some(|| ParticleHorizontalDirection::Right), None);
 
         g.spawn_particle(Particle::new(1, 1, ParticleType::Water));
 
@@ -611,7 +636,7 @@ mod tests_grid {
     #[test]
     fn test_update_grid_water_moves_left_or_right_when_bottom_cell_is_empty_and_both_right_and_left_are_empty_forced_left(
     ) {
-        let mut g = Grid::new_with_rand(3, 2, || ParticleHorizontalDirection::Left);
+        let mut g = Grid::new_with_rand(3, 2, Some(|| ParticleHorizontalDirection::Left), None);
 
         g.spawn_particle(Particle::new(1, 1, ParticleType::Water));
 
@@ -623,6 +648,86 @@ mod tests_grid {
         assert_eq!(Some(Particle::new(0, 1, ParticleType::Water)), g.cells[3]);
         assert_eq!(None, g.cells[4]);
         assert_eq!(None, g.cells[5]);
+    }
+
+    #[test]
+    fn test_updating_rows_in_forward_order_creates_a_left_bias_on_water() {
+        /*
+         * updating in forward: -ww- => ww-- or w--w
+         */
+        let mut g = Grid::new_with_rand(
+            4,
+            1,
+            Some(|| ParticleHorizontalDirection::Left),
+            Some(|| RowUpdateDirection::Forward),
+        );
+
+        g.spawn_particle(Particle::new(1, 0, ParticleType::Water));
+        g.spawn_particle(Particle::new(2, 0, ParticleType::Water));
+
+        g.update_grid();
+
+        assert_eq!(Some(Particle::new(0, 0, ParticleType::Water)), g.cells[0]);
+        assert_eq!(Some(Particle::new(1, 0, ParticleType::Water)), g.cells[1]);
+        assert_eq!(None, g.cells[2]);
+        assert_eq!(None, g.cells[3]);
+
+        let mut g = Grid::new_with_rand(
+            4,
+            1,
+            Some(|| ParticleHorizontalDirection::Right),
+            Some(|| RowUpdateDirection::Forward),
+        );
+
+        g.spawn_particle(Particle::new(1, 0, ParticleType::Water));
+        g.spawn_particle(Particle::new(2, 0, ParticleType::Water));
+
+        g.update_grid();
+
+        assert_eq!(Some(Particle::new(0, 0, ParticleType::Water)), g.cells[0]);
+        assert_eq!(None, g.cells[1]);
+        assert_eq!(None, g.cells[2]);
+        assert_eq!(Some(Particle::new(3, 0, ParticleType::Water)), g.cells[3]);
+    }
+
+    #[test]
+    fn test_updating_rows_in_reverse_order_creates_a_right_bias_on_water() {
+        /*
+         * updating in reverse: -ww- => --ww or w--w
+         */
+        let mut g = Grid::new_with_rand(
+            4,
+            1,
+            Some(|| ParticleHorizontalDirection::Right),
+            Some(|| RowUpdateDirection::Reverse),
+        );
+
+        g.spawn_particle(Particle::new(1, 0, ParticleType::Water));
+        g.spawn_particle(Particle::new(2, 0, ParticleType::Water));
+
+        g.update_grid();
+
+        assert_eq!(None, g.cells[0]);
+        assert_eq!(None, g.cells[1]);
+        assert_eq!(Some(Particle::new(2, 0, ParticleType::Water)), g.cells[2]);
+        assert_eq!(Some(Particle::new(3, 0, ParticleType::Water)), g.cells[3]);
+
+        let mut g = Grid::new_with_rand(
+            4,
+            1,
+            Some(|| ParticleHorizontalDirection::Left),
+            Some(|| RowUpdateDirection::Reverse),
+        );
+
+        g.spawn_particle(Particle::new(1, 0, ParticleType::Water));
+        g.spawn_particle(Particle::new(2, 0, ParticleType::Water));
+
+        g.update_grid();
+
+        assert_eq!(Some(Particle::new(0, 0, ParticleType::Water)), g.cells[0]);
+        assert_eq!(None, g.cells[1]);
+        assert_eq!(None, g.cells[2]);
+        assert_eq!(Some(Particle::new(3, 0, ParticleType::Water)), g.cells[3]);
     }
 
     #[test]
