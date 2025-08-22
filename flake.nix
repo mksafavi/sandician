@@ -13,6 +13,8 @@
         mkShell {
           buildInputs = [
             rustc
+            wasm-bindgen-cli_0_2_100
+            lld
             cargo
             rustfmt
             rust-analyzer
