@@ -48,13 +48,13 @@ impl ConfigResource {
 #[derive(Resource)]
 struct OutputFrameHandle(Handle<Image>);
 
-#[derive(Component, Clone, PartialEq, Debug)]
+#[derive(Clone, PartialEq, Debug)]
 struct Position {
     x: usize,
     y: usize,
 }
 
-#[derive(Component, Clone, PartialEq, Debug)]
+#[derive(Clone, PartialEq, Debug)]
 pub enum ParticleType {
     Sand,
     Water,
@@ -78,7 +78,7 @@ enum RowUpdateDirection {
     Reverse = 1,
 }
 
-#[derive(Component, Clone, PartialEq, Debug)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct Particle {
     position: Position,
     particle_type: ParticleType,
