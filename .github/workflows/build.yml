@@ -4,16 +4,35 @@ on:
   workflow_dispatch:
   push:
 
-env:
-  CARGO_TERM_COLOR: always
-  RUSTFLAGS: "-Dwarnings" # Make sure CI fails on all warnings
-
 jobs:
+  clippy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: rrbutani/use-nix-shell-action@v1
+      - run: just clippy
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: rrbutani/use-nix-shell-action@v1
+      - run: just ci-test
+
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: DeterminateSystems/nix-installer-action@main
       - uses: rrbutani/use-nix-shell-action@v1
-      - run: cargo build --verbose
-      - run: cargo test --verbose
+      - run: just ci-build "main"
+
+  build-wasm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: rrbutani/use-nix-shell-action@v1
+      - run: just ci-build-wasm "main"
