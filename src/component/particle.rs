@@ -343,40 +343,31 @@ impl Grid {
             };
             for x in it {
                 let index = y * self.width + x;
-                if let Some(p) = &self.cells[index] {
-                    if p.simulated {
-                        continue;
+                let (next_location_index, direction) = match &self.cells[index] {
+                    Some(p) => {
+                        if p.simulated {
+                            continue;
+                        }
+                        match p.particle_type {
+                            ParticleType::Sand => self.find_sand_particle_next_direction(x, y),
+                            ParticleType::Water => self.find_water_particle_next_direction(x, y),
+                        }
                     }
-                    let (next_location_index, direction) = match p.particle_type {
-                        ParticleType::Sand => self.find_sand_particle_next_direction(x, y),
-                        ParticleType::Water => self.find_water_particle_next_direction(x, y),
+                    None => (None, None),
+                };
+                if let (Some(new_index), Some((hd, vd))) = (next_location_index, direction) {
+                    self.cells.swap(index, new_index);
+                    if let Some(p) = &mut self.cells[index] {
+                        p.simulated = true;
+                        p.position.y -= vd.clone() as usize;
+                        p.position.x = (p.position.x as isize - hd.clone() as isize) as usize;
                     };
 
-                    if let (Some(new_index), Some((hd, vd))) = (next_location_index, direction) {
-                        let new_cell = self.cells[new_index].clone();
-                        let old_cell = p;
-                        self.cells[new_index] = Some({
-                            let mut np = old_cell.clone();
-                            np.simulated = true;
-                            np.position.y += vd.clone() as usize;
-                            np.position.x = (np.position.x as isize + hd.clone() as isize) as usize;
-                            np
-                        });
-                        match new_cell {
-                            Some(new_cell) => {
-                                self.cells[index] = Some({
-                                    let mut np = new_cell.clone();
-                                    np.simulated = true;
-                                    np.position.y -= vd as usize;
-                                    np.position.x = (np.position.x as isize - hd as isize) as usize;
-                                    np
-                                });
-                            }
-                            None => {
-                                self.cells[index] = None;
-                            }
-                        };
-                    }
+                    if let Some(p) = &mut self.cells[new_index] {
+                        p.simulated = true;
+                        p.position.y += vd as usize;
+                        p.position.x = (p.position.x as isize + hd as isize) as usize;
+                    };
                 }
             }
         }
