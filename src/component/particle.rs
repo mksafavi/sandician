@@ -60,12 +60,14 @@ enum ParticleType {
     Water,
 }
 
+#[derive(Clone, Debug)]
 enum ParticleHorizontalDirection {
     Stay = 0,
     Left = -1,
     Right = 1,
 }
 
+#[derive(Clone, Debug)]
 enum ParticleVerticalDirection {
     Stay = 0,
     Bottom = 1,
@@ -141,12 +143,22 @@ impl Grid {
         Option<(ParticleHorizontalDirection, ParticleVerticalDirection)>,
     ) {
         let index_bottom = {
-            if (y + 1 < self.height) && self.cells[(y + 1) * self.width + x].is_none() {
-                Some((y + 1) * self.width + x)
+            if y + 1 < self.height {
+                match &self.cells[(y + 1) * self.width + x] {
+                    Some(p) => match p.particle_type {
+                        ParticleType::Sand => None,
+                        ParticleType::Water => match p.simulated {
+                            false => Some((y + 1) * self.width + x),
+                            true => None,
+                        },
+                    },
+                    None => Some((y + 1) * self.width + x),
+                }
             } else {
                 None
             }
         };
+
         let index_bottom_right = {
             if (y + 1 < self.height)
                 && (x + 1 < self.width)
@@ -340,16 +352,31 @@ impl Grid {
                         ParticleType::Water => self.find_water_particle_next_direction(x, y),
                     };
 
-                    if let (Some(i), Some((hd, vd))) = (next_location_index, direction) {
-                        self.cells[i] = Some({
-                            let mut np = p.clone();
+                    if let (Some(new_index), Some((hd, vd))) = (next_location_index, direction) {
+                        let new_cell = self.cells[new_index].clone();
+                        let old_cell = p;
+                        self.cells[new_index] = Some({
+                            let mut np = old_cell.clone();
                             np.simulated = true;
-                            np.position.y += vd as usize;
-                            np.position.x = (np.position.x as isize + hd as isize) as usize;
+                            np.position.y += vd.clone() as usize;
+                            np.position.x = (np.position.x as isize + hd.clone() as isize) as usize;
                             np
                         });
-                        self.cells[index] = None;
-                    };
+                        match new_cell {
+                            Some(new_cell) => {
+                                self.cells[index] = Some({
+                                    let mut np = new_cell.clone();
+                                    np.simulated = true;
+                                    np.position.y -= vd as usize;
+                                    np.position.x = (np.position.x as isize - hd as isize) as usize;
+                                    np
+                                });
+                            }
+                            None => {
+                                self.cells[index] = None;
+                            }
+                        };
+                    }
                 }
             }
         }
@@ -775,6 +802,70 @@ mod tests_grid {
         assert_eq!(None, g.cells[1]);
         assert_eq!(None, g.cells[2]);
         assert_eq!(Some(Particle::new(3, 0, ParticleType::Water)), g.cells[3]);
+    }
+
+    #[test]
+    fn test_sand_should_sink_in_water() {
+        let mut g = Grid::new_with_rand(3, 2, Some(|| ParticleHorizontalDirection::Right), None);
+
+        g.spawn_particle(Particle::new(1, 0, ParticleType::Sand));
+        g.spawn_particle(Particle::new(0, 1, ParticleType::Sand));
+        g.spawn_particle(Particle::new(1, 1, ParticleType::Water));
+        g.spawn_particle(Particle::new(2, 1, ParticleType::Sand));
+
+        g.update_grid();
+
+        assert_eq!(
+            vec![
+                None,
+                Some(Particle::new(1, 0, ParticleType::Water)),
+                None,
+                Some(Particle::new(0, 1, ParticleType::Sand)),
+                Some(Particle::new(1, 1, ParticleType::Sand)),
+                Some(Particle::new(2, 1, ParticleType::Sand)),
+            ],
+            g.cells
+        );
+    }
+
+    #[test]
+    fn test_sand_should_sink_in_water_but_water_shouldnot_climb_sands() {
+        let mut g = Grid::new_with_rand(1, 3, Some(|| ParticleHorizontalDirection::Right), None);
+
+        g.spawn_particle(Particle::new(0, 0, ParticleType::Sand));
+        g.spawn_particle(Particle::new(0, 1, ParticleType::Sand));
+        g.spawn_particle(Particle::new(0, 2, ParticleType::Water));
+
+        assert_eq!(
+            vec![
+                Some(Particle::new(0, 0, ParticleType::Sand)),
+                Some(Particle::new(0, 1, ParticleType::Sand)),
+                Some(Particle::new(0, 2, ParticleType::Water)),
+            ],
+            g.cells
+        );
+
+        g.update_grid();
+
+        assert_eq!(
+            vec![
+                Some(Particle::new(0, 0, ParticleType::Sand)),
+                Some(Particle::new(0, 1, ParticleType::Water)),
+                Some(Particle::new(0, 2, ParticleType::Sand)),
+            ],
+            g.cells
+        );
+
+        g.update_grid();
+
+        assert_eq!(
+            vec![
+                Some(Particle::new(0, 0, ParticleType::Water)),
+                Some(Particle::new(0, 1, ParticleType::Sand)),
+                Some(Particle::new(0, 2, ParticleType::Sand)),
+            ],
+            g.cells
+        );
     }
 
     #[test]
