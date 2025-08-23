@@ -128,9 +128,11 @@ impl Grid {
     }
 
     fn spawn_particle(&mut self, p: Particle) {
-        let index = self.width * p.position.y + p.position.x;
-        if self.cells[index].is_none() {
-            self.cells[index] = Some(p);
+        if p.position.y < self.height && p.position.x < self.width {
+            let index = self.width * p.position.y + p.position.x;
+            if self.cells[index].is_none() {
+                self.cells[index] = Some(p);
+            }
         }
     }
 
@@ -521,6 +523,19 @@ mod tests_grid {
             Some(p) => assert_eq!(ParticleType::Sand, p.particle_type),
             None => panic!(),
         }
+    }
+    #[test]
+    fn test_grid_spawn_particle_out_of_grid_bound_silently_fails() {
+        let mut g = Grid::new(2, 3);
+        g.spawn_particle(Particle::new(0, 3, ParticleType::Sand));
+        g.spawn_particle(Particle::new(2, 0, ParticleType::Water));
+
+        assert_eq!(None, g.cells[0]);
+        assert_eq!(None, g.cells[1]);
+        assert_eq!(None, g.cells[2]);
+        assert_eq!(None, g.cells[3]);
+        assert_eq!(None, g.cells[4]);
+        assert_eq!(None, g.cells[5]);
     }
 
     #[test]
