@@ -125,27 +125,6 @@ impl Grid {
         }
     }
 
-    fn new_with_rand(
-        width: usize,
-        height: usize,
-        water_direction: Option<fn() -> ParticleHorizontalDirection>,
-        row_update_direction: Option<fn() -> RowUpdateDirection>,
-    ) -> Self {
-        Self {
-            cells: (0..width * height).map(|_| None).collect(),
-            width,
-            height,
-            water_direction: match water_direction {
-                Some(f) => f,
-                None => || ParticleHorizontalDirection::Stay,
-            },
-            row_update_direction: match row_update_direction {
-                Some(f) => f,
-                None => || RowUpdateDirection::Forward,
-            },
-        }
-    }
-
     fn spawn_particle(&mut self, p: Particle) {
         let index = self.width * p.position.y + p.position.x;
         if self.cells[index].is_none() {
@@ -418,6 +397,27 @@ mod tests_grid {
 
     use bevy::app::{App, Startup, Update};
     use bevy::prelude::IntoScheduleConfigs;
+
+    impl Grid {
+        fn new_with_rand(
+            width: usize,
+            height: usize,
+            water_direction: Option<fn() -> ParticleHorizontalDirection>,
+            row_update_direction: Option<fn() -> RowUpdateDirection>,
+        ) -> Self {
+            let mut g = Self::new(width, height);
+            g.water_direction = match water_direction {
+                Some(f) => f,
+                None => || ParticleHorizontalDirection::Stay,
+            };
+
+            g.row_update_direction = match row_update_direction {
+                Some(f) => f,
+                None => || RowUpdateDirection::Forward,
+            };
+            g
+        }
+    }
 
     #[test]
     fn test_create_grid() {
