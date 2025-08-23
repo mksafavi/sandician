@@ -56,15 +56,8 @@ pub enum ParticleType {
 
 #[derive(Clone, Debug)]
 enum ParticleHorizontalDirection {
-    Stay = 0,
     Left = -1,
     Right = 1,
-}
-
-#[derive(Clone, Debug)]
-enum ParticleVerticalDirection {
-    Stay = 0,
-    Bottom = 1,
 }
 
 enum RowUpdateDirection {
@@ -128,14 +121,7 @@ impl Grid {
         }
     }
 
-    fn find_sand_particle_next_direction(
-        &self,
-        x: usize,
-        y: usize,
-    ) -> (
-        Option<usize>,
-        Option<(ParticleHorizontalDirection, ParticleVerticalDirection)>,
-    ) {
+    fn find_sand_particle_next_direction(&self, x: usize, y: usize) -> Option<usize> {
         let index_bottom = {
             if y + 1 < self.height {
                 match &self.cells[(y + 1) * self.width + x] {
@@ -175,51 +161,22 @@ impl Grid {
         };
 
         match (index_bottom_left, index_bottom, index_bottom_right) {
-            (None, None, None) => (None, None),
-            (_, Some(i), _) => (
-                Some(i),
-                Some((
-                    ParticleHorizontalDirection::Stay,
-                    ParticleVerticalDirection::Bottom,
-                )),
-            ),
-            (None, None, Some(i)) => (
-                Some(i),
-                Some((
-                    ParticleHorizontalDirection::Right,
-                    ParticleVerticalDirection::Bottom,
-                )),
-            ),
-            (Some(i), None, None) => (
-                Some(i),
-                Some((
-                    ParticleHorizontalDirection::Left,
-                    ParticleVerticalDirection::Bottom,
-                )),
-            ),
+            (None, None, None) => None,
+            (_, Some(i), _) => Some(i),
+            (None, None, Some(i)) => Some(i),
+            (Some(i), None, None) => Some(i),
             (Some(l), None, Some(r)) => {
                 let direction = (self.water_direction)();
                 let i = match direction {
                     ParticleHorizontalDirection::Left => l,
                     ParticleHorizontalDirection::Right => r,
-                    ParticleHorizontalDirection::Stay => 0,
                 };
-                (
-                    Some(i),
-                    Some((direction, ParticleVerticalDirection::Bottom)),
-                )
+                Some(i)
             }
         }
     }
 
-    fn find_water_particle_next_direction(
-        &self,
-        x: usize,
-        y: usize,
-    ) -> (
-        Option<usize>,
-        Option<(ParticleHorizontalDirection, ParticleVerticalDirection)>,
-    ) {
+    fn find_water_particle_next_direction(&self, x: usize, y: usize) -> Option<usize> {
         let index_right = {
             if (x + 1 < self.width) && self.cells[y * self.width + (x + 1)].is_none() {
                 Some(y * self.width + (x + 1))
@@ -269,62 +226,27 @@ impl Grid {
             index_bottom_right,
             index_right,
         ) {
-            (None, None, None, None, None) => (None, None),
-            (_, _, Some(i), _, _) => (
-                Some(i),
-                Some((
-                    ParticleHorizontalDirection::Stay,
-                    ParticleVerticalDirection::Bottom,
-                )),
-            ),
-            (_, None, None, Some(i), _) => (
-                Some(i),
-                Some((
-                    ParticleHorizontalDirection::Right,
-                    ParticleVerticalDirection::Bottom,
-                )),
-            ),
-            (_, Some(i), None, None, _) => (
-                Some(i),
-                Some((
-                    ParticleHorizontalDirection::Left,
-                    ParticleVerticalDirection::Bottom,
-                )),
-            ),
+            (None, None, None, None, None) => None,
+            (_, _, Some(i), _, _) => Some(i),
+            (_, None, None, Some(i), _) => Some(i),
+            (_, Some(i), None, None, _) => Some(i),
             (_, Some(l), None, Some(r), _) => {
                 let direction = (self.water_direction)();
                 let i = match direction {
                     ParticleHorizontalDirection::Left => l,
                     ParticleHorizontalDirection::Right => r,
-                    ParticleHorizontalDirection::Stay => 0,
                 };
-                (
-                    Some(i),
-                    Some((direction, ParticleVerticalDirection::Bottom)),
-                )
+                Some(i)
             }
-            (None, None, None, None, Some(i)) => (
-                Some(i),
-                Some((
-                    ParticleHorizontalDirection::Right,
-                    ParticleVerticalDirection::Stay,
-                )),
-            ),
-            (Some(i), None, None, None, None) => (
-                Some(i),
-                Some((
-                    ParticleHorizontalDirection::Left,
-                    ParticleVerticalDirection::Stay,
-                )),
-            ),
+            (None, None, None, None, Some(i)) => Some(i),
+            (Some(i), None, None, None, None) => Some(i),
             (Some(l), None, None, None, Some(r)) => {
                 let direction = (self.water_direction)();
                 let i = match direction {
                     ParticleHorizontalDirection::Left => l,
                     ParticleHorizontalDirection::Right => r,
-                    ParticleHorizontalDirection::Stay => 0,
                 };
-                (Some(i), Some((direction, ParticleVerticalDirection::Stay)))
+                Some(i)
             }
         }
     }
@@ -337,7 +259,7 @@ impl Grid {
             };
             for x in it {
                 let index = y * self.width + x;
-                let (next_location_index, direction) = match &self.cells[index] {
+                let next_location_index = match &self.cells[index] {
                     Some(p) => {
                         if p.simulated {
                             continue;
@@ -347,9 +269,9 @@ impl Grid {
                             ParticleType::Water => self.find_water_particle_next_direction(x, y),
                         }
                     }
-                    None => (None, None),
+                    None => None,
                 };
-                if let (Some(new_index), Some((hd, vd))) = (next_location_index, direction) {
+                if let Some(new_index) = next_location_index {
                     self.cells.swap(index, new_index);
                     if let Some(p) = &mut self.cells[index] {
                         p.simulated = true;
@@ -463,7 +385,7 @@ mod tests_grid {
             let mut g = Self::new(width, height);
             g.water_direction = match water_direction {
                 Some(f) => f,
-                None => || ParticleHorizontalDirection::Stay,
+                None => || ParticleHorizontalDirection::Right,
             };
 
             g.row_update_direction = match row_update_direction {
