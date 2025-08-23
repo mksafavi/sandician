@@ -49,12 +49,6 @@ impl ConfigResource {
 struct OutputFrameHandle(Handle<Image>);
 
 #[derive(Clone, PartialEq, Debug)]
-struct Position {
-    x: usize,
-    y: usize,
-}
-
-#[derive(Clone, PartialEq, Debug)]
 pub enum ParticleType {
     Sand,
     Water,
@@ -80,15 +74,13 @@ enum RowUpdateDirection {
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct Particle {
-    position: Position,
     particle_type: ParticleType,
     simulated: bool,
 }
 
 impl Particle {
-    pub fn new(x: usize, y: usize, particle_type: ParticleType) -> Self {
+    pub fn new(particle_type: ParticleType) -> Self {
         Self {
-            position: Position { x, y },
             particle_type,
             simulated: false,
         }
@@ -131,7 +123,7 @@ impl Grid {
         if y < self.height && x < self.width {
             let index = self.width * y + x;
             if self.cells[index].is_none() {
-                self.cells[index] = Some(Particle::new(x, y, particle_type));
+                self.cells[index] = Some(Particle::new(particle_type));
             }
         }
     }
@@ -361,14 +353,10 @@ impl Grid {
                     self.cells.swap(index, new_index);
                     if let Some(p) = &mut self.cells[index] {
                         p.simulated = true;
-                        p.position.y -= vd.clone() as usize;
-                        p.position.x = (p.position.x as isize - hd.clone() as isize) as usize;
                     };
 
                     if let Some(p) = &mut self.cells[new_index] {
                         p.simulated = true;
-                        p.position.y += vd as usize;
-                        p.position.x = (p.position.x as isize + hd as isize) as usize;
                     };
                 }
             }
@@ -413,26 +401,18 @@ impl Grid {
 
     fn draw_grid(&self, image: &mut Image) {
         for (index, particle) in self.cells.iter().enumerate() {
+            let x: u32 = index as u32 % self.width as u32;
+            let y: u32 = (index as u32 - x) / self.width as u32;
             match particle {
                 Some(p) => match p.particle_type {
                     ParticleType::Sand => image
-                        .set_color_at(
-                            p.position.x as u32,
-                            p.position.y as u32,
-                            Color::srgb(1., 1., 1.),
-                        )
+                        .set_color_at(x, y, Color::srgb(1., 1., 1.))
                         .expect("temp: TODO: panic"),
                     ParticleType::Water => image
-                        .set_color_at(
-                            p.position.x as u32,
-                            p.position.y as u32,
-                            Color::srgb(0., 0., 1.),
-                        )
+                        .set_color_at(x, y, Color::srgb(0., 0., 1.))
                         .expect("temp: TODO: panic"),
                 },
                 _ => {
-                    let x: u32 = index as u32 % self.width as u32;
-                    let y: u32 = (index as u32 - x) / self.width as u32;
                     image
                         .set_color_at(x, y, Color::srgb(0., 0., 0.))
                         .expect("temp: TODO: panic");
@@ -550,16 +530,16 @@ mod tests_grid {
     fn test_spawn_particles_brush() {
         let mut g = Grid::new(2, 2);
         g.spawn_brush(0, 0, 1, ParticleType::Sand);
-        assert_eq!(Some(Particle::new(0, 0, ParticleType::Sand)), g.cells[0]);
+        assert_eq!(Some(Particle::new(ParticleType::Sand)), g.cells[0]);
 
         let mut g = Grid::new(2, 2);
         g.spawn_brush(0, 0, 2, ParticleType::Sand);
         assert_eq!(
             vec![
-                Some(Particle::new(0, 0, ParticleType::Sand)),
-                Some(Particle::new(1, 0, ParticleType::Sand)),
-                Some(Particle::new(0, 1, ParticleType::Sand)),
-                Some(Particle::new(1, 1, ParticleType::Sand)),
+                Some(Particle::new(ParticleType::Sand)),
+                Some(Particle::new(ParticleType::Sand)),
+                Some(Particle::new(ParticleType::Sand)),
+                Some(Particle::new(ParticleType::Sand)),
             ],
             g.cells
         );
@@ -590,7 +570,7 @@ mod tests_grid {
         g.update_grid(); /* should stay at the last line*/
         assert_eq!(None, g.cells[0]);
         assert_eq!(None, g.cells[1]);
-        assert_eq!(Some(Particle::new(0, 1, ParticleType::Sand)), g.cells[2]);
+        assert_eq!(Some(Particle::new(ParticleType::Sand)), g.cells[2]);
         assert_eq!(None, g.cells[3]);
     }
 
@@ -600,7 +580,7 @@ mod tests_grid {
 
         g.spawn_particle(0, 0, ParticleType::Sand);
 
-        assert_eq!(Some(Particle::new(0, 0, ParticleType::Sand)), g.cells[0]);
+        assert_eq!(Some(Particle::new(ParticleType::Sand)), g.cells[0]);
         assert_eq!(None, g.cells[1]);
         assert_eq!(None, g.cells[2]);
         assert_eq!(None, g.cells[3]);
@@ -609,7 +589,7 @@ mod tests_grid {
 
         assert_eq!(None, g.cells[0]);
         assert_eq!(None, g.cells[1]);
-        assert_eq!(Some(Particle::new(0, 1, ParticleType::Sand)), g.cells[2]);
+        assert_eq!(Some(Particle::new(ParticleType::Sand)), g.cells[2]);
         assert_eq!(None, g.cells[3]);
     }
 
@@ -626,8 +606,8 @@ mod tests_grid {
 
         assert_eq!(None, g.cells[0]);
         assert_eq!(None, g.cells[1]);
-        assert_eq!(Some(Particle::new(0, 1, ParticleType::Sand)), g.cells[2]);
-        assert_eq!(Some(Particle::new(1, 1, ParticleType::Sand)), g.cells[3]);
+        assert_eq!(Some(Particle::new(ParticleType::Sand)), g.cells[2]);
+        assert_eq!(Some(Particle::new(ParticleType::Sand)), g.cells[3]);
     }
 
     #[test]
@@ -643,8 +623,8 @@ mod tests_grid {
 
         assert_eq!(None, g.cells[0]);
         assert_eq!(None, g.cells[1]);
-        assert_eq!(Some(Particle::new(0, 1, ParticleType::Sand)), g.cells[2]);
-        assert_eq!(Some(Particle::new(1, 1, ParticleType::Sand)), g.cells[3]);
+        assert_eq!(Some(Particle::new(ParticleType::Sand)), g.cells[2]);
+        assert_eq!(Some(Particle::new(ParticleType::Sand)), g.cells[3]);
     }
 
     #[test]
@@ -661,8 +641,8 @@ mod tests_grid {
         assert_eq!(None, g.cells[0]);
         assert_eq!(None, g.cells[1]);
         assert_eq!(None, g.cells[2]);
-        assert_eq!(Some(Particle::new(0, 1, ParticleType::Sand)), g.cells[3]);
-        assert_eq!(Some(Particle::new(1, 1, ParticleType::Sand)), g.cells[4]);
+        assert_eq!(Some(Particle::new(ParticleType::Sand)), g.cells[3]);
+        assert_eq!(Some(Particle::new(ParticleType::Sand)), g.cells[4]);
         assert_eq!(None, g.cells[5]);
     }
 
@@ -681,8 +661,8 @@ mod tests_grid {
         assert_eq!(None, g.cells[1]);
         assert_eq!(None, g.cells[2]);
         assert_eq!(None, g.cells[3]);
-        assert_eq!(Some(Particle::new(1, 1, ParticleType::Sand)), g.cells[4]);
-        assert_eq!(Some(Particle::new(2, 1, ParticleType::Sand)), g.cells[5]);
+        assert_eq!(Some(Particle::new(ParticleType::Sand)), g.cells[4]);
+        assert_eq!(Some(Particle::new(ParticleType::Sand)), g.cells[5]);
     }
 
     #[test]
@@ -699,9 +679,9 @@ mod tests_grid {
         assert_eq!(None, g.cells[0]);
         assert_eq!(None, g.cells[1]);
         assert_eq!(None, g.cells[2]);
-        assert_eq!(Some(Particle::new(0, 1, ParticleType::Sand)), g.cells[3]);
+        assert_eq!(Some(Particle::new(ParticleType::Sand)), g.cells[3]);
         assert_eq!(None, g.cells[4]);
-        assert_eq!(Some(Particle::new(2, 1, ParticleType::Water)), g.cells[5]);
+        assert_eq!(Some(Particle::new(ParticleType::Water)), g.cells[5]);
     }
 
     #[test]
@@ -718,9 +698,9 @@ mod tests_grid {
         assert_eq!(None, g.cells[0]);
         assert_eq!(None, g.cells[1]);
         assert_eq!(None, g.cells[2]);
-        assert_eq!(Some(Particle::new(0, 1, ParticleType::Water)), g.cells[3]);
+        assert_eq!(Some(Particle::new(ParticleType::Water)), g.cells[3]);
         assert_eq!(None, g.cells[4]);
-        assert_eq!(Some(Particle::new(2, 1, ParticleType::Sand)), g.cells[5]);
+        assert_eq!(Some(Particle::new(ParticleType::Sand)), g.cells[5]);
     }
 
     #[test]
@@ -737,7 +717,7 @@ mod tests_grid {
         assert_eq!(None, g.cells[2]);
         assert_eq!(None, g.cells[3]);
         assert_eq!(None, g.cells[4]);
-        assert_eq!(Some(Particle::new(2, 1, ParticleType::Water)), g.cells[5]);
+        assert_eq!(Some(Particle::new(ParticleType::Water)), g.cells[5]);
     }
 
     #[test]
@@ -752,7 +732,7 @@ mod tests_grid {
         assert_eq!(None, g.cells[0]);
         assert_eq!(None, g.cells[1]);
         assert_eq!(None, g.cells[2]);
-        assert_eq!(Some(Particle::new(0, 1, ParticleType::Water)), g.cells[3]);
+        assert_eq!(Some(Particle::new(ParticleType::Water)), g.cells[3]);
         assert_eq!(None, g.cells[4]);
         assert_eq!(None, g.cells[5]);
     }
@@ -774,8 +754,8 @@ mod tests_grid {
 
         g.update_grid();
 
-        assert_eq!(Some(Particle::new(0, 0, ParticleType::Water)), g.cells[0]);
-        assert_eq!(Some(Particle::new(1, 0, ParticleType::Water)), g.cells[1]);
+        assert_eq!(Some(Particle::new(ParticleType::Water)), g.cells[0]);
+        assert_eq!(Some(Particle::new(ParticleType::Water)), g.cells[1]);
         assert_eq!(None, g.cells[2]);
         assert_eq!(None, g.cells[3]);
 
@@ -791,10 +771,10 @@ mod tests_grid {
 
         g.update_grid();
 
-        assert_eq!(Some(Particle::new(0, 0, ParticleType::Water)), g.cells[0]);
+        assert_eq!(Some(Particle::new(ParticleType::Water)), g.cells[0]);
         assert_eq!(None, g.cells[1]);
         assert_eq!(None, g.cells[2]);
-        assert_eq!(Some(Particle::new(3, 0, ParticleType::Water)), g.cells[3]);
+        assert_eq!(Some(Particle::new(ParticleType::Water)), g.cells[3]);
     }
 
     #[test]
@@ -816,8 +796,8 @@ mod tests_grid {
 
         assert_eq!(None, g.cells[0]);
         assert_eq!(None, g.cells[1]);
-        assert_eq!(Some(Particle::new(2, 0, ParticleType::Water)), g.cells[2]);
-        assert_eq!(Some(Particle::new(3, 0, ParticleType::Water)), g.cells[3]);
+        assert_eq!(Some(Particle::new(ParticleType::Water)), g.cells[2]);
+        assert_eq!(Some(Particle::new(ParticleType::Water)), g.cells[3]);
 
         let mut g = Grid::new_with_rand(
             4,
@@ -831,10 +811,10 @@ mod tests_grid {
 
         g.update_grid();
 
-        assert_eq!(Some(Particle::new(0, 0, ParticleType::Water)), g.cells[0]);
+        assert_eq!(Some(Particle::new(ParticleType::Water)), g.cells[0]);
         assert_eq!(None, g.cells[1]);
         assert_eq!(None, g.cells[2]);
-        assert_eq!(Some(Particle::new(3, 0, ParticleType::Water)), g.cells[3]);
+        assert_eq!(Some(Particle::new(ParticleType::Water)), g.cells[3]);
     }
 
     #[test]
@@ -851,11 +831,11 @@ mod tests_grid {
         assert_eq!(
             vec![
                 None,
-                Some(Particle::new(1, 0, ParticleType::Water)),
+                Some(Particle::new(ParticleType::Water)),
                 None,
-                Some(Particle::new(0, 1, ParticleType::Sand)),
-                Some(Particle::new(1, 1, ParticleType::Sand)),
-                Some(Particle::new(2, 1, ParticleType::Sand)),
+                Some(Particle::new(ParticleType::Sand)),
+                Some(Particle::new(ParticleType::Sand)),
+                Some(Particle::new(ParticleType::Sand)),
             ],
             g.cells
         );
@@ -871,9 +851,9 @@ mod tests_grid {
 
         assert_eq!(
             vec![
-                Some(Particle::new(0, 0, ParticleType::Sand)),
-                Some(Particle::new(0, 1, ParticleType::Sand)),
-                Some(Particle::new(0, 2, ParticleType::Water)),
+                Some(Particle::new(ParticleType::Sand)),
+                Some(Particle::new(ParticleType::Sand)),
+                Some(Particle::new(ParticleType::Water)),
             ],
             g.cells
         );
@@ -882,9 +862,9 @@ mod tests_grid {
 
         assert_eq!(
             vec![
-                Some(Particle::new(0, 0, ParticleType::Sand)),
-                Some(Particle::new(0, 1, ParticleType::Water)),
-                Some(Particle::new(0, 2, ParticleType::Sand)),
+                Some(Particle::new(ParticleType::Sand)),
+                Some(Particle::new(ParticleType::Water)),
+                Some(Particle::new(ParticleType::Sand)),
             ],
             g.cells
         );
@@ -893,9 +873,9 @@ mod tests_grid {
 
         assert_eq!(
             vec![
-                Some(Particle::new(0, 0, ParticleType::Water)),
-                Some(Particle::new(0, 1, ParticleType::Sand)),
-                Some(Particle::new(0, 2, ParticleType::Sand)),
+                Some(Particle::new(ParticleType::Water)),
+                Some(Particle::new(ParticleType::Sand)),
+                Some(Particle::new(ParticleType::Sand)),
             ],
             g.cells
         );
