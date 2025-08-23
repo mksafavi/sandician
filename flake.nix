@@ -13,6 +13,7 @@
         mkShell {
           buildInputs = [
             rustc
+            just
             wasm-bindgen-cli_0_2_100
             lld
             cargo
