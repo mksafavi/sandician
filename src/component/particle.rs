@@ -132,6 +132,197 @@ impl Grid {
         }
     }
 
+    fn find_sand_particle_next_direction(
+        &self,
+        x: usize,
+        y: usize,
+    ) -> (
+        Option<usize>,
+        Option<(ParticleHorizontalDirection, ParticleVerticalDirection)>,
+    ) {
+        let index_bottom = {
+            if (y + 1 < self.height) && self.cells[(y + 1) * self.width + x].is_none() {
+                Some((y + 1) * self.width + x)
+            } else {
+                None
+            }
+        };
+        let index_bottom_right = {
+            if (y + 1 < self.height)
+                && (x + 1 < self.width)
+                && (self.cells[(y + 1) * self.width + (x + 1)].is_none())
+            {
+                Some((y + 1) * self.width + (x + 1))
+            } else {
+                None
+            }
+        };
+        let index_bottom_left = {
+            if (y + 1 < self.height)
+                && (0 < x)
+                && (self.cells[(y + 1) * self.width + (x - 1)].is_none())
+            {
+                Some((y + 1) * self.width + (x - 1))
+            } else {
+                None
+            }
+        };
+
+        match (index_bottom_left, index_bottom, index_bottom_right) {
+            (None, None, None) => (None, None),
+            (_, Some(i), _) => (
+                Some(i),
+                Some((
+                    ParticleHorizontalDirection::Stay,
+                    ParticleVerticalDirection::Bottom,
+                )),
+            ),
+            (None, None, Some(i)) => (
+                Some(i),
+                Some((
+                    ParticleHorizontalDirection::Right,
+                    ParticleVerticalDirection::Bottom,
+                )),
+            ),
+            (Some(i), None, None) => (
+                Some(i),
+                Some((
+                    ParticleHorizontalDirection::Left,
+                    ParticleVerticalDirection::Bottom,
+                )),
+            ),
+            (Some(l), None, Some(r)) => {
+                let direction = (self.water_direction)();
+                let i = match direction {
+                    ParticleHorizontalDirection::Left => l,
+                    ParticleHorizontalDirection::Right => r,
+                    ParticleHorizontalDirection::Stay => 0,
+                };
+                (
+                    Some(i),
+                    Some((direction, ParticleVerticalDirection::Bottom)),
+                )
+            }
+        }
+    }
+
+    fn find_water_particle_next_direction(
+        &self,
+        x: usize,
+        y: usize,
+    ) -> (
+        Option<usize>,
+        Option<(ParticleHorizontalDirection, ParticleVerticalDirection)>,
+    ) {
+        let index_right = {
+            if (x + 1 < self.width) && self.cells[y * self.width + (x + 1)].is_none() {
+                Some(y * self.width + (x + 1))
+            } else {
+                None
+            }
+        };
+        let index_left = {
+            if (0 < x) && (self.cells[y * self.width + (x - 1)].is_none()) {
+                Some(y * self.width + (x - 1))
+            } else {
+                None
+            }
+        };
+        let index_bottom = {
+            if (y + 1 < self.height) && self.cells[(y + 1) * self.width + x].is_none() {
+                Some((y + 1) * self.width + x)
+            } else {
+                None
+            }
+        };
+        let index_bottom_right = {
+            if (y + 1 < self.height)
+                && (x + 1 < self.width)
+                && (self.cells[(y + 1) * self.width + (x + 1)].is_none())
+            {
+                Some((y + 1) * self.width + (x + 1))
+            } else {
+                None
+            }
+        };
+        let index_bottom_left = {
+            if (y + 1 < self.height)
+                && (0 < x)
+                && (self.cells[(y + 1) * self.width + (x - 1)].is_none())
+            {
+                Some((y + 1) * self.width + (x - 1))
+            } else {
+                None
+            }
+        };
+
+        match (
+            index_left,
+            index_bottom_left,
+            index_bottom,
+            index_bottom_right,
+            index_right,
+        ) {
+            (None, None, None, None, None) => (None, None),
+            (_, _, Some(i), _, _) => (
+                Some(i),
+                Some((
+                    ParticleHorizontalDirection::Stay,
+                    ParticleVerticalDirection::Bottom,
+                )),
+            ),
+            (_, None, None, Some(i), _) => (
+                Some(i),
+                Some((
+                    ParticleHorizontalDirection::Right,
+                    ParticleVerticalDirection::Bottom,
+                )),
+            ),
+            (_, Some(i), None, None, _) => (
+                Some(i),
+                Some((
+                    ParticleHorizontalDirection::Left,
+                    ParticleVerticalDirection::Bottom,
+                )),
+            ),
+            (_, Some(l), None, Some(r), _) => {
+                let direction = (self.water_direction)();
+                let i = match direction {
+                    ParticleHorizontalDirection::Left => l,
+                    ParticleHorizontalDirection::Right => r,
+                    ParticleHorizontalDirection::Stay => 0,
+                };
+                (
+                    Some(i),
+                    Some((direction, ParticleVerticalDirection::Bottom)),
+                )
+            }
+            (None, None, None, None, Some(i)) => (
+                Some(i),
+                Some((
+                    ParticleHorizontalDirection::Right,
+                    ParticleVerticalDirection::Stay,
+                )),
+            ),
+            (Some(i), None, None, None, None) => (
+                Some(i),
+                Some((
+                    ParticleHorizontalDirection::Left,
+                    ParticleVerticalDirection::Stay,
+                )),
+            ),
+            (Some(l), None, None, None, Some(r)) => {
+                let direction = (self.water_direction)();
+                let i = match direction {
+                    ParticleHorizontalDirection::Left => l,
+                    ParticleHorizontalDirection::Right => r,
+                    ParticleHorizontalDirection::Stay => 0,
+                };
+                (Some(i), Some((direction, ParticleVerticalDirection::Stay)))
+            }
+        }
+    }
+
     fn update_grid(&mut self) {
         for y in (0..self.height).rev() {
             let it = match (self.row_update_direction)() {
@@ -144,153 +335,9 @@ impl Grid {
                     if p.simulated {
                         continue;
                     }
-                    let index_right = {
-                        if (x + 1 < self.width) && self.cells[y * self.width + (x + 1)].is_none() {
-                            Some(y * self.width + (x + 1))
-                        } else {
-                            None
-                        }
-                    };
-                    let index_left = {
-                        if (0 < x) && (self.cells[y * self.width + (x - 1)].is_none()) {
-                            Some(y * self.width + (x - 1))
-                        } else {
-                            None
-                        }
-                    };
-                    let index_bottom = {
-                        if (y + 1 < self.height) && self.cells[(y + 1) * self.width + x].is_none() {
-                            Some((y + 1) * self.width + x)
-                        } else {
-                            None
-                        }
-                    };
-                    let index_bottom_right = {
-                        if (y + 1 < self.height)
-                            && (x + 1 < self.width)
-                            && (self.cells[(y + 1) * self.width + (x + 1)].is_none())
-                        {
-                            Some((y + 1) * self.width + (x + 1))
-                        } else {
-                            None
-                        }
-                    };
-                    let index_bottom_left = {
-                        if (y + 1 < self.height)
-                            && (0 < x)
-                            && (self.cells[(y + 1) * self.width + (x - 1)].is_none())
-                        {
-                            Some((y + 1) * self.width + (x - 1))
-                        } else {
-                            None
-                        }
-                    };
                     let (next_location_index, direction) = match p.particle_type {
-                        ParticleType::Sand => {
-                            match (index_bottom_left, index_bottom, index_bottom_right) {
-                                (None, None, None) => (None, None),
-                                (_, Some(i), _) => (
-                                    Some(i),
-                                    Some((
-                                        ParticleHorizontalDirection::Stay,
-                                        ParticleVerticalDirection::Bottom,
-                                    )),
-                                ),
-                                (None, None, Some(i)) => (
-                                    Some(i),
-                                    Some((
-                                        ParticleHorizontalDirection::Right,
-                                        ParticleVerticalDirection::Bottom,
-                                    )),
-                                ),
-                                (Some(i), None, None) => (
-                                    Some(i),
-                                    Some((
-                                        ParticleHorizontalDirection::Left,
-                                        ParticleVerticalDirection::Bottom,
-                                    )),
-                                ),
-                                (Some(l), None, Some(r)) => {
-                                    let direction = (self.water_direction)();
-                                    let i = match direction {
-                                        ParticleHorizontalDirection::Left => l,
-                                        ParticleHorizontalDirection::Right => r,
-                                        ParticleHorizontalDirection::Stay => 0,
-                                    };
-                                    (
-                                        Some(i),
-                                        Some((direction, ParticleVerticalDirection::Bottom)),
-                                    )
-                                }
-                            }
-                        }
-                        ParticleType::Water => {
-                            match (
-                                index_left,
-                                index_bottom_left,
-                                index_bottom,
-                                index_bottom_right,
-                                index_right,
-                            ) {
-                                (None, None, None, None, None) => (None, None),
-                                (_, _, Some(i), _, _) => (
-                                    Some(i),
-                                    Some((
-                                        ParticleHorizontalDirection::Stay,
-                                        ParticleVerticalDirection::Bottom,
-                                    )),
-                                ),
-                                (_, None, None, Some(i), _) => (
-                                    Some(i),
-                                    Some((
-                                        ParticleHorizontalDirection::Right,
-                                        ParticleVerticalDirection::Bottom,
-                                    )),
-                                ),
-                                (_, Some(i), None, None, _) => (
-                                    Some(i),
-                                    Some((
-                                        ParticleHorizontalDirection::Left,
-                                        ParticleVerticalDirection::Bottom,
-                                    )),
-                                ),
-                                (_, Some(l), None, Some(r), _) => {
-                                    let direction = (self.water_direction)();
-                                    let i = match direction {
-                                        ParticleHorizontalDirection::Left => l,
-                                        ParticleHorizontalDirection::Right => r,
-                                        ParticleHorizontalDirection::Stay => 0,
-                                    };
-                                    (
-                                        Some(i),
-                                        Some((direction, ParticleVerticalDirection::Bottom)),
-                                    )
-                                }
-                                (None, None, None, None, Some(i)) => (
-                                    Some(i),
-                                    Some((
-                                        ParticleHorizontalDirection::Right,
-                                        ParticleVerticalDirection::Stay,
-                                    )),
-                                ),
-                                (Some(i), None, None, None, None) => (
-                                    Some(i),
-                                    Some((
-                                        ParticleHorizontalDirection::Left,
-                                        ParticleVerticalDirection::Stay,
-                                    )),
-                                ),
-                                (Some(l), None, None, None, Some(r)) => {
-                                    let direction = (self.water_direction)();
-                                    let i = match direction {
-                                        ParticleHorizontalDirection::Left => l,
-                                        ParticleHorizontalDirection::Right => r,
-                                        ParticleHorizontalDirection::Stay => 0,
-                                    };
-                                    (Some(i), Some((direction, ParticleVerticalDirection::Stay)))
-                                }
-                            }
-                        }
+                        ParticleType::Sand => self.find_sand_particle_next_direction(x, y),
+                        ParticleType::Water => self.find_water_particle_next_direction(x, y),
                     };
 
                     if let (Some(i), Some((hd, vd))) = (next_location_index, direction) {
