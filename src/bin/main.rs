@@ -1,7 +1,8 @@
-use bevy::app::{App, Startup};
+use bevy::app::{App, FixedUpdate, Startup};
 use bevy::core_pipeline::core_2d::Camera2d;
 use bevy::ecs::system::Commands;
 use bevy::DefaultPlugins;
+use sandsim::component::inputs;
 use sandsim::component::particle::{ConfigResource, GridPlugin};
 
 fn setup_camera(mut commands: Commands) {
@@ -15,5 +16,6 @@ fn main() {
             config: ConfigResource::new(400, 300, 120.),
         })
         .add_systems(Startup, setup_camera)
+        .add_systems(FixedUpdate, inputs::mouse_spawn_brush_system)
         .run();
 }
