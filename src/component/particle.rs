@@ -455,6 +455,14 @@ impl Grid {
             None => todo!(),
         }
     }
+
+    pub fn spawn_brush(&mut self, x: usize, y: usize, size: usize, particle_type: ParticleType) {
+        for j in 0..size {
+            for i in 0..size {
+                self.spawn_particle(Particle::new(x + i, y + j, particle_type.clone()));
+            }
+        }
+    }
 }
 
 #[cfg(test)]
@@ -536,6 +544,25 @@ mod tests_grid {
         assert_eq!(None, g.cells[3]);
         assert_eq!(None, g.cells[4]);
         assert_eq!(None, g.cells[5]);
+    }
+
+    #[test]
+    fn test_spawn_particles_brush() {
+        let mut g = Grid::new(2, 2);
+        g.spawn_brush(0, 0, 1, ParticleType::Sand);
+        assert_eq!(Some(Particle::new(0, 0, ParticleType::Sand)), g.cells[0]);
+
+        let mut g = Grid::new(2, 2);
+        g.spawn_brush(0, 0, 2, ParticleType::Sand);
+        assert_eq!(
+            vec![
+                Some(Particle::new(0, 0, ParticleType::Sand)),
+                Some(Particle::new(1, 0, ParticleType::Sand)),
+                Some(Particle::new(0, 1, ParticleType::Sand)),
+                Some(Particle::new(1, 1, ParticleType::Sand)),
+            ],
+            g.cells
+        );
     }
 
     #[test]
