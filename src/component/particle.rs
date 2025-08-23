@@ -55,7 +55,7 @@ struct Position {
 }
 
 #[derive(Component, Clone, PartialEq, Debug)]
-enum ParticleType {
+pub enum ParticleType {
     Sand,
     Water,
 }
@@ -79,14 +79,14 @@ enum RowUpdateDirection {
 }
 
 #[derive(Component, Clone, PartialEq, Debug)]
-struct Particle {
+pub struct Particle {
     position: Position,
     particle_type: ParticleType,
     simulated: bool,
 }
 
 impl Particle {
-    fn new(x: usize, y: usize, particle_type: ParticleType) -> Self {
+    pub fn new(x: usize, y: usize, particle_type: ParticleType) -> Self {
         Self {
             position: Position { x, y },
             particle_type,
@@ -96,7 +96,7 @@ impl Particle {
 }
 
 #[derive(Component, Clone, PartialEq, Debug)]
-struct Grid {
+pub struct Grid {
     cells: Vec<Option<Particle>>,
     width: usize,
     height: usize,
@@ -127,7 +127,7 @@ impl Grid {
         }
     }
 
-    fn spawn_particle(&mut self, p: Particle) {
+    pub fn spawn_particle(&mut self, p: Particle) {
         if p.position.y < self.height && p.position.x < self.width {
             let index = self.width * p.position.y + p.position.x;
             if self.cells[index].is_none() {
