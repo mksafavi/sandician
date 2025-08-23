@@ -127,9 +127,9 @@ impl Grid {
         }
     }
 
-    pub fn spawn_particle(&mut self, p: Particle) {
-        if p.position.y < self.height && p.position.x < self.width {
-            let index = self.width * p.position.y + p.position.x;
+    pub fn spawn_particle(&mut self, x: usize, y: usize, p: Particle) {
+        if y < self.height && x < self.width {
+            let index = self.width * y + x;
             if self.cells[index].is_none() {
                 self.cells[index] = Some(p);
             }
@@ -459,7 +459,11 @@ impl Grid {
     pub fn spawn_brush(&mut self, x: usize, y: usize, size: usize, particle_type: ParticleType) {
         for j in 0..size {
             for i in 0..size {
-                self.spawn_particle(Particle::new(x + i, y + j, particle_type.clone()));
+                self.spawn_particle(
+                    x + i,
+                    y + j,
+                    Particle::new(x + i, y + j, particle_type.clone()),
+                );
             }
         }
     }
@@ -505,9 +509,9 @@ mod tests_grid {
     #[test]
     fn test_grid_spawn_particle_to_grid() {
         let mut g = Grid::new(2, 3);
-        g.spawn_particle(Particle::new(0, 0, ParticleType::Sand));
+        g.spawn_particle(0, 0, Particle::new(0, 0, ParticleType::Sand));
 
-        g.spawn_particle(Particle::new(1, 1, ParticleType::Water));
+        g.spawn_particle(1, 1, Particle::new(1, 1, ParticleType::Water));
 
         match &g.cells[0] {
             Some(p) => assert_eq!(ParticleType::Sand, p.particle_type),
@@ -523,9 +527,9 @@ mod tests_grid {
     #[test]
     fn test_grid_spawn_particle_to_non_empty_location_silently_fails() {
         let mut g = Grid::new(2, 3);
-        g.spawn_particle(Particle::new(0, 0, ParticleType::Sand));
+        g.spawn_particle(0, 0, Particle::new(0, 0, ParticleType::Sand));
 
-        g.spawn_particle(Particle::new(0, 0, ParticleType::Water));
+        g.spawn_particle(0, 0, Particle::new(0, 0, ParticleType::Water));
 
         match &g.cells[0] {
             Some(p) => assert_eq!(ParticleType::Sand, p.particle_type),
@@ -535,8 +539,8 @@ mod tests_grid {
     #[test]
     fn test_grid_spawn_particle_out_of_grid_bound_silently_fails() {
         let mut g = Grid::new(2, 3);
-        g.spawn_particle(Particle::new(0, 3, ParticleType::Sand));
-        g.spawn_particle(Particle::new(2, 0, ParticleType::Water));
+        g.spawn_particle(0, 3, Particle::new(0, 3, ParticleType::Sand));
+        g.spawn_particle(2, 0, Particle::new(2, 0, ParticleType::Water));
 
         assert_eq!(None, g.cells[0]);
         assert_eq!(None, g.cells[1]);
@@ -585,7 +589,7 @@ mod tests_grid {
     #[test]
     fn test_update_grid_sand_falling_down_at_last_row_stays_there() {
         let mut g = Grid::new(2, 2);
-        g.spawn_particle(Particle::new(0, 1, ParticleType::Sand));
+        g.spawn_particle(0, 1, Particle::new(0, 1, ParticleType::Sand));
 
         g.update_grid(); /* should stay at the last line*/
         assert_eq!(None, g.cells[0]);
@@ -598,7 +602,7 @@ mod tests_grid {
     fn test_update_grid_sand_falls_down_when_bottom_cell_is_empty() {
         let mut g = Grid::new(2, 2);
 
-        g.spawn_particle(Particle::new(0, 0, ParticleType::Sand));
+        g.spawn_particle(0, 0, Particle::new(0, 0, ParticleType::Sand));
 
         assert_eq!(Some(Particle::new(0, 0, ParticleType::Sand)), g.cells[0]);
         assert_eq!(None, g.cells[1]);
@@ -618,9 +622,9 @@ mod tests_grid {
     ) {
         let mut g = Grid::new(2, 2);
 
-        g.spawn_particle(Particle::new(0, 0, ParticleType::Sand));
+        g.spawn_particle(0, 0, Particle::new(0, 0, ParticleType::Sand));
 
-        g.spawn_particle(Particle::new(0, 1, ParticleType::Sand));
+        g.spawn_particle(0, 1, Particle::new(0, 1, ParticleType::Sand));
 
         g.update_grid();
 
@@ -635,9 +639,9 @@ mod tests_grid {
     ) {
         let mut g = Grid::new(2, 2);
 
-        g.spawn_particle(Particle::new(1, 0, ParticleType::Sand));
+        g.spawn_particle(1, 0, Particle::new(1, 0, ParticleType::Sand));
 
-        g.spawn_particle(Particle::new(1, 1, ParticleType::Sand));
+        g.spawn_particle(1, 1, Particle::new(1, 1, ParticleType::Sand));
 
         g.update_grid();
 
@@ -652,9 +656,9 @@ mod tests_grid {
     ) {
         let mut g = Grid::new_with_rand(3, 2, Some(|| ParticleHorizontalDirection::Left), None);
 
-        g.spawn_particle(Particle::new(1, 0, ParticleType::Sand));
+        g.spawn_particle(1, 0, Particle::new(1, 0, ParticleType::Sand));
 
-        g.spawn_particle(Particle::new(1, 1, ParticleType::Sand));
+        g.spawn_particle(1, 1, Particle::new(1, 1, ParticleType::Sand));
 
         g.update_grid();
 
@@ -671,9 +675,9 @@ mod tests_grid {
     ) {
         let mut g = Grid::new_with_rand(3, 2, Some(|| ParticleHorizontalDirection::Right), None);
 
-        g.spawn_particle(Particle::new(1, 0, ParticleType::Sand));
+        g.spawn_particle(1, 0, Particle::new(1, 0, ParticleType::Sand));
 
-        g.spawn_particle(Particle::new(1, 1, ParticleType::Sand));
+        g.spawn_particle(1, 1, Particle::new(1, 1, ParticleType::Sand));
 
         g.update_grid();
 
@@ -690,9 +694,9 @@ mod tests_grid {
     ) {
         let mut g = Grid::new(3, 2);
 
-        g.spawn_particle(Particle::new(0, 1, ParticleType::Sand));
+        g.spawn_particle(0, 1, Particle::new(0, 1, ParticleType::Sand));
 
-        g.spawn_particle(Particle::new(1, 1, ParticleType::Water));
+        g.spawn_particle(1, 1, Particle::new(1, 1, ParticleType::Water));
 
         g.update_grid();
 
@@ -709,9 +713,9 @@ mod tests_grid {
     {
         let mut g = Grid::new(3, 2);
 
-        g.spawn_particle(Particle::new(1, 1, ParticleType::Water));
+        g.spawn_particle(1, 1, Particle::new(1, 1, ParticleType::Water));
 
-        g.spawn_particle(Particle::new(2, 1, ParticleType::Sand));
+        g.spawn_particle(2, 1, Particle::new(2, 1, ParticleType::Sand));
 
         g.update_grid();
 
@@ -728,7 +732,7 @@ mod tests_grid {
     ) {
         let mut g = Grid::new_with_rand(3, 2, Some(|| ParticleHorizontalDirection::Right), None);
 
-        g.spawn_particle(Particle::new(1, 1, ParticleType::Water));
+        g.spawn_particle(1, 1, Particle::new(1, 1, ParticleType::Water));
 
         g.update_grid();
 
@@ -745,7 +749,7 @@ mod tests_grid {
     ) {
         let mut g = Grid::new_with_rand(3, 2, Some(|| ParticleHorizontalDirection::Left), None);
 
-        g.spawn_particle(Particle::new(1, 1, ParticleType::Water));
+        g.spawn_particle(1, 1, Particle::new(1, 1, ParticleType::Water));
 
         g.update_grid();
 
@@ -769,8 +773,8 @@ mod tests_grid {
             Some(|| RowUpdateDirection::Forward),
         );
 
-        g.spawn_particle(Particle::new(1, 0, ParticleType::Water));
-        g.spawn_particle(Particle::new(2, 0, ParticleType::Water));
+        g.spawn_particle(1, 0, Particle::new(1, 0, ParticleType::Water));
+        g.spawn_particle(2, 0, Particle::new(2, 0, ParticleType::Water));
 
         g.update_grid();
 
@@ -786,8 +790,8 @@ mod tests_grid {
             Some(|| RowUpdateDirection::Forward),
         );
 
-        g.spawn_particle(Particle::new(1, 0, ParticleType::Water));
-        g.spawn_particle(Particle::new(2, 0, ParticleType::Water));
+        g.spawn_particle(1, 0, Particle::new(1, 0, ParticleType::Water));
+        g.spawn_particle(2, 0, Particle::new(2, 0, ParticleType::Water));
 
         g.update_grid();
 
@@ -809,8 +813,8 @@ mod tests_grid {
             Some(|| RowUpdateDirection::Reverse),
         );
 
-        g.spawn_particle(Particle::new(1, 0, ParticleType::Water));
-        g.spawn_particle(Particle::new(2, 0, ParticleType::Water));
+        g.spawn_particle(1, 0, Particle::new(1, 0, ParticleType::Water));
+        g.spawn_particle(2, 0, Particle::new(2, 0, ParticleType::Water));
 
         g.update_grid();
 
@@ -826,8 +830,8 @@ mod tests_grid {
             Some(|| RowUpdateDirection::Reverse),
         );
 
-        g.spawn_particle(Particle::new(1, 0, ParticleType::Water));
-        g.spawn_particle(Particle::new(2, 0, ParticleType::Water));
+        g.spawn_particle(1, 0, Particle::new(1, 0, ParticleType::Water));
+        g.spawn_particle(2, 0, Particle::new(2, 0, ParticleType::Water));
 
         g.update_grid();
 
@@ -841,10 +845,10 @@ mod tests_grid {
     fn test_sand_should_sink_in_water() {
         let mut g = Grid::new_with_rand(3, 2, Some(|| ParticleHorizontalDirection::Right), None);
 
-        g.spawn_particle(Particle::new(1, 0, ParticleType::Sand));
-        g.spawn_particle(Particle::new(0, 1, ParticleType::Sand));
-        g.spawn_particle(Particle::new(1, 1, ParticleType::Water));
-        g.spawn_particle(Particle::new(2, 1, ParticleType::Sand));
+        g.spawn_particle(1, 0, Particle::new(1, 0, ParticleType::Sand));
+        g.spawn_particle(0, 1, Particle::new(0, 1, ParticleType::Sand));
+        g.spawn_particle(1, 1, Particle::new(1, 1, ParticleType::Water));
+        g.spawn_particle(2, 1, Particle::new(2, 1, ParticleType::Sand));
 
         g.update_grid();
 
@@ -865,9 +869,9 @@ mod tests_grid {
     fn test_sand_should_sink_in_water_but_water_shouldnot_climb_sands() {
         let mut g = Grid::new_with_rand(1, 3, Some(|| ParticleHorizontalDirection::Right), None);
 
-        g.spawn_particle(Particle::new(0, 0, ParticleType::Sand));
-        g.spawn_particle(Particle::new(0, 1, ParticleType::Sand));
-        g.spawn_particle(Particle::new(0, 2, ParticleType::Water));
+        g.spawn_particle(0, 0, Particle::new(0, 0, ParticleType::Sand));
+        g.spawn_particle(0, 1, Particle::new(0, 1, ParticleType::Sand));
+        g.spawn_particle(0, 2, Particle::new(0, 2, ParticleType::Water));
 
         assert_eq!(
             vec![
@@ -921,7 +925,7 @@ mod tests_grid {
             ]
         );
 
-        g.spawn_particle(Particle::new(0, 0, ParticleType::Sand));
+        g.spawn_particle(0, 0, Particle::new(0, 0, ParticleType::Sand));
         g.draw_grid(&mut image);
         assert_eq!(
             vec![
@@ -937,7 +941,7 @@ mod tests_grid {
                 image.get_color_at(1, 1).unwrap()
             ]
         );
-        g.spawn_particle(Particle::new(1, 0, ParticleType::Sand));
+        g.spawn_particle(1, 0, Particle::new(1, 0, ParticleType::Sand));
         g.cells[0] = None;
         g.draw_grid(&mut image);
         assert_eq!(
@@ -960,8 +964,8 @@ mod tests_grid {
     fn test_draw_grid_system() {
         fn fixture_spawn_particle_system(mut grid: Query<&mut Grid>) {
             let mut g = grid.iter_mut().last().unwrap();
-            g.spawn_particle(Particle::new(0, 0, ParticleType::Sand));
-            g.spawn_particle(Particle::new(1, 0, ParticleType::Water));
+            g.spawn_particle(0, 0, Particle::new(0, 0, ParticleType::Sand));
+            g.spawn_particle(1, 0, Particle::new(1, 0, ParticleType::Water));
         }
 
         fn assert_read_output_frame_system(
