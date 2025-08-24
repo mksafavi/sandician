@@ -15,6 +15,7 @@
             rustc
             just
             wasm-bindgen-cli_0_2_100
+            binaryen
             lld
             cargo
             rustfmt
