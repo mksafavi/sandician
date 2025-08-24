@@ -160,7 +160,13 @@ impl Grid {
 
         let index_bottom_right = match self.get_neighbor_index(x, y, 1, 1) {
             Ok(i) => match self.get_cell(i) {
-                Some(_) => None,
+                Some(p) => match p.particle_type {
+                    ParticleType::Sand => None,
+                    ParticleType::Water => match p.simulated {
+                        true => None,
+                        false => Some(i),
+                    },
+                },
                 None => Some(i),
             },
             Err(_) => None,
@@ -168,7 +174,13 @@ impl Grid {
 
         let index_bottom_left = match self.get_neighbor_index(x, y, -1, 1) {
             Ok(i) => match self.get_cell(i) {
-                Some(_) => None,
+                Some(p) => match p.particle_type {
+                    ParticleType::Sand => None,
+                    ParticleType::Water => match p.simulated {
+                        true => None,
+                        false => Some(i),
+                    },
+                },
                 None => Some(i),
             },
             Err(_) => None,
@@ -743,13 +755,61 @@ mod tests_grid {
     }
 
     #[test]
-    fn test_sand_should_sink_in_water() {
-        let mut g = Grid::new_with_rand(3, 2, Some(|| ParticleHorizontalDirection::Right), None);
+    fn test_sand_should_sink_to_bottom_in_water() {
+        let mut g = Grid::new(3, 2);
 
         g.spawn_particle(1, 0, ParticleType::Sand);
         g.spawn_particle(0, 1, ParticleType::Sand);
         g.spawn_particle(1, 1, ParticleType::Water);
         g.spawn_particle(2, 1, ParticleType::Sand);
+
+        g.update_grid();
+
+        assert_eq!(
+            vec![
+                None,
+                Some(Particle::new(ParticleType::Water)),
+                None,
+                Some(Particle::new(ParticleType::Sand)),
+                Some(Particle::new(ParticleType::Sand)),
+                Some(Particle::new(ParticleType::Sand)),
+            ],
+            g.cells
+        );
+    }
+
+    #[test]
+    fn test_sand_should_sink_to_bottom_left_in_water() {
+        let mut g = Grid::new(3, 2);
+
+        g.spawn_particle(1, 0, ParticleType::Sand);
+        g.spawn_particle(0, 1, ParticleType::Water);
+        g.spawn_particle(1, 1, ParticleType::Sand);
+        g.spawn_particle(2, 1, ParticleType::Sand);
+
+        g.update_grid();
+
+        assert_eq!(
+            vec![
+                None,
+                Some(Particle::new(ParticleType::Water)),
+                None,
+                Some(Particle::new(ParticleType::Sand)),
+                Some(Particle::new(ParticleType::Sand)),
+                Some(Particle::new(ParticleType::Sand)),
+            ],
+            g.cells
+        );
+    }
+
+    #[test]
+    fn test_sand_should_sink_to_bottom_right_in_water() {
+        let mut g = Grid::new(3, 2);
+
+        g.spawn_particle(1, 0, ParticleType::Sand);
+        g.spawn_particle(0, 1, ParticleType::Sand);
+        g.spawn_particle(1, 1, ParticleType::Sand);
+        g.spawn_particle(2, 1, ParticleType::Water);
 
         g.update_grid();
 
