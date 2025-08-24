@@ -16,6 +16,10 @@ use rand::random_range;
 
 // TODO: remove all unwrap and expects
 
+enum GridError {
+    OutOfBound,
+}
+
 pub struct GridPlugin {
     pub config: ConfigResource,
 }
@@ -121,102 +125,106 @@ impl Grid {
         }
     }
 
+    fn get_cell(&self, index: usize) -> &Option<Particle> {
+        &self.cells[index]
+    }
+
+    fn get_neighbor_index(&self, x: usize, y: usize, xn: i32, yn: i32) -> Result<usize, GridError> {
+        let neighbor_index = (y as i32 + yn) * self.width as i32 + (x as i32 + xn);
+
+        if (0 <= y as i32 + yn)
+            && ((y as i32 + yn) < self.height as i32)
+            && ((x as i32 + xn) < self.width as i32)
+            && (0 <= x as i32 + xn)
+        {
+            Ok(neighbor_index as usize)
+        } else {
+            Err(GridError::OutOfBound)
+        }
+    }
+
     fn find_sand_particle_next_direction(&self, x: usize, y: usize) -> Option<usize> {
-        let index_bottom = {
-            if y + 1 < self.height {
-                match &self.cells[(y + 1) * self.width + x] {
-                    Some(p) => match p.particle_type {
-                        ParticleType::Sand => None,
-                        ParticleType::Water => match p.simulated {
-                            false => Some((y + 1) * self.width + x),
-                            true => None,
-                        },
+        let index_bottom = match self.get_neighbor_index(x, y, 0, 1) {
+            Ok(i) => match self.get_cell(i) {
+                Some(p) => match p.particle_type {
+                    ParticleType::Sand => None,
+                    ParticleType::Water => match p.simulated {
+                        true => None,
+                        false => Some(i),
                     },
-                    None => Some((y + 1) * self.width + x),
-                }
-            } else {
-                None
-            }
+                },
+                None => Some(i),
+            },
+            Err(_) => None,
         };
 
-        let index_bottom_right = {
-            if (y + 1 < self.height)
-                && (x + 1 < self.width)
-                && (self.cells[(y + 1) * self.width + (x + 1)].is_none())
-            {
-                Some((y + 1) * self.width + (x + 1))
-            } else {
-                None
-            }
+        let index_bottom_right = match self.get_neighbor_index(x, y, 1, 1) {
+            Ok(i) => match self.get_cell(i) {
+                Some(_) => None,
+                None => Some(i),
+            },
+            Err(_) => None,
         };
-        let index_bottom_left = {
-            if (y + 1 < self.height)
-                && (0 < x)
-                && (self.cells[(y + 1) * self.width + (x - 1)].is_none())
-            {
-                Some((y + 1) * self.width + (x - 1))
-            } else {
-                None
-            }
+
+        let index_bottom_left = match self.get_neighbor_index(x, y, -1, 1) {
+            Ok(i) => match self.get_cell(i) {
+                Some(_) => None,
+                None => Some(i),
+            },
+            Err(_) => None,
         };
 
         match (index_bottom_left, index_bottom, index_bottom_right) {
             (None, None, None) => None,
+            (None, None, Some(r)) => Some(r),
+            (Some(l), None, None) => Some(l),
+            (Some(l), None, Some(r)) => match (self.water_direction)() {
+                ParticleHorizontalDirection::Left => Some(l),
+                ParticleHorizontalDirection::Right => Some(r),
+            },
             (_, Some(i), _) => Some(i),
-            (None, None, Some(i)) => Some(i),
-            (Some(i), None, None) => Some(i),
-            (Some(l), None, Some(r)) => {
-                let direction = (self.water_direction)();
-                let i = match direction {
-                    ParticleHorizontalDirection::Left => l,
-                    ParticleHorizontalDirection::Right => r,
-                };
-                Some(i)
-            }
         }
     }
 
     fn find_water_particle_next_direction(&self, x: usize, y: usize) -> Option<usize> {
-        let index_right = {
-            if (x + 1 < self.width) && self.cells[y * self.width + (x + 1)].is_none() {
-                Some(y * self.width + (x + 1))
-            } else {
-                None
-            }
+        let index_bottom = match self.get_neighbor_index(x, y, 0, 1) {
+            Ok(i) => match self.get_cell(i) {
+                Some(_) => None,
+                None => Some(i),
+            },
+            Err(_) => None,
         };
-        let index_left = {
-            if (0 < x) && (self.cells[y * self.width + (x - 1)].is_none()) {
-                Some(y * self.width + (x - 1))
-            } else {
-                None
-            }
+
+        let index_right = match self.get_neighbor_index(x, y, 1, 0) {
+            Ok(i) => match self.get_cell(i) {
+                Some(_) => None,
+                None => Some(i),
+            },
+            Err(_) => None,
         };
-        let index_bottom = {
-            if (y + 1 < self.height) && self.cells[(y + 1) * self.width + x].is_none() {
-                Some((y + 1) * self.width + x)
-            } else {
-                None
-            }
+
+        let index_left = match self.get_neighbor_index(x, y, -1, 0) {
+            Ok(i) => match self.get_cell(i) {
+                Some(_) => None,
+                None => Some(i),
+            },
+            Err(_) => None,
         };
-        let index_bottom_right = {
-            if (y + 1 < self.height)
-                && (x + 1 < self.width)
-                && (self.cells[(y + 1) * self.width + (x + 1)].is_none())
-            {
-                Some((y + 1) * self.width + (x + 1))
-            } else {
-                None
-            }
+
+        let index_bottom_right = match self.get_neighbor_index(x, y, 1, 1) {
+            Ok(i) => match self.get_cell(i) {
+                Some(_) => None,
+                None => Some(i),
+            },
+            Err(_) => None,
         };
-        let index_bottom_left = {
-            if (y + 1 < self.height)
-                && (0 < x)
-                && (self.cells[(y + 1) * self.width + (x - 1)].is_none())
-            {
-                Some((y + 1) * self.width + (x - 1))
-            } else {
-                None
-            }
+
+        let index_bottom_left = match self.get_neighbor_index(x, y, -1, 1) {
+            Ok(i) => match self.get_cell(i) {
+                Some(_) => None,
+                None => Some(i),
+            },
+            Err(_) => None,
         };
 
         match (
@@ -230,24 +238,16 @@ impl Grid {
             (_, _, Some(i), _, _) => Some(i),
             (_, None, None, Some(i), _) => Some(i),
             (_, Some(i), None, None, _) => Some(i),
-            (_, Some(l), None, Some(r), _) => {
-                let direction = (self.water_direction)();
-                let i = match direction {
-                    ParticleHorizontalDirection::Left => l,
-                    ParticleHorizontalDirection::Right => r,
-                };
-                Some(i)
-            }
+            (_, Some(l), None, Some(r), _) => match (self.water_direction)() {
+                ParticleHorizontalDirection::Left => Some(l),
+                ParticleHorizontalDirection::Right => Some(r),
+            },
             (None, None, None, None, Some(i)) => Some(i),
             (Some(i), None, None, None, None) => Some(i),
-            (Some(l), None, None, None, Some(r)) => {
-                let direction = (self.water_direction)();
-                let i = match direction {
-                    ParticleHorizontalDirection::Left => l,
-                    ParticleHorizontalDirection::Right => r,
-                };
-                Some(i)
-            }
+            (Some(l), None, None, None, Some(r)) => match (self.water_direction)() {
+                ParticleHorizontalDirection::Left => Some(l),
+                ParticleHorizontalDirection::Right => Some(r),
+            },
         }
     }
 
