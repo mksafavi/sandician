@@ -251,6 +251,24 @@ impl Grid {
         }
     }
 
+    fn swap_particles(&mut self, index: usize, next_location_index: usize) {
+        self.cells.swap(index, next_location_index);
+        if let Some(p) = &mut self.cells[index] {
+            p.simulated = true;
+        };
+        if let Some(p) = &mut self.cells[next_location_index] {
+            p.simulated = true;
+        };
+    }
+
+    fn clear_all_simulated_field(&mut self) {
+        self.cells.iter_mut().for_each(|x| {
+            if let Some(x) = x {
+                x.simulated = false
+            }
+        });
+    }
+
     fn update_grid(&mut self) {
         for y in (0..self.height).rev() {
             let it = match (self.row_update_direction)() {
@@ -259,35 +277,20 @@ impl Grid {
             };
             for x in it {
                 let index = y * self.width + x;
-                let next_location_index = match &self.cells[index] {
-                    Some(p) => {
-                        if p.simulated {
-                            continue;
-                        }
-                        match p.particle_type {
+                if let Some(p) = &self.cells[index] {
+                    if !p.simulated {
+                        let next_location_index = match p.particle_type {
                             ParticleType::Sand => self.find_sand_particle_next_direction(x, y),
                             ParticleType::Water => self.find_water_particle_next_direction(x, y),
+                        };
+                        if let Some(next_location_index) = next_location_index {
+                            self.swap_particles(index, next_location_index);
                         }
                     }
-                    None => None,
                 };
-                if let Some(new_index) = next_location_index {
-                    self.cells.swap(index, new_index);
-                    if let Some(p) = &mut self.cells[index] {
-                        p.simulated = true;
-                    };
-
-                    if let Some(p) = &mut self.cells[new_index] {
-                        p.simulated = true;
-                    };
-                }
             }
         }
-        self.cells.iter_mut().for_each(|x| {
-            if let Some(x) = x {
-                x.simulated = false
-            }
-        });
+        self.clear_all_simulated_field();
     }
 
     fn create_output_frame(width: usize, height: usize) -> Image {
