@@ -20,7 +20,7 @@ ci-build BIN:
     RUSTFLAGS='-Dwarnings' cargo build --release --bin {{BIN}}
 
 ci-build-wasm BIN:
-    RUSTFLAGS='-Dwarnings --cfg getrandom_backend="wasm_js"' cargo build --bin {{BIN}} --release --target wasm32-unknown-unknown --bin {{BIN}}
+    RUSTFLAGS='-Dwarnings --cfg getrandom_backend="wasm_js"' cargo build --release --target wasm32-unknown-unknown --bin {{BIN}}
     wasm-bindgen --target web --no-typescript --out-dir ./target/wasm-bind ./target/wasm32-unknown-unknown/release/{{BIN}}.wasm
 
 clippy:
