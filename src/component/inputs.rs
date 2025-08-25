@@ -4,7 +4,7 @@ use bevy::{
     window::Window,
 };
 
-use super::particle::{Grid, ParticleType};
+use super::particle::{Grid, Particle};
 
 pub fn mouse_spawn_brush_system(
     mouse_button: Res<ButtonInput<MouseButton>>,
@@ -18,10 +18,10 @@ pub fn mouse_spawn_brush_system(
     let mut g = grid.iter_mut().last().unwrap();
     if let Some(c) = _cursor {
         if mouse_button.pressed(MouseButton::Left) {
-            g.spawn_brush(c.x as usize, c.y as usize, 25, ParticleType::Sand);
+            g.spawn_brush(c.x as usize, c.y as usize, 25, Particle::Sand);
         };
         if mouse_button.pressed(MouseButton::Right) {
-            g.spawn_brush(c.x as usize, c.y as usize, 25, ParticleType::Water);
+            g.spawn_brush(c.x as usize, c.y as usize, 25, Particle::Water);
         };
     };
 }
