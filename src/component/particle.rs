@@ -295,21 +295,13 @@ impl Grid {
         for (index, particle) in self.cells.iter().enumerate() {
             let x: u32 = index as u32 % self.width as u32;
             let y: u32 = (index as u32 - x) / self.width as u32;
-            match particle {
+            let _ = match particle {
                 Some(p) => match p.particle {
-                    Particle::Sand => image
-                        .set_color_at(x, y, Color::srgb(1., 1., 1.))
-                        .expect("temp: TODO: panic"),
-                    Particle::Water => image
-                        .set_color_at(x, y, Color::srgb(0., 0., 1.))
-                        .expect("temp: TODO: panic"),
+                    Particle::Sand => image.set_color_at(x, y, Color::srgb(1., 1., 1.)),
+                    Particle::Water => image.set_color_at(x, y, Color::srgb(0., 0., 1.)),
                 },
-                _ => {
-                    image
-                        .set_color_at(x, y, Color::srgb(0., 0., 0.))
-                        .expect("temp: TODO: panic");
-                }
-            }
+                _ => image.set_color_at(x, y, Color::srgb(0., 0., 0.)),
+            };
         }
     }
 
