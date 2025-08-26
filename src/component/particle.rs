@@ -27,9 +27,43 @@ impl Plugin for GridPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(self.config.clone())
             .insert_resource(Time::<Fixed>::from_hz(self.config.update_rate))
-            .add_systems(Startup, Grid::init_grid_system)
-            .add_systems(FixedUpdate, Grid::update_grid_system)
-            .add_systems(Update, Grid::draw_grid_system);
+            .add_systems(Startup, GridPlugin::init_grid_system)
+            .add_systems(FixedUpdate, GridPlugin::update_grid_system)
+            .add_systems(Update, GridPlugin::draw_grid_system);
+    }
+}
+
+impl GridPlugin {
+    fn init_grid_system(
+        mut commands: Commands,
+        config: Res<ConfigResource>,
+        mut images: ResMut<Assets<Image>>,
+    ) {
+        commands.spawn(Grid::new(config.width, config.height));
+        let handle = images.add(Grid::create_output_frame(config.width, config.height));
+        commands.spawn(Sprite::from_image(handle.clone()));
+        commands.insert_resource(OutputFrameHandle(handle));
+    }
+
+    fn update_grid_system(mut grid: Query<&mut Grid>) {
+        if let Some(mut g) = grid.iter_mut().last() {
+            g.update_grid();
+        }
+    }
+
+    fn draw_grid_system(
+        grid: Query<&Grid>,
+        output_frame_handle: Res<OutputFrameHandle>,
+        mut images: ResMut<Assets<Image>>,
+    ) {
+        let image = images
+            .get_mut(&output_frame_handle.0)
+            .expect("Image not found");
+
+        match grid.iter().last() {
+            Some(g) => g.draw_grid(image),
+            None => todo!(),
+        }
     }
 }
 
@@ -324,23 +358,6 @@ impl Grid {
         )
     }
 
-    fn init_grid_system(
-        mut commands: Commands,
-        config: Res<ConfigResource>,
-        mut images: ResMut<Assets<Image>>,
-    ) {
-        commands.spawn(Grid::new(config.width, config.height));
-        let handle = images.add(Grid::create_output_frame(config.width, config.height));
-        commands.spawn(Sprite::from_image(handle.clone()));
-        commands.insert_resource(OutputFrameHandle(handle));
-    }
-
-    fn update_grid_system(mut grid: Query<&mut Grid>) {
-        if let Some(mut g) = grid.iter_mut().last() {
-            g.update_grid();
-        }
-    }
-
     fn draw_grid(&self, image: &mut Image) {
         for (index, particle) in self.cells.iter().enumerate() {
             let x: u32 = index as u32 % self.width as u32;
@@ -360,21 +377,6 @@ impl Grid {
                         .expect("temp: TODO: panic");
                 }
             }
-        }
-    }
-
-    fn draw_grid_system(
-        grid: Query<&Grid>,
-        output_frame_handle: Res<OutputFrameHandle>,
-        mut images: ResMut<Assets<Image>>,
-    ) {
-        let image = images
-            .get_mut(&output_frame_handle.0)
-            .expect("Image not found");
-
-        match grid.iter().last() {
-            Some(g) => g.draw_grid(image),
-            None => todo!(),
         }
     }
 
@@ -492,7 +494,7 @@ mod tests_grid {
         let mut app = App::new();
         app.insert_resource(ConfigResource::new(2, 3, 100.));
         app.init_resource::<Assets<Image>>();
-        app.add_systems(Startup, Grid::init_grid_system);
+        app.add_systems(Startup, GridPlugin::init_grid_system);
         app.update();
         assert_eq!(1, app.world_mut().query::<&Grid>().iter(app.world()).len());
         for g in app.world_mut().query::<&Grid>().iter(app.world()) {
@@ -960,12 +962,12 @@ mod tests_grid {
         app.init_resource::<Assets<Image>>();
 
         //app.insert_resource(OutputFrameHandle);
-        app.add_systems(Startup, Grid::init_grid_system);
+        app.add_systems(Startup, GridPlugin::init_grid_system);
         app.add_systems(
             Update,
             (
                 fixture_spawn_particle_system,
-                Grid::draw_grid_system,
+                GridPlugin::draw_grid_system,
                 assert_read_output_frame_system,
             )
                 .chain(),
