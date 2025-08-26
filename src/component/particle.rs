@@ -298,11 +298,12 @@ impl Grid {
 
     pub fn update_grid(&mut self) {
         for y in (0..self.height).rev() {
-            let it = match (self.row_update_direction)() {
-                RowUpdateDirection::Forward => (0..self.width).collect::<Vec<_>>(),
-                RowUpdateDirection::Reverse => (0..self.width).rev().collect::<Vec<_>>(),
-            };
-            for x in it {
+            let x_direction = (self.row_update_direction)();
+            for x in 0..self.width {
+                let x = match x_direction {
+                    RowUpdateDirection::Forward => x,
+                    RowUpdateDirection::Reverse => self.width - 1 - x,
+                };
                 self.update_particles(x, y);
             }
         }
