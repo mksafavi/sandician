@@ -281,25 +281,29 @@ impl Grid {
         });
     }
 
-    fn update_grid(&mut self) {
+    fn update_particles(&mut self, x: usize, y: usize) {
+        let index = y * self.width + x;
+        if let Some(p) = &self.cells[index] {
+            if !p.simulated {
+                let next_location_index = match p.particle {
+                    Particle::Sand => self.find_sand_particle_next_direction(x, y),
+                    Particle::Water => self.find_water_particle_next_direction(x, y),
+                };
+                if let Some(next_location_index) = next_location_index {
+                    self.swap_particles(index, next_location_index);
+                }
+            }
+        };
+    }
+
+    pub fn update_grid(&mut self) {
         for y in (0..self.height).rev() {
             let it = match (self.row_update_direction)() {
                 RowUpdateDirection::Forward => (0..self.width).collect::<Vec<_>>(),
                 RowUpdateDirection::Reverse => (0..self.width).rev().collect::<Vec<_>>(),
             };
             for x in it {
-                let index = y * self.width + x;
-                if let Some(p) = &self.cells[index] {
-                    if !p.simulated {
-                        let next_location_index = match p.particle {
-                            Particle::Sand => self.find_sand_particle_next_direction(x, y),
-                            Particle::Water => self.find_water_particle_next_direction(x, y),
-                        };
-                        if let Some(next_location_index) = next_location_index {
-                            self.swap_particles(index, next_location_index);
-                        }
-                    }
-                };
+                self.update_particles(x, y);
             }
         }
         self.clear_all_simulated_field();
