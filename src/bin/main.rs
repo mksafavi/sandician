@@ -3,7 +3,7 @@ use bevy::core_pipeline::core_2d::Camera2d;
 use bevy::ecs::system::Commands;
 use bevy::DefaultPlugins;
 use sandsim::component::inputs;
-use sandsim::component::particle::{ConfigResource, GridPlugin};
+use sandsim::component::grid_plugin::{ConfigResource, GridPlugin};
 
 fn setup_camera(mut commands: Commands) {
     commands.spawn(Camera2d);
