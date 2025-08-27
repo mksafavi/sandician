@@ -17,8 +17,8 @@ struct OutputFrameHandle(Handle<Image>);
 
 #[derive(Resource, Clone)]
 pub struct ConfigResource {
-    width: usize,
-    height: usize,
+    pub width: usize,
+    pub height: usize,
     update_rate: f64,
 }
 impl ConfigResource {
