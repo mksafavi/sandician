@@ -3703,7 +3703,6 @@ name = "sandsim"
 version = "0.1.0"
 dependencies = [
  "bevy",
- "bevy_dev_tools",
  "getrandom 0.3.3",
  "rand 0.9.2",
 ]
