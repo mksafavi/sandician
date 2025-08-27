@@ -57,7 +57,7 @@ impl GridPlugin {
     }
 
     fn update_grid_system(mut grid: Query<&mut Grid>) {
-        if let Some(mut g) = grid.iter_mut().last() {
+        if let Ok(mut g) = grid.single_mut() {
             g.update_grid();
         }
     }
