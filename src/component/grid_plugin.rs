@@ -67,13 +67,10 @@ impl GridPlugin {
         output_frame_handle: Res<OutputFrameHandle>,
         mut images: ResMut<Assets<Image>>,
     ) {
-        let image = images
-            .get_mut(&output_frame_handle.0)
-            .expect("Image not found");
-
-        match grid.iter().last() {
-            Some(g) => g.draw_grid(image),
-            None => todo!(),
+        if let Ok(g) = grid.single() {
+            if let Some(image) = images.get_mut(&output_frame_handle.0) {
+                g.draw_grid(image)
+            }
         }
     }
 }
