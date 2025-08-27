@@ -18,3 +18,10 @@ opt-level = 1
 # Enable a large amount of optimization in the dev profile for dependencies.
 [profile.dev.package."*"]
 opt-level = 3
+
+[dev-dependencies]
+criterion = "0.7.0"
+
+[[bench]]
+name = "bench"
+harness = false
