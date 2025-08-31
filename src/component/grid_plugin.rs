@@ -106,7 +106,7 @@ mod tests {
 
         fn assert_read_output_frame_system(
             output_frame_handle: Res<OutputFrameHandle>,
-            images: ResMut<Assets<Image>>,
+            images: Res<Assets<Image>>,
         ) {
             let image = images.get(&output_frame_handle.0).expect("Image not found");
             assert_color_srgb_eq!(Particle::Sand.color(), image.get_color_at(0, 0).unwrap());
