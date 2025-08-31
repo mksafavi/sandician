@@ -19,6 +19,12 @@ pub const BACKGROUND_COLOR: bevy::prelude::Color = Color::srgb(0.82, 0.93, 1.);
 pub enum Particle {
     Sand,
     Water,
+    Salt,
+}
+
+enum ParticleOperation {
+    Swap(usize),
+    Dissolve(Particle),
 }
 
 #[derive(Clone, Debug)]
@@ -57,22 +63,32 @@ pub struct Grid {
 }
 
 impl Particle {
-    fn find_particle_next_location(&self, grid: &Grid, x: usize, y: usize) -> Option<usize> {
+    fn find_particle_next_location(
+        &self,
+        grid: &Grid,
+        x: usize,
+        y: usize,
+    ) -> Option<ParticleOperation> {
         match self {
             Particle::Sand => Particle::find_sand_particle_next_location(grid, x, y),
             Particle::Water => Particle::find_water_particle_next_location(grid, x, y),
+            Particle::Salt => Particle::find_salt_particle_next_location(grid, x, y),
         }
     }
 
-    fn find_sand_particle_next_location(grid: &Grid, x: usize, y: usize) -> Option<usize> {
+    fn find_sand_particle_next_location(
+        grid: &Grid,
+        x: usize,
+        y: usize,
+    ) -> Option<ParticleOperation> {
         let index_bottom = match grid.get_neighbor_index(x, y, 0, 1) {
             Ok(i) => match grid.get_cell(i) {
                 Some(p) => match p.particle {
-                    Particle::Sand => None,
                     Particle::Water => match p.simulated {
                         true => None,
                         false => Some(i),
                     },
+                    _ => None,
                 },
                 None => Some(i),
             },
@@ -82,11 +98,11 @@ impl Particle {
         let index_bottom_right = match grid.get_neighbor_index(x, y, 1, 1) {
             Ok(i) => match grid.get_cell(i) {
                 Some(p) => match p.particle {
-                    Particle::Sand => None,
                     Particle::Water => match p.simulated {
                         true => None,
                         false => Some(i),
                     },
+                    _ => None,
                 },
                 None => Some(i),
             },
@@ -96,18 +112,18 @@ impl Particle {
         let index_bottom_left = match grid.get_neighbor_index(x, y, -1, 1) {
             Ok(i) => match grid.get_cell(i) {
                 Some(p) => match p.particle {
-                    Particle::Sand => None,
                     Particle::Water => match p.simulated {
                         true => None,
                         false => Some(i),
                     },
+                    _ => None,
                 },
                 None => Some(i),
             },
             Err(_) => None,
         };
 
-        match (index_bottom_left, index_bottom, index_bottom_right) {
+        let index = match (index_bottom_left, index_bottom, index_bottom_right) {
             (None, None, None) => None,
             (None, None, Some(r)) => Some(r),
             (Some(l), None, None) => Some(l),
@@ -116,10 +132,19 @@ impl Particle {
                 ParticleHorizontalDirection::Right => Some(r),
             },
             (_, Some(i), _) => Some(i),
+        };
+
+        match index {
+            Some(i) => Some(ParticleOperation::Swap(i)),
+            None => None,
         }
     }
 
-    fn find_water_particle_next_location(grid: &Grid, x: usize, y: usize) -> Option<usize> {
+    fn find_water_particle_next_location(
+        grid: &Grid,
+        x: usize,
+        y: usize,
+    ) -> Option<ParticleOperation> {
         let index_bottom = match grid.get_neighbor_index(x, y, 0, 1) {
             Ok(i) => match grid.get_cell(i) {
                 Some(_) => None,
@@ -160,7 +185,7 @@ impl Particle {
             Err(_) => None,
         };
 
-        match (
+        let index = match (
             index_left,
             index_bottom_left,
             index_bottom,
@@ -181,6 +206,76 @@ impl Particle {
                 ParticleHorizontalDirection::Left => Some(l),
                 ParticleHorizontalDirection::Right => Some(r),
             },
+        };
+
+        match index {
+            Some(i) => Some(ParticleOperation::Swap(i)),
+            None => None,
+        }
+    }
+
+    fn find_salt_particle_next_location(
+        grid: &Grid,
+        x: usize,
+        y: usize,
+    ) -> Option<ParticleOperation> {
+        let neighboring_water =
+            (-1..=1)
+                .flat_map(|y| (-1..=1).map(move |x| (y, x)))
+                .fold(false, |acc, (xo, yo)| {
+                    let n = match grid.get_neighbor_index(x, y, xo, yo) {
+                        Ok(i) => match grid.get_cell(i) {
+                            Some(p) => match p.particle {
+                                Particle::Water => true,
+                                _ => false,
+                            },
+                            None => false,
+                        },
+                        Err(_) => false,
+                    };
+                    acc || n
+                });
+        if neighboring_water {
+            return Some(ParticleOperation::Dissolve(Particle::Water));
+        }
+        let index_bottom = match grid.get_neighbor_index(x, y, 0, 1) {
+            Ok(i) => match grid.get_cell(i) {
+                Some(_) => None,
+                None => Some(i),
+            },
+            Err(_) => None,
+        };
+
+        let index_bottom_right = match grid.get_neighbor_index(x, y, 1, 1) {
+            Ok(i) => match grid.get_cell(i) {
+                Some(_) => None,
+                None => Some(i),
+            },
+            Err(_) => None,
+        };
+
+        let index_bottom_left = match grid.get_neighbor_index(x, y, -1, 1) {
+            Ok(i) => match grid.get_cell(i) {
+                Some(_) => None,
+                None => Some(i),
+            },
+            Err(_) => None,
+        };
+
+        let index = match (index_bottom_left, index_bottom, index_bottom_right) {
+            (None, None, None) => None,
+            (None, None, Some(r)) => Some(r),
+            (Some(l), None, None) => Some(l),
+            (Some(l), None, Some(r)) => match (grid.water_direction)() {
+                ParticleHorizontalDirection::Left => Some(l),
+                ParticleHorizontalDirection::Right => Some(r),
+            },
+            (_, Some(i), _) => Some(i),
+        };
+
+        match index {
+            Some(i) => Some(ParticleOperation::Swap(i)),
+            None => None,
         }
     }
 
@@ -188,6 +283,7 @@ impl Particle {
         match self {
             Particle::Sand => Color::srgb(0.76, 0.70, 0.50),
             Particle::Water => Color::srgb(0.05, 0.53, 0.80),
+            Particle::Salt => Color::srgb(1.00, 1.00, 1.00),
         }
     }
 }
@@ -252,6 +348,13 @@ impl Grid {
         };
     }
 
+    fn disolve_particles(&mut self, index: usize, particle: Particle) {
+        if let Some(p) = &mut self.cells[index] {
+            p.simulated = true;
+            p.particle = particle
+        };
+    }
+
     fn clear_all_simulated_field(&mut self) {
         self.cells.iter_mut().for_each(|x| {
             if let Some(x) = x {
@@ -264,9 +367,16 @@ impl Grid {
         let index = y * self.width + x;
         if let Some(p) = &self.cells[index] {
             if !p.simulated {
-                let next_location_index = p.particle.find_particle_next_location(self, x, y);
-                if let Some(next_location_index) = next_location_index {
-                    self.swap_particles(index, next_location_index);
+                let next_operation = p.particle.find_particle_next_location(self, x, y);
+                if let Some(next_operation) = next_operation {
+                    match next_operation {
+                        ParticleOperation::Swap(next_location_index) => {
+                            self.swap_particles(index, next_location_index)
+                        }
+                        ParticleOperation::Dissolve(particle) => {
+                            self.disolve_particles(index, particle)
+                        }
+                    }
                 }
             }
         };
@@ -420,7 +530,7 @@ mod tests {
     }
 
     #[test]
-    fn test_update_grid_sand_falling_down_at_last_row_stays_there() {
+    fn test_update_grid_sand_falling_down_to_last_row_stays_there() {
         let mut g = Grid::new(2, 2);
         g.spawn_particle(0, 1, Particle::Sand);
 
@@ -520,6 +630,127 @@ mod tests {
         assert_eq!(None, g.cells[3]);
         assert_eq!(Some(Cell::new(Particle::Sand)), g.cells[4]);
         assert_eq!(Some(Cell::new(Particle::Sand)), g.cells[5]);
+    }
+
+    #[test]
+    fn test_update_grid_salt_falling_down_to_last_row_stays_there() {
+        let mut g = Grid::new(2, 2);
+        g.spawn_particle(0, 1, Particle::Salt);
+
+        g.update_grid(); /* should stay at the last line*/
+        assert_eq!(None, g.cells[0]);
+        assert_eq!(None, g.cells[1]);
+        assert_eq!(Some(Cell::new(Particle::Salt)), g.cells[2]);
+        assert_eq!(None, g.cells[3]);
+    }
+
+    #[test]
+    fn test_update_grid_salt_falls_down_when_bottom_cell_is_empty() {
+        let mut g = Grid::new(2, 2);
+
+        g.spawn_particle(0, 0, Particle::Salt);
+
+        assert_eq!(Some(Cell::new(Particle::Salt)), g.cells[0]);
+        assert_eq!(None, g.cells[1]);
+        assert_eq!(None, g.cells[2]);
+        assert_eq!(None, g.cells[3]);
+
+        g.update_grid();
+
+        assert_eq!(None, g.cells[0]);
+        assert_eq!(None, g.cells[1]);
+        assert_eq!(Some(Cell::new(Particle::Salt)), g.cells[2]);
+        assert_eq!(None, g.cells[3]);
+    }
+
+    #[test]
+    fn test_update_grid_salt_falls_bottom_right_when_bottom_cell_is_full_and_bottom_left_is_wall_and_bottom_right_is_empty(
+    ) {
+        let mut g = Grid::new(2, 2);
+
+        g.spawn_particle(0, 0, Particle::Salt);
+
+        g.spawn_particle(0, 1, Particle::Salt);
+
+        g.update_grid();
+
+        assert_eq!(None, g.cells[0]);
+        assert_eq!(None, g.cells[1]);
+        assert_eq!(Some(Cell::new(Particle::Salt)), g.cells[2]);
+        assert_eq!(Some(Cell::new(Particle::Salt)), g.cells[3]);
+    }
+
+    #[test]
+    fn test_update_grid_salt_falls_bottom_left_when_bottom_cell_is_full_and_bottom_right_is_wall_and_bottom_left_is_empty(
+    ) {
+        let mut g = Grid::new(2, 2);
+
+        g.spawn_particle(1, 0, Particle::Salt);
+
+        g.spawn_particle(1, 1, Particle::Salt);
+
+        g.update_grid();
+
+        assert_eq!(None, g.cells[0]);
+        assert_eq!(None, g.cells[1]);
+        assert_eq!(Some(Cell::new(Particle::Salt)), g.cells[2]);
+        assert_eq!(Some(Cell::new(Particle::Salt)), g.cells[3]);
+    }
+
+    #[test]
+    fn test_update_grid_salt_dissolves_when_touches_water() {
+        for y in 0..3 {
+            for x in 0..3 {
+                if (x, y) == (1, 1) {
+                    continue;
+                }
+                let mut g = Grid::new(3, 3);
+                g.spawn_particle(1, 1, Particle::Salt);
+                g.spawn_particle(x, y, Particle::Water);
+
+                g.update_grid();
+
+                assert_eq!(Some(Cell::new(Particle::Water)), g.cells[4]);
+            }
+        }
+    }
+
+    #[test]
+    fn test_update_grid_salt_falls_bottom_left_or_bottom_right_when_bottom_cell_is_full_and_both_bottom_right_and_bottom_left_are_empty_for_testing_forced_left(
+    ) {
+        let mut g = Grid::new_with_rand(3, 2, Some(|| ParticleHorizontalDirection::Left), None);
+
+        g.spawn_particle(1, 0, Particle::Salt);
+
+        g.spawn_particle(1, 1, Particle::Salt);
+
+        g.update_grid();
+
+        assert_eq!(None, g.cells[0]);
+        assert_eq!(None, g.cells[1]);
+        assert_eq!(None, g.cells[2]);
+        assert_eq!(Some(Cell::new(Particle::Salt)), g.cells[3]);
+        assert_eq!(Some(Cell::new(Particle::Salt)), g.cells[4]);
+        assert_eq!(None, g.cells[5]);
+    }
+
+    #[test]
+    fn test_update_grid_salt_falls_bottom_left_or_bottom_right_when_bottom_cell_is_full_and_both_bottom_right_and_bottom_left_are_empty_for_testing_forced_right(
+    ) {
+        let mut g = Grid::new_with_rand(3, 2, Some(|| ParticleHorizontalDirection::Right), None);
+
+        g.spawn_particle(1, 0, Particle::Salt);
+
+        g.spawn_particle(1, 1, Particle::Salt);
+
+        g.update_grid();
+
+        assert_eq!(None, g.cells[0]);
+        assert_eq!(None, g.cells[1]);
+        assert_eq!(None, g.cells[2]);
+        assert_eq!(None, g.cells[3]);
+        assert_eq!(Some(Cell::new(Particle::Salt)), g.cells[4]);
+        assert_eq!(Some(Cell::new(Particle::Salt)), g.cells[5]);
     }
 
     #[test]
@@ -820,5 +1051,6 @@ mod tests {
     fn test_get_particle_color() {
         assert_color_srgb_eq!(Color::srgb(0.76, 0.70, 0.50), Particle::Sand.color());
         assert_color_srgb_eq!(Color::srgb(0.05, 0.53, 0.80), Particle::Water.color());
+        assert_color_srgb_eq!(Color::srgb(1.00, 1.00, 1.00), Particle::Salt.color());
     }
 }
