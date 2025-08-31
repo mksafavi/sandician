@@ -78,10 +78,12 @@ impl GridPlugin {
 #[cfg(test)]
 mod tests {
 
-    use crate::component::particle::Particle;
+    use crate::component::{
+        macros::assert_color_srgb_eq,
+        particle::{Particle, BACKGROUND_COLOR},
+    };
 
     use super::*;
-    use bevy::color::Color;
     use bevy::prelude::IntoScheduleConfigs;
 
     #[test]
@@ -107,20 +109,10 @@ mod tests {
             images: ResMut<Assets<Image>>,
         ) {
             let image = images.get(&output_frame_handle.0).expect("Image not found");
-            assert_eq!(
-                vec![
-                    Color::srgb(1., 1., 1.),
-                    Color::srgb(0., 0., 1.),
-                    Color::srgb(0., 0., 0.),
-                    Color::srgb(0., 0., 0.)
-                ],
-                vec![
-                    image.get_color_at(0, 0).unwrap(),
-                    image.get_color_at(1, 0).unwrap(),
-                    image.get_color_at(0, 1).unwrap(),
-                    image.get_color_at(1, 1).unwrap()
-                ]
-            );
+            assert_color_srgb_eq!(Particle::Sand.color(), image.get_color_at(0, 0).unwrap());
+            assert_color_srgb_eq!(Particle::Water.color(), image.get_color_at(1, 0).unwrap());
+            assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(0, 1).unwrap());
+            assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(1, 1).unwrap());
         }
 
         let mut app = App::new();

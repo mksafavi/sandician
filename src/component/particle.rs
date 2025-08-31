@@ -13,6 +13,8 @@ enum GridError {
     OutOfBound,
 }
 
+pub const BACKGROUND_COLOR: bevy::prelude::Color = Color::srgb(0.82, 0.93, 1.);
+
 #[derive(Clone, PartialEq, Debug)]
 pub enum Particle {
     Sand,
@@ -181,6 +183,13 @@ impl Particle {
             },
         }
     }
+
+    pub fn color(&self) -> Color {
+        match self {
+            Particle::Sand => Color::srgb(0.76, 0.70, 0.50),
+            Particle::Water => Color::srgb(0.05, 0.53, 0.80),
+        }
+    }
 }
 
 impl Grid {
@@ -296,11 +305,8 @@ impl Grid {
             let x: u32 = index as u32 % self.width as u32;
             let y: u32 = (index as u32 - x) / self.width as u32;
             let _ = match particle {
-                Some(p) => match p.particle {
-                    Particle::Sand => image.set_color_at(x, y, Color::srgb(1., 1., 1.)),
-                    Particle::Water => image.set_color_at(x, y, Color::srgb(0., 0., 1.)),
-                },
-                _ => image.set_color_at(x, y, Color::srgb(0., 0., 0.)),
+                Some(p) => image.set_color_at(x, y, p.particle.color()),
+                _ => image.set_color_at(x, y, BACKGROUND_COLOR),
             };
         }
     }
@@ -316,6 +322,8 @@ impl Grid {
 
 #[cfg(test)]
 mod tests {
+
+    use crate::component::macros::assert_color_srgb_eq;
 
     use super::*;
 
@@ -783,53 +791,34 @@ mod tests {
         let mut g = Grid::new(2, 2);
         let mut image = Grid::create_output_frame(2, 2);
         g.draw_grid(&mut image);
-        assert_eq!(
-            vec![
-                Color::srgb(0., 0., 0.),
-                Color::srgb(0., 0., 0.),
-                Color::srgb(0., 0., 0.),
-                Color::srgb(0., 0., 0.)
-            ],
-            vec![
-                image.get_color_at(0, 0).unwrap(),
-                image.get_color_at(1, 0).unwrap(),
-                image.get_color_at(0, 1).unwrap(),
-                image.get_color_at(1, 1).unwrap()
-            ]
-        );
+        assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(0, 0).unwrap());
+        assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(1, 0).unwrap());
+        assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(0, 1).unwrap());
+        assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(1, 1).unwrap());
 
         g.spawn_particle(0, 0, Particle::Sand);
         g.draw_grid(&mut image);
-        assert_eq!(
-            vec![
-                Color::srgb(1., 1., 1.),
-                Color::srgb(0., 0., 0.),
-                Color::srgb(0., 0., 0.),
-                Color::srgb(0., 0., 0.)
-            ],
-            vec![
-                image.get_color_at(0, 0).unwrap(),
-                image.get_color_at(1, 0).unwrap(),
-                image.get_color_at(0, 1).unwrap(),
-                image.get_color_at(1, 1).unwrap()
-            ]
+        assert_color_srgb_eq!(
+            Particle::Sand.color(),
+            image.get_color_at(0, 0).unwrap(),
+            0.1
         );
-        g.spawn_particle(1, 0, Particle::Sand);
+        assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(1, 0).unwrap());
+        assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(0, 1).unwrap());
+        assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(1, 1).unwrap());
+
+        g.spawn_particle(1, 0, Particle::Water);
         g.cells[0] = None;
         g.draw_grid(&mut image);
-        assert_eq!(
-            vec![
-                Color::srgb(0., 0., 0.),
-                Color::srgb(1., 1., 1.),
-                Color::srgb(0., 0., 0.),
-                Color::srgb(0., 0., 0.)
-            ],
-            vec![
-                image.get_color_at(0, 0).unwrap(),
-                image.get_color_at(1, 0).unwrap(),
-                image.get_color_at(0, 1).unwrap(),
-                image.get_color_at(1, 1).unwrap()
-            ]
-        );
+        assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(0, 0).unwrap());
+        assert_color_srgb_eq!(Particle::Water.color(), image.get_color_at(1, 0).unwrap());
+        assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(0, 1).unwrap());
+        assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(1, 1).unwrap());
+    }
+
+    #[test]
+    fn test_get_particle_color() {
+        assert_color_srgb_eq!(Color::srgb(0.76, 0.70, 0.50), Particle::Sand.color());
+        assert_color_srgb_eq!(Color::srgb(0.05, 0.53, 0.80), Particle::Water.color());
     }
 }
