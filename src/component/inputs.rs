@@ -46,7 +46,7 @@ pub fn mouse_spawn_brush_system(
                 g.spawn_brush(x, y, 25, Particle::Sand);
             };
             if mouse_button.pressed(MouseButton::Right) {
-                g.spawn_brush(x - 1, y - 1, 25, Particle::Water);
+                g.spawn_brush(x, y, 25, Particle::Water);
             };
         };
     };
