@@ -6,8 +6,11 @@ use bevy::{
         system::{Commands, Query, Res, ResMut},
     },
     image::Image,
+    prelude::Vec3,
     sprite::Sprite,
     time::{Fixed, Time},
+    transform::components::Transform,
+    window::Window,
 };
 
 use super::particle::Grid;
@@ -49,10 +52,24 @@ impl GridPlugin {
         mut commands: Commands,
         config: Res<ConfigResource>,
         mut images: ResMut<Assets<Image>>,
+        windows: Query<&Window>,
     ) {
         commands.spawn(Grid::new(config.width, config.height));
         let handle = images.add(Grid::create_output_frame(config.width, config.height));
-        commands.spawn(Sprite::from_image(handle.clone()));
+
+        let sprite_scale = match windows.single() {
+            Ok(window) => Vec3::new(
+                window.resolution.width() / config.width as f32,
+                window.resolution.height() / config.height as f32,
+                1.,
+            ),
+            Err(_) => Vec3::new(1., 1., 1.),
+        };
+
+        commands.spawn((
+            Sprite::from_image(handle.clone()),
+            Transform::from_scale(sprite_scale),
+        ));
         commands.insert_resource(OutputFrameHandle(handle));
     }
 
@@ -84,7 +101,9 @@ mod tests {
     };
 
     use super::*;
-    use bevy::prelude::IntoScheduleConfigs;
+    use bevy::prelude::default;
+    use bevy::{ecs::query::With, prelude::IntoScheduleConfigs, window::WindowPlugin};
+    use bevy::window::WindowResolution;
 
     #[test]
     fn test_init_grid_system_creates_a_grid() {
@@ -94,6 +113,30 @@ mod tests {
         app.add_systems(Startup, GridPlugin::init_grid_system);
         app.update();
         assert_eq!(1, app.world_mut().query::<&Grid>().iter(app.world()).len());
+    }
+
+    #[test]
+    fn test_init_grid_system_scales_output_frame_to_window() {
+        let mut app = App::new();
+        app.insert_resource(ConfigResource::new(10, 5, 100.));
+        app.init_resource::<Assets<Image>>();
+        app.add_systems(Startup, GridPlugin::init_grid_system);
+        app.add_plugins(WindowPlugin {
+            primary_window: Some(Window {
+                resolution: WindowResolution::new(200., 100.),
+                ..default()
+            }),
+            ..default()
+        });
+
+        app.update();
+
+        let mut t = app.world_mut().query_filtered::<&Transform, With<Sprite>>();
+        if let Ok(t) = t.single(app.world()) {
+            assert_eq!(Transform::from_scale(Vec3::new(20., 20., 1.)), *t);
+        } else {
+            panic!("missing the transform component of output frame sprite")
+        }
     }
 
     #[test]
