@@ -1,8 +1,6 @@
 use super::particle::{GridAccess, ParticleHorizontalDirection, ParticleOperation};
 use bevy::prelude::Color;
 
-
-
 #[derive(Clone, PartialEq, Debug)]
 pub enum Particle {
     Sand,
@@ -167,10 +165,7 @@ impl Particle {
                 .fold(false, |acc, (xo, yo)| {
                     let n = match grid.get_neighbor_index(x, y, xo, yo) {
                         Ok(i) => match grid.get_cell(i) {
-                            Some(p) => match p.particle {
-                                Particle::Water => true,
-                                _ => false,
-                            },
+                            Some(p) => matches!(p.particle, Particle::Water),
                             None => false,
                         },
                         Err(_) => false,
