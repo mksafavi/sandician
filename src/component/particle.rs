@@ -7,28 +7,23 @@ use bevy::{
 };
 use rand::random_range;
 
+use super::particles::Particle;
+
 // TODO: remove all unwrap and expects
 
-enum GridError {
+pub enum GridError {
     OutOfBound,
 }
 
 pub const BACKGROUND_COLOR: bevy::prelude::Color = Color::srgb(0.82, 0.93, 1.);
 
-#[derive(Clone, PartialEq, Debug)]
-pub enum Particle {
-    Sand,
-    Water,
-    Salt,
-}
-
-enum ParticleOperation {
+pub enum ParticleOperation {
     Swap(usize),
     Dissolve(Particle),
 }
 
 #[derive(Clone, Debug)]
-enum ParticleHorizontalDirection {
+pub enum ParticleHorizontalDirection {
     Left = -1,
     Right = 1,
 }
@@ -40,8 +35,8 @@ enum RowUpdateDirection {
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct Cell {
-    particle: Particle,
-    simulated: bool,
+    pub particle: Particle,
+    pub simulated: bool,
 }
 
 impl Cell {
@@ -62,7 +57,7 @@ pub struct Grid {
     row_update_direction: fn() -> RowUpdateDirection,
 }
 
-trait GridAccess {
+pub trait GridAccess {
     fn water_direction(&self) -> ParticleHorizontalDirection;
     fn get_neighbor_index(&self, x: usize, y: usize, xn: i32, yn: i32) -> Result<usize, GridError>;
     fn get_cell(&self, index: usize) -> &Option<Cell>;
@@ -89,232 +84,6 @@ impl GridAccess for Grid {
 
     fn water_direction(&self) -> ParticleHorizontalDirection {
         (self.water_direction)()
-    }
-}
-
-impl Particle {
-    fn find_particle_next_location<T: GridAccess>(
-        &self,
-        grid: &T,
-        x: usize,
-        y: usize,
-    ) -> Option<ParticleOperation> {
-        match self {
-            Particle::Sand => Particle::find_sand_particle_next_location(grid, x, y),
-            Particle::Water => Particle::find_water_particle_next_location(grid, x, y),
-            Particle::Salt => Particle::find_salt_particle_next_location(grid, x, y),
-        }
-    }
-
-    fn find_sand_particle_next_location<T: GridAccess>(
-        grid: &T,
-        x: usize,
-        y: usize,
-    ) -> Option<ParticleOperation> {
-        let index_bottom = match grid.get_neighbor_index(x, y, 0, 1) {
-            Ok(i) => match grid.get_cell(i) {
-                Some(p) => match p.particle {
-                    Particle::Water => match p.simulated {
-                        true => None,
-                        false => Some(i),
-                    },
-                    _ => None,
-                },
-                None => Some(i),
-            },
-            Err(_) => None,
-        };
-
-        let index_bottom_right = match grid.get_neighbor_index(x, y, 1, 1) {
-            Ok(i) => match grid.get_cell(i) {
-                Some(p) => match p.particle {
-                    Particle::Water => match p.simulated {
-                        true => None,
-                        false => Some(i),
-                    },
-                    _ => None,
-                },
-                None => Some(i),
-            },
-            Err(_) => None,
-        };
-
-        let index_bottom_left = match grid.get_neighbor_index(x, y, -1, 1) {
-            Ok(i) => match grid.get_cell(i) {
-                Some(p) => match p.particle {
-                    Particle::Water => match p.simulated {
-                        true => None,
-                        false => Some(i),
-                    },
-                    _ => None,
-                },
-                None => Some(i),
-            },
-            Err(_) => None,
-        };
-
-        let index = match (index_bottom_left, index_bottom, index_bottom_right) {
-            (None, None, None) => None,
-            (None, None, Some(r)) => Some(r),
-            (Some(l), None, None) => Some(l),
-            (Some(l), None, Some(r)) => match grid.water_direction() {
-                ParticleHorizontalDirection::Left => Some(l),
-                ParticleHorizontalDirection::Right => Some(r),
-            },
-            (_, Some(i), _) => Some(i),
-        };
-
-        match index {
-            Some(i) => Some(ParticleOperation::Swap(i)),
-            None => None,
-        }
-    }
-
-    fn find_water_particle_next_location<T: GridAccess>(
-        grid: &T,
-        x: usize,
-        y: usize,
-    ) -> Option<ParticleOperation> {
-        let index_bottom = match grid.get_neighbor_index(x, y, 0, 1) {
-            Ok(i) => match grid.get_cell(i) {
-                Some(_) => None,
-                None => Some(i),
-            },
-            Err(_) => None,
-        };
-
-        let index_right = match grid.get_neighbor_index(x, y, 1, 0) {
-            Ok(i) => match grid.get_cell(i) {
-                Some(_) => None,
-                None => Some(i),
-            },
-            Err(_) => None,
-        };
-
-        let index_left = match grid.get_neighbor_index(x, y, -1, 0) {
-            Ok(i) => match grid.get_cell(i) {
-                Some(_) => None,
-                None => Some(i),
-            },
-            Err(_) => None,
-        };
-
-        let index_bottom_right = match grid.get_neighbor_index(x, y, 1, 1) {
-            Ok(i) => match grid.get_cell(i) {
-                Some(_) => None,
-                None => Some(i),
-            },
-            Err(_) => None,
-        };
-
-        let index_bottom_left = match grid.get_neighbor_index(x, y, -1, 1) {
-            Ok(i) => match grid.get_cell(i) {
-                Some(_) => None,
-                None => Some(i),
-            },
-            Err(_) => None,
-        };
-
-        let index = match (
-            index_left,
-            index_bottom_left,
-            index_bottom,
-            index_bottom_right,
-            index_right,
-        ) {
-            (None, None, None, None, None) => None,
-            (_, _, Some(i), _, _) => Some(i),
-            (_, None, None, Some(i), _) => Some(i),
-            (_, Some(i), None, None, _) => Some(i),
-            (_, Some(l), None, Some(r), _) => match grid.water_direction() {
-                ParticleHorizontalDirection::Left => Some(l),
-                ParticleHorizontalDirection::Right => Some(r),
-            },
-            (None, None, None, None, Some(i)) => Some(i),
-            (Some(i), None, None, None, None) => Some(i),
-            (Some(l), None, None, None, Some(r)) => match grid.water_direction() {
-                ParticleHorizontalDirection::Left => Some(l),
-                ParticleHorizontalDirection::Right => Some(r),
-            },
-        };
-
-        match index {
-            Some(i) => Some(ParticleOperation::Swap(i)),
-            None => None,
-        }
-    }
-
-    fn find_salt_particle_next_location<T: GridAccess>(
-        grid: &T,
-        x: usize,
-        y: usize,
-    ) -> Option<ParticleOperation> {
-        let neighboring_water =
-            (-1..=1)
-                .flat_map(|y| (-1..=1).map(move |x| (y, x)))
-                .fold(false, |acc, (xo, yo)| {
-                    let n = match grid.get_neighbor_index(x, y, xo, yo) {
-                        Ok(i) => match grid.get_cell(i) {
-                            Some(p) => match p.particle {
-                                Particle::Water => true,
-                                _ => false,
-                            },
-                            None => false,
-                        },
-                        Err(_) => false,
-                    };
-                    acc || n
-                });
-        if neighboring_water {
-            return Some(ParticleOperation::Dissolve(Particle::Water));
-        }
-        let index_bottom = match grid.get_neighbor_index(x, y, 0, 1) {
-            Ok(i) => match grid.get_cell(i) {
-                Some(_) => None,
-                None => Some(i),
-            },
-            Err(_) => None,
-        };
-
-        let index_bottom_right = match grid.get_neighbor_index(x, y, 1, 1) {
-            Ok(i) => match grid.get_cell(i) {
-                Some(_) => None,
-                None => Some(i),
-            },
-            Err(_) => None,
-        };
-
-        let index_bottom_left = match grid.get_neighbor_index(x, y, -1, 1) {
-            Ok(i) => match grid.get_cell(i) {
-                Some(_) => None,
-                None => Some(i),
-            },
-            Err(_) => None,
-        };
-
-        let index = match (index_bottom_left, index_bottom, index_bottom_right) {
-            (None, None, None) => None,
-            (None, None, Some(r)) => Some(r),
-            (Some(l), None, None) => Some(l),
-            (Some(l), None, Some(r)) => match grid.water_direction() {
-                ParticleHorizontalDirection::Left => Some(l),
-                ParticleHorizontalDirection::Right => Some(r),
-            },
-            (_, Some(i), _) => Some(i),
-        };
-
-        match index {
-            Some(i) => Some(ParticleOperation::Swap(i)),
-            None => None,
-        }
-    }
-
-    pub fn color(&self) -> Color {
-        match self {
-            Particle::Sand => Color::srgb(0.76, 0.70, 0.50),
-            Particle::Water => Color::srgb(0.05, 0.53, 0.80),
-            Particle::Salt => Color::srgb(1.00, 1.00, 1.00),
-        }
     }
 }
 

@@ -97,8 +97,9 @@ mod tests {
 
     use crate::component::{
         macros::assert_color_srgb_eq,
-        particle::{Particle, BACKGROUND_COLOR},
+        particle::{BACKGROUND_COLOR},
     };
+    use crate::component::particles::Particle;
 
     use super::*;
     use bevy::prelude::default;

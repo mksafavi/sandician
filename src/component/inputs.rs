@@ -5,10 +5,7 @@ use bevy::{
 };
 use bevy::{math::Vec2, window::WindowResolution};
 
-use super::{
-    grid_plugin::ConfigResource,
-    particle::{Grid, Particle},
-};
+use super::{grid_plugin::ConfigResource, particle::Grid, particles::Particle};
 
 fn scale_input_position(
     cursor: Option<Vec2>,
