@@ -82,10 +82,7 @@ impl Particle {
             (_, Some(i), _) => Some(i),
         };
 
-        match index {
-            Some(i) => Some(ParticleOperation::Swap(i)),
-            None => None,
-        }
+        index.map(ParticleOperation::Swap)
     }
 
     fn find_water_particle_next_location<T: GridAccess>(
@@ -156,10 +153,7 @@ impl Particle {
             },
         };
 
-        match index {
-            Some(i) => Some(ParticleOperation::Swap(i)),
-            None => None,
-        }
+        index.map(ParticleOperation::Swap)
     }
 
     fn find_salt_particle_next_location<T: GridAccess>(
@@ -221,10 +215,7 @@ impl Particle {
             (_, Some(i), _) => Some(i),
         };
 
-        match index {
-            Some(i) => Some(ParticleOperation::Swap(i)),
-            None => None,
-        }
+        index.map(ParticleOperation::Swap)
     }
 
     pub fn color(&self) -> Color {
