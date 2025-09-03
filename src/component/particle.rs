@@ -59,7 +59,11 @@ pub struct Grid {
 
 pub trait GridAccess {
     fn water_direction(&self) -> ParticleHorizontalDirection;
-    fn get_neighbor_index(&self, x: usize, y: usize, xn: i32, yn: i32) -> Result<usize, GridError>;
+    fn get_neighbor_index(
+        &self,
+        position: (usize, usize),
+        offset: (i32, i32),
+    ) -> Result<usize, GridError>;
     fn get_cell(&self, index: usize) -> &Option<Cell>;
 }
 
@@ -68,13 +72,16 @@ impl GridAccess for Grid {
         &self.cells[index]
     }
 
-    fn get_neighbor_index(&self, x: usize, y: usize, xn: i32, yn: i32) -> Result<usize, GridError> {
-        let neighbor_index = (y as i32 + yn) * self.width as i32 + (x as i32 + xn);
-
-        if (0 <= y as i32 + yn)
-            && ((y as i32 + yn) < self.height as i32)
-            && ((x as i32 + xn) < self.width as i32)
-            && (0 <= x as i32 + xn)
+    fn get_neighbor_index(
+        &self,
+        (x, y): (usize, usize),
+        (ox, oy): (i32, i32),
+    ) -> Result<usize, GridError> {
+        let neighbor_index = (y as i32 + oy) * self.width as i32 + (x as i32 + ox);
+        if (0 <= y as i32 + oy)
+            && ((y as i32 + oy) < self.height as i32)
+            && ((x as i32 + ox) < self.width as i32)
+            && (0 <= x as i32 + ox)
         {
             Ok(neighbor_index as usize)
         } else {

@@ -16,18 +16,17 @@ impl Particle {
         y: usize,
     ) -> Option<ParticleOperation> {
         match self {
-            Particle::Sand => Particle::find_sand_particle_next_location(grid, x, y),
-            Particle::Water => Particle::find_water_particle_next_location(grid, x, y),
-            Particle::Salt => Particle::find_salt_particle_next_location(grid, x, y),
+            Particle::Sand => Particle::find_sand_particle_next_location(grid, (x, y)),
+            Particle::Water => Particle::find_water_particle_next_location(grid, (x, y)),
+            Particle::Salt => Particle::find_salt_particle_next_location(grid, (x, y)),
         }
     }
 
     fn find_sand_particle_next_location<T: GridAccess>(
         grid: &T,
-        x: usize,
-        y: usize,
+        position: (usize, usize),
     ) -> Option<ParticleOperation> {
-        let index_bottom = match grid.get_neighbor_index(x, y, 0, 1) {
+        let index_bottom = match grid.get_neighbor_index(position, (0, 1)) {
             Ok(i) => match grid.get_cell(i) {
                 Some(p) => match p.particle {
                     Particle::Water => match p.simulated {
@@ -41,7 +40,7 @@ impl Particle {
             Err(_) => None,
         };
 
-        let index_bottom_right = match grid.get_neighbor_index(x, y, 1, 1) {
+        let index_bottom_right = match grid.get_neighbor_index(position, (1, 1)) {
             Ok(i) => match grid.get_cell(i) {
                 Some(p) => match p.particle {
                     Particle::Water => match p.simulated {
@@ -55,7 +54,7 @@ impl Particle {
             Err(_) => None,
         };
 
-        let index_bottom_left = match grid.get_neighbor_index(x, y, -1, 1) {
+        let index_bottom_left = match grid.get_neighbor_index(position, (-1, 1)) {
             Ok(i) => match grid.get_cell(i) {
                 Some(p) => match p.particle {
                     Particle::Water => match p.simulated {
@@ -85,10 +84,9 @@ impl Particle {
 
     fn find_water_particle_next_location<T: GridAccess>(
         grid: &T,
-        x: usize,
-        y: usize,
+        position: (usize, usize),
     ) -> Option<ParticleOperation> {
-        let index_bottom = match grid.get_neighbor_index(x, y, 0, 1) {
+        let index_bottom = match grid.get_neighbor_index(position, (0, 1)) {
             Ok(i) => match grid.get_cell(i) {
                 Some(_) => None,
                 None => Some(i),
@@ -96,7 +94,7 @@ impl Particle {
             Err(_) => None,
         };
 
-        let index_right = match grid.get_neighbor_index(x, y, 1, 0) {
+        let index_right = match grid.get_neighbor_index(position, (1, 0)) {
             Ok(i) => match grid.get_cell(i) {
                 Some(_) => None,
                 None => Some(i),
@@ -104,7 +102,7 @@ impl Particle {
             Err(_) => None,
         };
 
-        let index_left = match grid.get_neighbor_index(x, y, -1, 0) {
+        let index_left = match grid.get_neighbor_index(position, (-1, 0)) {
             Ok(i) => match grid.get_cell(i) {
                 Some(_) => None,
                 None => Some(i),
@@ -112,7 +110,7 @@ impl Particle {
             Err(_) => None,
         };
 
-        let index_bottom_right = match grid.get_neighbor_index(x, y, 1, 1) {
+        let index_bottom_right = match grid.get_neighbor_index(position, (1, 1)) {
             Ok(i) => match grid.get_cell(i) {
                 Some(_) => None,
                 None => Some(i),
@@ -120,7 +118,7 @@ impl Particle {
             Err(_) => None,
         };
 
-        let index_bottom_left = match grid.get_neighbor_index(x, y, -1, 1) {
+        let index_bottom_left = match grid.get_neighbor_index(position, (-1, 1)) {
             Ok(i) => match grid.get_cell(i) {
                 Some(_) => None,
                 None => Some(i),
@@ -156,14 +154,13 @@ impl Particle {
 
     fn find_salt_particle_next_location<T: GridAccess>(
         grid: &T,
-        x: usize,
-        y: usize,
+        position: (usize, usize),
     ) -> Option<ParticleOperation> {
         let neighboring_water =
             (-1..=1)
                 .flat_map(|y| (-1..=1).map(move |x| (y, x)))
                 .fold(false, |acc, (xo, yo)| {
-                    let n = match grid.get_neighbor_index(x, y, xo, yo) {
+                    let n = match grid.get_neighbor_index(position, (xo, yo)) {
                         Ok(i) => match grid.get_cell(i) {
                             Some(p) => matches!(p.particle, Particle::Water),
                             None => false,
@@ -175,7 +172,7 @@ impl Particle {
         if neighboring_water {
             return Some(ParticleOperation::Dissolve(Particle::Water));
         }
-        let index_bottom = match grid.get_neighbor_index(x, y, 0, 1) {
+        let index_bottom = match grid.get_neighbor_index(position, (0, 1)) {
             Ok(i) => match grid.get_cell(i) {
                 Some(_) => None,
                 None => Some(i),
@@ -183,7 +180,7 @@ impl Particle {
             Err(_) => None,
         };
 
-        let index_bottom_right = match grid.get_neighbor_index(x, y, 1, 1) {
+        let index_bottom_right = match grid.get_neighbor_index(position, (1, 1)) {
             Ok(i) => match grid.get_cell(i) {
                 Some(_) => None,
                 None => Some(i),
@@ -191,7 +188,7 @@ impl Particle {
             Err(_) => None,
         };
 
-        let index_bottom_left = match grid.get_neighbor_index(x, y, -1, 1) {
+        let index_bottom_left = match grid.get_neighbor_index(position, (-1, 1)) {
             Ok(i) => match grid.get_cell(i) {
                 Some(_) => None,
                 None => Some(i),
