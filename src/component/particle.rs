@@ -130,23 +130,23 @@ impl Grid {
         self.cells.swap(index, next_location_index);
         if let Some(p) = &mut self.cells[index] {
             p.simulated = true;
-        };
+        }
         if let Some(p) = &mut self.cells[next_location_index] {
             p.simulated = true;
-        };
+        }
     }
 
     fn disolve_particles(&mut self, index: usize, particle: Particle) {
         if let Some(p) = &mut self.cells[index] {
             p.simulated = true;
-            p.particle = particle
-        };
+            p.particle = particle;
+        }
     }
 
     fn clear_all_simulated_field(&mut self) {
         self.cells.iter_mut().for_each(|x| {
             if let Some(x) = x {
-                x.simulated = false
+                x.simulated = false;
             }
         });
     }
@@ -159,15 +159,15 @@ impl Grid {
                 if let Some(next_operation) = next_operation {
                     match next_operation {
                         ParticleOperation::Swap(next_location_index) => {
-                            self.swap_particles(index, next_location_index)
+                            self.swap_particles(index, next_location_index);
                         }
                         ParticleOperation::Dissolve(particle) => {
-                            self.disolve_particles(index, particle)
+                            self.disolve_particles(index, particle);
                         }
                     }
                 }
             }
-        };
+        }
     }
 
     pub fn update_grid(&mut self) {

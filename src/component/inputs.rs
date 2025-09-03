@@ -41,15 +41,15 @@ pub fn mouse_spawn_brush_system(
         if let Some((x, y)) = cursor_position {
             if mouse_button.pressed(MouseButton::Left) {
                 g.spawn_brush(x, y, 25, Particle::Sand);
-            };
+            }
             if mouse_button.pressed(MouseButton::Right) {
                 g.spawn_brush(x, y, 25, Particle::Water);
-            };
+            }
             if mouse_button.pressed(MouseButton::Middle) {
                 g.spawn_brush(x, y, 25, Particle::Salt);
-            };
-        };
-    };
+            }
+        }
+    }
 }
 
 #[cfg(test)]

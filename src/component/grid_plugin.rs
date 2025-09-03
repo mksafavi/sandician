@@ -86,7 +86,7 @@ impl GridPlugin {
     ) {
         if let Ok(g) = grid.single() {
             if let Some(image) = images.get_mut(&output_frame_handle.0) {
-                g.draw_grid(image)
+                g.draw_grid(image);
             }
         }
     }
