@@ -62,10 +62,40 @@ pub struct Grid {
     row_update_direction: fn() -> RowUpdateDirection,
 }
 
+trait GridAccess {
+    fn water_direction(&self) -> ParticleHorizontalDirection;
+    fn get_neighbor_index(&self, x: usize, y: usize, xn: i32, yn: i32) -> Result<usize, GridError>;
+    fn get_cell(&self, index: usize) -> &Option<Cell>;
+}
+
+impl GridAccess for Grid {
+    fn get_cell(&self, index: usize) -> &Option<Cell> {
+        &self.cells[index]
+    }
+
+    fn get_neighbor_index(&self, x: usize, y: usize, xn: i32, yn: i32) -> Result<usize, GridError> {
+        let neighbor_index = (y as i32 + yn) * self.width as i32 + (x as i32 + xn);
+
+        if (0 <= y as i32 + yn)
+            && ((y as i32 + yn) < self.height as i32)
+            && ((x as i32 + xn) < self.width as i32)
+            && (0 <= x as i32 + xn)
+        {
+            Ok(neighbor_index as usize)
+        } else {
+            Err(GridError::OutOfBound)
+        }
+    }
+
+    fn water_direction(&self) -> ParticleHorizontalDirection {
+        (self.water_direction)()
+    }
+}
+
 impl Particle {
-    fn find_particle_next_location(
+    fn find_particle_next_location<T: GridAccess>(
         &self,
-        grid: &Grid,
+        grid: &T,
         x: usize,
         y: usize,
     ) -> Option<ParticleOperation> {
@@ -76,8 +106,8 @@ impl Particle {
         }
     }
 
-    fn find_sand_particle_next_location(
-        grid: &Grid,
+    fn find_sand_particle_next_location<T: GridAccess>(
+        grid: &T,
         x: usize,
         y: usize,
     ) -> Option<ParticleOperation> {
@@ -127,7 +157,7 @@ impl Particle {
             (None, None, None) => None,
             (None, None, Some(r)) => Some(r),
             (Some(l), None, None) => Some(l),
-            (Some(l), None, Some(r)) => match (grid.water_direction)() {
+            (Some(l), None, Some(r)) => match grid.water_direction() {
                 ParticleHorizontalDirection::Left => Some(l),
                 ParticleHorizontalDirection::Right => Some(r),
             },
@@ -140,8 +170,8 @@ impl Particle {
         }
     }
 
-    fn find_water_particle_next_location(
-        grid: &Grid,
+    fn find_water_particle_next_location<T: GridAccess>(
+        grid: &T,
         x: usize,
         y: usize,
     ) -> Option<ParticleOperation> {
@@ -196,13 +226,13 @@ impl Particle {
             (_, _, Some(i), _, _) => Some(i),
             (_, None, None, Some(i), _) => Some(i),
             (_, Some(i), None, None, _) => Some(i),
-            (_, Some(l), None, Some(r), _) => match (grid.water_direction)() {
+            (_, Some(l), None, Some(r), _) => match grid.water_direction() {
                 ParticleHorizontalDirection::Left => Some(l),
                 ParticleHorizontalDirection::Right => Some(r),
             },
             (None, None, None, None, Some(i)) => Some(i),
             (Some(i), None, None, None, None) => Some(i),
-            (Some(l), None, None, None, Some(r)) => match (grid.water_direction)() {
+            (Some(l), None, None, None, Some(r)) => match grid.water_direction() {
                 ParticleHorizontalDirection::Left => Some(l),
                 ParticleHorizontalDirection::Right => Some(r),
             },
@@ -214,8 +244,8 @@ impl Particle {
         }
     }
 
-    fn find_salt_particle_next_location(
-        grid: &Grid,
+    fn find_salt_particle_next_location<T: GridAccess>(
+        grid: &T,
         x: usize,
         y: usize,
     ) -> Option<ParticleOperation> {
@@ -266,7 +296,7 @@ impl Particle {
             (None, None, None) => None,
             (None, None, Some(r)) => Some(r),
             (Some(l), None, None) => Some(l),
-            (Some(l), None, Some(r)) => match (grid.water_direction)() {
+            (Some(l), None, Some(r)) => match grid.water_direction() {
                 ParticleHorizontalDirection::Left => Some(l),
                 ParticleHorizontalDirection::Right => Some(r),
             },
@@ -317,24 +347,6 @@ impl Grid {
             if self.cells[index].is_none() {
                 self.cells[index] = Some(Cell::new(particle));
             }
-        }
-    }
-
-    fn get_cell(&self, index: usize) -> &Option<Cell> {
-        &self.cells[index]
-    }
-
-    fn get_neighbor_index(&self, x: usize, y: usize, xn: i32, yn: i32) -> Result<usize, GridError> {
-        let neighbor_index = (y as i32 + yn) * self.width as i32 + (x as i32 + xn);
-
-        if (0 <= y as i32 + yn)
-            && ((y as i32 + yn) < self.height as i32)
-            && ((x as i32 + xn) < self.width as i32)
-            && (0 <= x as i32 + xn)
-        {
-            Ok(neighbor_index as usize)
-        } else {
-            Err(GridError::OutOfBound)
         }
     }
 
