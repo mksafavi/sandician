@@ -1,6 +1,6 @@
 use bevy::{
     ecs::system::{Query, Res},
-    input::{mouse::MouseButton, ButtonInput},
+    input::{mouse::MouseButton, ButtonInput, ButtonState},
     window::Window,
 };
 use bevy::{math::Vec2, window::WindowResolution};
@@ -52,11 +52,50 @@ pub fn mouse_spawn_brush_system(
     }
 }
 
+#[allow(dead_code)]
+fn select_particle_from_mouse_button(button: MouseButton, state: ButtonState) -> Option<Particle> {
+    match state {
+        bevy::input::ButtonState::Pressed => match button {
+            MouseButton::Left => Some(Particle::Sand),
+            MouseButton::Right => Some(Particle::Water),
+            MouseButton::Middle => Some(Particle::Salt),
+            _ => None,
+        },
+        bevy::input::ButtonState::Released => None,
+    }
+}
+
 #[cfg(test)]
 mod tests {
 
     use super::*;
     use bevy::{math::vec2, window::WindowResolution};
+
+    #[test]
+    fn test_select_particle_from_mouse_button_returns_particle_when_pressed() {
+        assert_eq!(
+            Some(Particle::Sand),
+            select_particle_from_mouse_button(MouseButton::Left, ButtonState::Pressed)
+        );
+
+        assert_eq!(
+            Some(Particle::Water),
+            select_particle_from_mouse_button(MouseButton::Right, ButtonState::Pressed)
+        );
+
+        assert_eq!(
+            Some(Particle::Salt),
+            select_particle_from_mouse_button(MouseButton::Middle, ButtonState::Pressed)
+        );
+    }
+
+    #[test]
+    fn test_select_particle_from_mouse_button_returns_none_when_not_pressed() {
+        assert_eq!(
+            None,
+            select_particle_from_mouse_button(MouseButton::Left, ButtonState::Released)
+        );
+    }
 
     #[test]
     fn test_scale_input_position_to_window_size_at_none() {
