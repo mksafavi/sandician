@@ -38,15 +38,15 @@ pub fn mouse_spawn_brush_system(
     };
 
     if let Ok(mut g) = grid.single_mut() {
-        if let Some((x, y)) = cursor_position {
+        if let Some(p) = cursor_position {
             if mouse_button.pressed(MouseButton::Left) {
-                g.spawn_brush(x, y, 25, Particle::Sand);
+                g.spawn_brush(p, 25, Particle::Sand);
             }
             if mouse_button.pressed(MouseButton::Right) {
-                g.spawn_brush(x, y, 25, Particle::Water);
+                g.spawn_brush(p, 25, Particle::Water);
             }
             if mouse_button.pressed(MouseButton::Middle) {
-                g.spawn_brush(x, y, 25, Particle::Salt);
+                g.spawn_brush(p, 25, Particle::Salt);
             }
         }
     }

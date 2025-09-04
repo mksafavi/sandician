@@ -209,7 +209,7 @@ impl Grid {
         }
     }
 
-    pub fn spawn_brush(&mut self, x: usize, y: usize, size: usize, particle: Particle) {
+    pub fn spawn_brush(&mut self, (x, y): (usize, usize), size: usize, particle: Particle) {
         for j in 0..size {
             for i in 0..size {
                 self.spawn_particle(x + i, y + j, particle.clone());
@@ -301,11 +301,11 @@ mod tests {
     #[test]
     fn test_spawn_particles_brush() {
         let mut g = Grid::new(2, 2);
-        g.spawn_brush(0, 0, 1, Particle::Sand);
+        g.spawn_brush((0, 0), 1, Particle::Sand);
         assert_eq!(Some(Cell::new(Particle::Sand)), g.cells[0]);
 
         let mut g = Grid::new(2, 2);
-        g.spawn_brush(0, 0, 2, Particle::Sand);
+        g.spawn_brush((0, 0), 2, Particle::Sand);
         assert_eq!(
             vec![
                 Some(Cell::new(Particle::Sand)),
