@@ -1,4 +1,4 @@
-use super::particle::{GridAccess, ParticleHorizontalDirection, ParticleOperation};
+use super::grid::{GridAccess, ParticleHorizontalDirection, ParticleOperation};
 use bevy::prelude::Color;
 
 #[derive(Clone, PartialEq, Debug)]

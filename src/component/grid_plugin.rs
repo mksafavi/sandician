@@ -13,7 +13,7 @@ use bevy::{
     window::Window,
 };
 
-use super::particle::Grid;
+use super::grid::Grid;
 
 #[derive(Resource)]
 struct OutputFrameHandle(Handle<Image>);
@@ -97,7 +97,7 @@ mod tests {
 
     use crate::component::{
         macros::assert_color_srgb_eq,
-        particle::{BACKGROUND_COLOR},
+        grid::{BACKGROUND_COLOR},
     };
     use crate::component::particles::Particle;
 
