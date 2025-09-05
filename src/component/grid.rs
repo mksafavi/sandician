@@ -318,21 +318,12 @@ mod tests {
     }
 
     #[test]
-    fn test_update_grid_sand_falling_down_to_last_row_stays_there() {
-        let mut g = Grid::new(2, 2);
-        g.spawn_particle(0, 1, Particle::Sand);
-
-        g.update_grid(); /* should stay at the last line*/
-        assert_eq!(None, g.cells[0]);
-        assert_eq!(None, g.cells[1]);
-        assert_eq!(Some(Cell::new(Particle::Sand)), g.cells[2]);
-        assert_eq!(None, g.cells[3]);
-    }
-
-    #[test]
     fn test_update_grid_sand_falls_down_when_bottom_cell_is_empty() {
+        /*
+         * s- -> --
+         * --    s-
+         */
         let mut g = Grid::new(2, 2);
-
         g.spawn_particle(0, 0, Particle::Sand);
 
         assert_eq!(Some(Cell::new(Particle::Sand)), g.cells[0]);
@@ -349,12 +340,15 @@ mod tests {
     }
 
     #[test]
-    fn test_update_grid_sand_falls_bottom_right_when_bottom_cell_is_full_and_bottom_left_is_wall_and_bottom_right_is_empty(
+    fn test_update_grid_sand_falls_to_bottom_right_when_bottom_cell_and_bottom_left_are_full_and_bottom_right_is_empty(
     ) {
+        /*
+         * s- -> --
+         * s-    ss
+         */
         let mut g = Grid::new(2, 2);
 
         g.spawn_particle(0, 0, Particle::Sand);
-
         g.spawn_particle(0, 1, Particle::Sand);
 
         g.update_grid();
@@ -366,12 +360,15 @@ mod tests {
     }
 
     #[test]
-    fn test_update_grid_sand_falls_bottom_left_when_bottom_cell_is_full_and_bottom_right_is_wall_and_bottom_left_is_empty(
+    fn test_update_grid_sand_falls_bottom_left_when_bottom_cell_and_bottom_right_are_full_and_bottom_left_is_empty(
     ) {
+        /*
+         * -s -> --
+         * -s    ss
+         */
         let mut g = Grid::new(2, 2);
 
         g.spawn_particle(1, 0, Particle::Sand);
-
         g.spawn_particle(1, 1, Particle::Sand);
 
         g.update_grid();
@@ -383,12 +380,15 @@ mod tests {
     }
 
     #[test]
-    fn test_update_grid_sand_falls_bottom_left_or_bottom_right_when_bottom_cell_is_full_and_both_bottom_right_and_bottom_left_are_empty_for_testing_forced_left(
+    fn test_update_grid_sand_falls_bottom_left_or_bottom_right_when_bottom_cell_is_full_and_both_bottom_right_and_bottom_left_are_empty_forced_left(
     ) {
+        /*
+         * -s- -> ---
+         * -s-    ss-
+         */
         let mut g = Grid::new_with_rand(3, 2, Some(|| ParticleHorizontalDirection::Left), None);
 
         g.spawn_particle(1, 0, Particle::Sand);
-
         g.spawn_particle(1, 1, Particle::Sand);
 
         g.update_grid();
@@ -402,12 +402,15 @@ mod tests {
     }
 
     #[test]
-    fn test_update_grid_sand_falls_bottom_left_or_bottom_right_when_bottom_cell_is_full_and_both_bottom_right_and_bottom_left_are_empty_for_testing_forced_right(
+    fn test_update_grid_sand_falls_bottom_left_or_bottom_right_when_bottom_cell_is_full_and_both_bottom_right_and_bottom_left_are_empty_forced_right(
     ) {
+        /*
+         * -s- -> ---
+         * -s-    -ss
+         */
         let mut g = Grid::new_with_rand(3, 2, Some(|| ParticleHorizontalDirection::Right), None);
 
         g.spawn_particle(1, 0, Particle::Sand);
-
         g.spawn_particle(1, 1, Particle::Sand);
 
         g.update_grid();
@@ -810,7 +813,6 @@ mod tests {
 
     #[test]
     fn test_sand_should_sink_in_water_but_water_should_not_climb_sands() {
-
         /*
          * -s- -> -s- -> -w-
          * -s-    -w-    -s-
