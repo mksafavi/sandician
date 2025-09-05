@@ -2,6 +2,7 @@ use bevy::{
     app::{App, FixedUpdate, Plugin, Startup, Update},
     asset::{Assets, Handle},
     ecs::{
+        query::With,
         resource::Resource,
         system::{Commands, Query, Res, ResMut},
     },
@@ -43,7 +44,8 @@ impl Plugin for GridPlugin {
             .insert_resource(Time::<Fixed>::from_hz(self.config.update_rate))
             .add_systems(Startup, GridPlugin::init_grid_system)
             .add_systems(FixedUpdate, GridPlugin::update_grid_system)
-            .add_systems(Update, GridPlugin::draw_grid_system);
+            .add_systems(Update, GridPlugin::draw_grid_system)
+            .add_systems(Update, GridPlugin::scale_output_frame_to_window_system);
     }
 }
 
@@ -52,25 +54,32 @@ impl GridPlugin {
         mut commands: Commands,
         config: Res<ConfigResource>,
         mut images: ResMut<Assets<Image>>,
-        windows: Query<&Window>,
     ) {
         commands.spawn(Grid::new(config.width, config.height));
         let handle = images.add(Grid::create_output_frame(config.width, config.height));
-
-        let sprite_scale = match windows.single() {
-            Ok(window) => Vec3::new(
-                window.resolution.width() / config.width as f32,
-                window.resolution.height() / config.height as f32,
-                1.,
-            ),
-            Err(_) => Vec3::new(1., 1., 1.),
-        };
-
         commands.spawn((
             Sprite::from_image(handle.clone()),
-            Transform::from_scale(sprite_scale),
+            Transform::from_scale(Vec3::new(1., 1., 1.)),
         ));
         commands.insert_resource(OutputFrameHandle(handle));
+    }
+
+    fn scale_output_frame_to_window_system(
+        config: Res<ConfigResource>,
+        windows: Query<&Window>,
+        mut sprite_transform: Query<&mut Transform, With<Sprite>>,
+    ) {
+        if let Ok(mut s) = sprite_transform.single_mut() {
+            let sprite_scale = match windows.single() {
+                Ok(window) => Vec3::new(
+                    window.resolution.width() / config.width as f32,
+                    window.resolution.height() / config.height as f32,
+                    1.,
+                ),
+                Err(_) => Vec3::new(1., 1., 1.),
+            };
+            s.scale = sprite_scale;
+        };
     }
 
     fn update_grid_system(mut grid: Query<&mut Grid>) {
@@ -95,16 +104,13 @@ impl GridPlugin {
 #[cfg(test)]
 mod tests {
 
-    use crate::component::{
-        macros::assert_color_srgb_eq,
-        grid::{BACKGROUND_COLOR},
-    };
     use crate::component::particles::Particle;
+    use crate::component::{grid::BACKGROUND_COLOR, macros::assert_color_srgb_eq};
 
     use super::*;
     use bevy::prelude::default;
-    use bevy::{ecs::query::With, prelude::IntoScheduleConfigs, window::WindowPlugin};
     use bevy::window::WindowResolution;
+    use bevy::{ecs::query::With, prelude::IntoScheduleConfigs, window::WindowPlugin};
 
     #[test]
     fn test_init_grid_system_creates_a_grid() {
@@ -117,11 +123,15 @@ mod tests {
     }
 
     #[test]
-    fn test_init_grid_system_scales_output_frame_to_window() {
+    fn test_scale_output_frame_to_window_system() {
         let mut app = App::new();
         app.insert_resource(ConfigResource::new(10, 5, 100.));
         app.init_resource::<Assets<Image>>();
         app.add_systems(Startup, GridPlugin::init_grid_system);
+        app.add_systems(Startup, |mut c: Commands| {
+            c.spawn(Transform::default()); /* Insert any transform asset that might be present at app runtime */
+        });
+        app.add_systems(Update, GridPlugin::scale_output_frame_to_window_system);
         app.add_plugins(WindowPlugin {
             primary_window: Some(Window {
                 resolution: WindowResolution::new(200., 100.),
