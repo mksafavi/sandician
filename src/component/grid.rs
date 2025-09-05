@@ -216,35 +216,32 @@ impl Grid {
             }
         }
     }
+
+    #[allow(dead_code)]
+    fn new_with_rand(
+        width: usize,
+        height: usize,
+        water_direction: Option<fn() -> ParticleHorizontalDirection>,
+        row_update_direction: Option<fn() -> RowUpdateDirection>,
+    ) -> Self {
+        let mut g = Self::new(width, height);
+        g.water_direction = match water_direction {
+            Some(f) => f,
+            None => || ParticleHorizontalDirection::Right,
+        };
+
+        g.row_update_direction = match row_update_direction {
+            Some(f) => f,
+            None => || RowUpdateDirection::Forward,
+        };
+        g
+    }
 }
 
 #[cfg(test)]
 mod tests {
-
     use crate::component::macros::assert_color_srgb_eq;
-
     use super::*;
-
-    impl Grid {
-        fn new_with_rand(
-            width: usize,
-            height: usize,
-            water_direction: Option<fn() -> ParticleHorizontalDirection>,
-            row_update_direction: Option<fn() -> RowUpdateDirection>,
-        ) -> Self {
-            let mut g = Self::new(width, height);
-            g.water_direction = match water_direction {
-                Some(f) => f,
-                None => || ParticleHorizontalDirection::Right,
-            };
-
-            g.row_update_direction = match row_update_direction {
-                Some(f) => f,
-                None => || RowUpdateDirection::Forward,
-            };
-            g
-        }
-    }
 
     #[test]
     fn test_create_grid() {
@@ -316,6 +313,49 @@ mod tests {
             g.cells
         );
     }
+
+    #[test]
+    fn test_draw_grid() {
+        let mut g = Grid::new(2, 2);
+        let mut image = Grid::create_output_frame(2, 2);
+        g.draw_grid(&mut image);
+        assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(0, 0).unwrap());
+        assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(1, 0).unwrap());
+        assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(0, 1).unwrap());
+        assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(1, 1).unwrap());
+
+        g.spawn_particle(0, 0, Particle::Sand);
+        g.draw_grid(&mut image);
+        assert_color_srgb_eq!(
+            Particle::Sand.color(),
+            image.get_color_at(0, 0).unwrap(),
+            0.1
+        );
+        assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(1, 0).unwrap());
+        assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(0, 1).unwrap());
+        assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(1, 1).unwrap());
+
+        g.spawn_particle(1, 0, Particle::Water);
+        g.cells[0] = None;
+        g.draw_grid(&mut image);
+        assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(0, 0).unwrap());
+        assert_color_srgb_eq!(Particle::Water.color(), image.get_color_at(1, 0).unwrap());
+        assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(0, 1).unwrap());
+        assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(1, 1).unwrap());
+    }
+
+    #[test]
+    fn test_get_particle_color() {
+        assert_color_srgb_eq!(Color::srgb(0.76, 0.70, 0.50), Particle::Sand.color());
+        assert_color_srgb_eq!(Color::srgb(0.05, 0.53, 0.80), Particle::Water.color());
+        assert_color_srgb_eq!(Color::srgb(1.00, 1.00, 1.00), Particle::Salt.color());
+    }
+
+}
+
+#[cfg(test)]
+mod sand_tests {
+    use super::*;
 
     #[test]
     fn test_update_grid_sand_falls_down_when_bottom_cell_is_empty() {
@@ -422,6 +462,11 @@ mod tests {
         assert_eq!(Some(Cell::new(Particle::Sand)), g.cells[4]);
         assert_eq!(Some(Cell::new(Particle::Sand)), g.cells[5]);
     }
+}
+
+#[cfg(test)]
+mod salt_tests {
+    use super::*;
 
     #[test]
     fn test_update_grid_salt_falling_down_to_last_row_stays_there() {
@@ -543,6 +588,11 @@ mod tests {
         assert_eq!(Some(Cell::new(Particle::Salt)), g.cells[4]);
         assert_eq!(Some(Cell::new(Particle::Salt)), g.cells[5]);
     }
+}
+
+#[cfg(test)]
+mod water_tests {
+    use super::*;
 
     #[test]
     fn test_update_grid_water_falls_down_to_last_row_stays_there() {
@@ -854,42 +904,5 @@ mod tests {
             ],
             g.cells
         );
-    }
-
-    #[test]
-    fn test_draw_grid() {
-        let mut g = Grid::new(2, 2);
-        let mut image = Grid::create_output_frame(2, 2);
-        g.draw_grid(&mut image);
-        assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(0, 0).unwrap());
-        assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(1, 0).unwrap());
-        assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(0, 1).unwrap());
-        assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(1, 1).unwrap());
-
-        g.spawn_particle(0, 0, Particle::Sand);
-        g.draw_grid(&mut image);
-        assert_color_srgb_eq!(
-            Particle::Sand.color(),
-            image.get_color_at(0, 0).unwrap(),
-            0.1
-        );
-        assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(1, 0).unwrap());
-        assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(0, 1).unwrap());
-        assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(1, 1).unwrap());
-
-        g.spawn_particle(1, 0, Particle::Water);
-        g.cells[0] = None;
-        g.draw_grid(&mut image);
-        assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(0, 0).unwrap());
-        assert_color_srgb_eq!(Particle::Water.color(), image.get_color_at(1, 0).unwrap());
-        assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(0, 1).unwrap());
-        assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(1, 1).unwrap());
-    }
-
-    #[test]
-    fn test_get_particle_color() {
-        assert_color_srgb_eq!(Color::srgb(0.76, 0.70, 0.50), Particle::Sand.color());
-        assert_color_srgb_eq!(Color::srgb(0.05, 0.53, 0.80), Particle::Water.color());
-        assert_color_srgb_eq!(Color::srgb(1.00, 1.00, 1.00), Particle::Salt.color());
     }
 }
