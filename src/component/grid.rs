@@ -697,6 +697,91 @@ mod water_tests {
     }
 
     #[test]
+    fn test_update_grid_water_falls_to_bottom_right_when_bottom_cell_and_bottom_left_are_full_and_bottom_right_is_empty(
+    ) {
+        /*
+         * w- -> --
+         * s-    sw
+         */
+        let mut g = Grid::new(2, 2);
+
+        g.spawn_particle(0, 0, Particle::Water);
+        g.spawn_particle(0, 1, Particle::Sand);
+
+        g.update_grid();
+
+        assert_eq!(None, g.cells[0]);
+        assert_eq!(None, g.cells[1]);
+        assert_eq!(Some(Cell::new(Particle::Sand)), g.cells[2]);
+        assert_eq!(Some(Cell::new(Particle::Water)), g.cells[3]);
+    }
+
+    #[test]
+    fn test_update_grid_water_falls_bottom_left_when_bottom_cell_and_bottom_right_are_full_and_bottom_left_is_empty(
+    ) {
+        /*
+         * -w -> --
+         * -s    ws
+         */
+        let mut g = Grid::new(2, 2);
+
+        g.spawn_particle(1, 0, Particle::Water);
+        g.spawn_particle(1, 1, Particle::Sand);
+
+        g.update_grid();
+
+        assert_eq!(None, g.cells[0]);
+        assert_eq!(None, g.cells[1]);
+        assert_eq!(Some(Cell::new(Particle::Water)), g.cells[2]);
+        assert_eq!(Some(Cell::new(Particle::Sand)), g.cells[3]);
+    }
+
+    #[test]
+    fn test_update_grid_water_falls_bottom_left_or_bottom_right_when_bottom_cell_is_full_and_both_bottom_right_and_bottom_left_are_empty_forced_left(
+    ) {
+        /*
+         * -w- -> ---
+         * -s-    ws-
+         */
+        let mut g = Grid::new_with_rand(3, 2, Some(|| ParticleHorizontalDirection::Left), None);
+
+        g.spawn_particle(1, 0, Particle::Water);
+        g.spawn_particle(1, 1, Particle::Sand);
+
+        g.update_grid();
+
+        assert_eq!(None, g.cells[0]);
+        assert_eq!(None, g.cells[1]);
+        assert_eq!(None, g.cells[2]);
+        assert_eq!(Some(Cell::new(Particle::Water)), g.cells[3]);
+        assert_eq!(Some(Cell::new(Particle::Sand)), g.cells[4]);
+        assert_eq!(None, g.cells[5]);
+    }
+
+    #[test]
+    fn test_update_grid_water_falls_bottom_left_or_bottom_right_when_bottom_cell_is_full_and_both_bottom_right_and_bottom_left_are_empty_forced_right(
+    ) {
+        /*
+         * -w- -> ---
+         * -s-    -sw
+         */
+        let mut g = Grid::new_with_rand(3, 2, Some(|| ParticleHorizontalDirection::Right), None);
+
+        g.spawn_particle(1, 0, Particle::Water);
+        g.spawn_particle(1, 1, Particle::Sand);
+
+        g.update_grid();
+
+        assert_eq!(None, g.cells[0]);
+        assert_eq!(None, g.cells[1]);
+        assert_eq!(None, g.cells[2]);
+        assert_eq!(None, g.cells[3]);
+        assert_eq!(Some(Cell::new(Particle::Sand)), g.cells[4]);
+        assert_eq!(Some(Cell::new(Particle::Water)), g.cells[5]);
+    }
+
+
+    #[test]
     fn test_updating_rows_in_forward_order_creates_a_left_bias_on_water() {
         /*
          * -ww- => ww-- or w--w
