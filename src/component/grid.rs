@@ -65,6 +65,7 @@ pub trait GridAccess {
         offset: (i32, i32),
     ) -> Result<usize, GridError>;
     fn get_cell(&self, index: usize) -> &Option<Cell>;
+    fn get_cells(&self) -> &Vec<Option<Cell>>;
 }
 
 impl GridAccess for Grid {
@@ -92,6 +93,11 @@ impl GridAccess for Grid {
     fn water_direction(&self) -> ParticleHorizontalDirection {
         (self.water_direction)()
     }
+
+    fn get_cells(&self) -> &Vec<Option<Cell>> {
+        &self.cells
+    }
+
 }
 
 impl Grid {
