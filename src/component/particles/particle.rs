@@ -13,11 +13,22 @@ pub enum Particle {
 }
 
 impl Particle {
-    pub fn update<T: GridAccess>(&self, grid: &T, x: usize, y: usize) -> Option<ParticleOperation> {
-        match self {
+    pub fn update<T: GridAccess>(&self, grid: &mut T, x: usize, y: usize) {
+        let next_operation = match self {
             Particle::Sand => update_sand(grid, (x, y)),
             Particle::Water => update_water(grid, (x, y)),
             Particle::Salt => update_salt(grid, (x, y)),
+        };
+        if let Some(next_operation) = next_operation {
+            let index = grid.to_index((x, y));
+            match next_operation {
+                ParticleOperation::Swap(next_location_index) => {
+                    grid.swap_particles(index, next_location_index);
+                }
+                ParticleOperation::Dissolve(particle) => {
+                    grid.disolve_particles(index, particle);
+                }
+            }
         }
     }
 

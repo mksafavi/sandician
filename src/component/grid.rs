@@ -66,11 +66,18 @@ pub trait GridAccess {
     ) -> Result<usize, GridError>;
     fn get_cell(&self, index: usize) -> &Option<Cell>;
     fn get_cells(&self) -> &Vec<Option<Cell>>;
+    fn to_index(&self, position: (usize, usize)) -> usize;
+    fn swap_particles(&mut self, index: usize, next_location_index: usize);
+    fn disolve_particles(&mut self, index: usize, particle: Particle);
 }
 
 impl GridAccess for Grid {
     fn get_cell(&self, index: usize) -> &Option<Cell> {
         &self.cells[index]
+    }
+
+    fn to_index(&self, (x, y): (usize, usize)) -> usize {
+        y * self.width + x
     }
 
     fn get_neighbor_index(
@@ -96,6 +103,23 @@ impl GridAccess for Grid {
 
     fn get_cells(&self) -> &Vec<Option<Cell>> {
         &self.cells
+    }
+
+    fn swap_particles(&mut self, index: usize, next_location_index: usize) {
+        self.cells.swap(index, next_location_index);
+        if let Some(p) = &mut self.cells[index] {
+            p.simulated = true;
+        }
+        if let Some(p) = &mut self.cells[next_location_index] {
+            p.simulated = true;
+        }
+    }
+
+    fn disolve_particles(&mut self, index: usize, particle: Particle) {
+        if let Some(p) = &mut self.cells[index] {
+            p.simulated = true;
+            p.particle = particle;
+        }
     }
 }
 
@@ -129,48 +153,12 @@ impl Grid {
         }
     }
 
-    fn swap_particles(&mut self, index: usize, next_location_index: usize) {
-        self.cells.swap(index, next_location_index);
-        if let Some(p) = &mut self.cells[index] {
-            p.simulated = true;
-        }
-        if let Some(p) = &mut self.cells[next_location_index] {
-            p.simulated = true;
-        }
-    }
-
-    fn disolve_particles(&mut self, index: usize, particle: Particle) {
-        if let Some(p) = &mut self.cells[index] {
-            p.simulated = true;
-            p.particle = particle;
-        }
-    }
-
     fn clear_all_simulated_field(&mut self) {
         self.cells.iter_mut().for_each(|x| {
             if let Some(x) = x {
                 x.simulated = false;
             }
         });
-    }
-
-    fn update_particles(&mut self, x: usize, y: usize) {
-        let index = y * self.width + x;
-        if let Some(p) = &self.cells[index] {
-            if !p.simulated {
-                let next_operation = p.particle.update(self, x, y);
-                if let Some(next_operation) = next_operation {
-                    match next_operation {
-                        ParticleOperation::Swap(next_location_index) => {
-                            self.swap_particles(index, next_location_index);
-                        }
-                        ParticleOperation::Dissolve(particle) => {
-                            self.disolve_particles(index, particle);
-                        }
-                    }
-                }
-            }
-        }
     }
 
     pub fn update_grid(&mut self) {
@@ -181,7 +169,11 @@ impl Grid {
                     RowUpdateDirection::Forward => x,
                     RowUpdateDirection::Reverse => self.width - 1 - x,
                 };
-                self.update_particles(x, y);
+                if let Some(p) = self.get_cell(self.to_index((x, y))) {
+                    if !p.simulated {
+                        p.particle.clone().update(self, x, y); // TODO: is there any other way to handle this double borrow instead of clone?
+                    }
+                };
             }
         }
         self.clear_all_simulated_field();
