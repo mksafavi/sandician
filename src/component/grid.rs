@@ -149,7 +149,7 @@ impl Grid {
 
     pub fn spawn_particle(&mut self, x: usize, y: usize, particle: Particle) {
         if y < self.height && x < self.width {
-            let index = self.to_index((x,y));
+            let index = self.to_index((x, y));
             self.cells[index] = Some(Cell::new(particle));
         }
     }
@@ -172,7 +172,7 @@ impl Grid {
                 };
                 if let Some(p) = self.get_cell(self.to_index((x, y))) {
                     if !p.simulated {
-                        p.particle.clone().update(self, x, y); // TODO: is there any other way to handle this double borrow instead of clone?
+                        p.particle.clone().update(self, (x, y)); // TODO: is there any other way to handle this double borrow instead of clone?
                     }
                 };
             }

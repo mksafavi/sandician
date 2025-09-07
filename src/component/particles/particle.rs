@@ -13,7 +13,7 @@ pub enum Particle {
 }
 
 impl Particle {
-    pub fn update<T: GridAccess>(&self, grid: &mut T, x: usize, y: usize) {
+    pub fn update<T: GridAccess>(&self, grid: &mut T, (x, y): (usize, usize)) {
         let next_operation = match self {
             Particle::Sand => update_sand(grid, (x, y)),
             Particle::Water => update_water(grid, (x, y)),
