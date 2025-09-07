@@ -60,6 +60,7 @@ pub trait GridAccess {
         offset: (i32, i32),
     ) -> Result<usize, GridError>;
     fn get_cell(&self, index: usize) -> &Option<Cell>;
+    fn get_cell_mut(&mut self, index: usize) -> &mut Option<Cell>;
     fn get_cells(&self) -> &Vec<Option<Cell>>;
     fn to_index(&self, position: (usize, usize)) -> usize;
     fn swap_particles(&mut self, index: usize, next_location_index: usize);
@@ -69,6 +70,10 @@ pub trait GridAccess {
 impl GridAccess for Grid {
     fn get_cell(&self, index: usize) -> &Option<Cell> {
         &self.cells[index]
+    }
+
+    fn get_cell_mut(&mut self, index: usize) -> &mut Option<Cell> {
+        &mut self.cells[index]
     }
 
     fn to_index(&self, (x, y): (usize, usize)) -> usize {
