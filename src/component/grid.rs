@@ -63,7 +63,7 @@ pub trait GridAccess {
     fn get_cells(&self) -> &Vec<Option<Cell>>;
     fn to_index(&self, position: (usize, usize)) -> usize;
     fn swap_particles(&mut self, index: usize, next_location_index: usize);
-    fn disolve_particles(&mut self, index: usize, particle: Particle);
+    fn dissolve_particles(&mut self, index: usize, particle: Particle);
 }
 
 impl GridAccess for Grid {
@@ -111,7 +111,7 @@ impl GridAccess for Grid {
         }
     }
 
-    fn disolve_particles(&mut self, index: usize, particle: Particle) {
+    fn dissolve_particles(&mut self, index: usize, particle: Particle) {
         if let Some(p) = &mut self.cells[index] {
             p.simulated = true;
             p.particle = particle;

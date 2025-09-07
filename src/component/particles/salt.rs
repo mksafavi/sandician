@@ -18,7 +18,7 @@ pub fn update_salt<T: GridAccess>(grid: &mut T, position: (usize, usize)) {
                 acc || n
             });
     if neighboring_water {
-        return grid.disolve_particles(grid.to_index(position), Particle::Water);
+        return grid.dissolve_particles(grid.to_index(position), Particle::Water);
     }
     let index_bottom = match grid.get_neighbor_index(position, (0, 1)) {
         Ok(i) => match grid.get_cell(i) {
