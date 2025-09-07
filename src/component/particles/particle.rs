@@ -3,10 +3,7 @@ use bevy::prelude::Color;
 
 use crate::component::grid::{GridAccess, ParticleOperation};
 
-use super::{
-    salt::find_salt_particle_next_location, sand::find_sand_particle_next_location,
-    water::find_water_particle_next_location,
-};
+use super::{salt::update_salt, sand::update_sand, water::update_water};
 
 #[derive(Clone, PartialEq, Debug)]
 pub enum Particle {
@@ -16,16 +13,11 @@ pub enum Particle {
 }
 
 impl Particle {
-    pub fn find_particle_next_location<T: GridAccess>(
-        &self,
-        grid: &T,
-        x: usize,
-        y: usize,
-    ) -> Option<ParticleOperation> {
+    pub fn update<T: GridAccess>(&self, grid: &T, x: usize, y: usize) -> Option<ParticleOperation> {
         match self {
-            Particle::Sand => find_sand_particle_next_location(grid, (x, y)),
-            Particle::Water => find_water_particle_next_location(grid, (x, y)),
-            Particle::Salt => find_salt_particle_next_location(grid, (x, y)),
+            Particle::Sand => update_sand(grid, (x, y)),
+            Particle::Water => update_water(grid, (x, y)),
+            Particle::Salt => update_salt(grid, (x, y)),
         }
     }
 

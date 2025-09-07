@@ -2,10 +2,7 @@ use crate::component::grid::{GridAccess, ParticleHorizontalDirection, ParticleOp
 
 use super::particle::Particle;
 
-pub fn find_sand_particle_next_location<T: GridAccess>(
-    grid: &T,
-    position: (usize, usize),
-) -> Option<ParticleOperation> {
+pub fn update_sand<T: GridAccess>(grid: &T, position: (usize, usize)) -> Option<ParticleOperation> {
     let index_bottom = match grid.get_neighbor_index(position, (0, 1)) {
         Ok(i) => match grid.get_cell(i) {
             Some(p) => match p.particle {

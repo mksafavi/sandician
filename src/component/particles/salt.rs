@@ -3,10 +3,7 @@ use crate::component::{
     particles::particle::Particle,
 };
 
-pub fn find_salt_particle_next_location<T: GridAccess>(
-    grid: &T,
-    position: (usize, usize),
-) -> Option<ParticleOperation> {
+pub fn update_salt<T: GridAccess>(grid: &T, position: (usize, usize)) -> Option<ParticleOperation> {
     let neighboring_water =
         (-1..=1)
             .flat_map(|y| (-1..=1).map(move |x| (y, x)))

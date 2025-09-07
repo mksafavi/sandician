@@ -158,7 +158,7 @@ impl Grid {
         let index = y * self.width + x;
         if let Some(p) = &self.cells[index] {
             if !p.simulated {
-                let next_operation = p.particle.find_particle_next_location(self, x, y);
+                let next_operation = p.particle.update(self, x, y);
                 if let Some(next_operation) = next_operation {
                     match next_operation {
                         ParticleOperation::Swap(next_location_index) => {

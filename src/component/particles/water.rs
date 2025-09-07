@@ -1,6 +1,6 @@
 use crate::component::grid::{GridAccess, ParticleHorizontalDirection, ParticleOperation};
 
-pub fn find_water_particle_next_location<T: GridAccess>(
+pub fn update_water<T: GridAccess>(
     grid: &T,
     position: (usize, usize),
 ) -> Option<ParticleOperation> {
