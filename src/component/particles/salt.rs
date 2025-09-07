@@ -1,9 +1,17 @@
 use crate::component::grid::{GridAccess, ParticleHorizontalDirection};
 
+use super::particle::Particle;
+
 pub fn update_salt<T: GridAccess>(grid: &mut T, position: (usize, usize)) {
     let index_bottom = match grid.get_neighbor_index(position, (0, 1)) {
         Ok(i) => match grid.get_cell(i) {
-            Some(_) => None,
+            Some(p) => match p.particle {
+                Particle::Water { .. } => match p.simulated {
+                    true => None,
+                    false => Some(i),
+                },
+                _ => None,
+            },
             None => Some(i),
         },
         Err(_) => None,
@@ -11,7 +19,13 @@ pub fn update_salt<T: GridAccess>(grid: &mut T, position: (usize, usize)) {
 
     let index_bottom_right = match grid.get_neighbor_index(position, (1, 1)) {
         Ok(i) => match grid.get_cell(i) {
-            Some(_) => None,
+            Some(p) => match p.particle {
+                Particle::Water { .. } => match p.simulated {
+                    true => None,
+                    false => Some(i),
+                },
+                _ => None,
+            },
             None => Some(i),
         },
         Err(_) => None,
@@ -19,7 +33,13 @@ pub fn update_salt<T: GridAccess>(grid: &mut T, position: (usize, usize)) {
 
     let index_bottom_left = match grid.get_neighbor_index(position, (-1, 1)) {
         Ok(i) => match grid.get_cell(i) {
-            Some(_) => None,
+            Some(p) => match p.particle {
+                Particle::Water { .. } => match p.simulated {
+                    true => None,
+                    false => Some(i),
+                },
+                _ => None,
+            },
             None => Some(i),
         },
         Err(_) => None,

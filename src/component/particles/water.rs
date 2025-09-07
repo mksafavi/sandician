@@ -655,4 +655,208 @@ mod tests {
             );
         }
     }
+
+    #[test]
+    fn test_update_grid_salt_sink_in_water_when_capacity_is_zero() {
+        let mut g = Grid::new(1, 5);
+
+        g.spawn_particle(0, 0, Particle::Salt);
+        g.spawn_particle(0, 1, Particle::Salt);
+        g.spawn_particle(0, 2, Particle::Salt);
+        g.spawn_particle(0, 3, Particle::Salt);
+        g.spawn_particle(0, 4, Particle::new_water());
+
+        assert_eq!(
+            vec![
+                Some(Cell::new(Particle::Salt)),
+                Some(Cell::new(Particle::Salt)),
+                Some(Cell::new(Particle::Salt)),
+                Some(Cell::new(Particle::Salt)),
+                Some(Cell::new(Particle::Water { solute: 3 })),
+            ],
+            *g.get_cells()
+        );
+
+        g.update_grid();
+
+        assert_eq!(
+            vec![
+                None,
+                Some(Cell::new(Particle::Salt)),
+                Some(Cell::new(Particle::Salt)),
+                Some(Cell::new(Particle::Salt)),
+                Some(Cell::new(Particle::Water { solute: 2 })),
+            ],
+            *g.get_cells()
+        );
+
+        g.update_grid();
+
+        assert_eq!(
+            vec![
+                None,
+                None,
+                Some(Cell::new(Particle::Salt)),
+                Some(Cell::new(Particle::Salt)),
+                Some(Cell::new(Particle::Water { solute: 1 })),
+            ],
+            *g.get_cells()
+        );
+
+        g.update_grid();
+
+        assert_eq!(
+            vec![
+                None,
+                None,
+                None,
+                Some(Cell::new(Particle::Salt)),
+                Some(Cell::new(Particle::Water { solute: 0 })),
+            ],
+            *g.get_cells()
+        );
+
+        g.update_grid();
+
+        assert_eq!(
+            vec![
+                None,
+                None,
+                None,
+                Some(Cell::new(Particle::Water { solute: 0 })),
+                Some(Cell::new(Particle::Salt)),
+            ],
+            *g.get_cells()
+        );
+    }
+
+    #[test]
+    fn test_salt_should_sink_to_bottom_in_water() {
+        /*
+         * -S- -> -w-
+         * SwS    SSS
+         */
+
+        let mut g = Grid::new(3, 2);
+
+        g.spawn_particle(1, 0, Particle::Salt);
+        g.spawn_particle(0, 1, Particle::Salt);
+        g.spawn_particle(1, 1, Particle::Water { solute: 0 });
+        g.spawn_particle(2, 1, Particle::Salt);
+
+        g.update_grid();
+
+        assert_eq!(
+            vec![
+                None,
+                Some(Cell::new(Particle::Water { solute: 0 })),
+                None,
+                Some(Cell::new(Particle::Salt)),
+                Some(Cell::new(Particle::Salt)),
+                Some(Cell::new(Particle::Salt)),
+            ],
+            *g.get_cells()
+        );
+    }
+
+    #[test]
+    fn test_salt_should_sink_to_bottom_left_in_water() {
+        /*
+         * -S- -> -w-
+         * wSS    SSS
+         */
+        let mut g = Grid::new(3, 2);
+
+        g.spawn_particle(1, 0, Particle::Salt);
+        g.spawn_particle(0, 1, Particle::Water { solute: 0 });
+        g.spawn_particle(1, 1, Particle::Salt);
+        g.spawn_particle(2, 1, Particle::Salt);
+
+        g.update_grid();
+
+        assert_eq!(
+            vec![
+                None,
+                Some(Cell::new(Particle::Water { solute: 0 })),
+                None,
+                Some(Cell::new(Particle::Salt)),
+                Some(Cell::new(Particle::Salt)),
+                Some(Cell::new(Particle::Salt)),
+            ],
+            *g.get_cells()
+        );
+    }
+
+    #[test]
+    fn test_salt_should_sink_to_bottom_right_in_water() {
+        /*
+         * -S- -> -w-
+         * SSw    SSS
+         */
+        let mut g = Grid::new(3, 2);
+
+        g.spawn_particle(1, 0, Particle::Salt);
+        g.spawn_particle(0, 1, Particle::Salt);
+        g.spawn_particle(1, 1, Particle::Salt);
+        g.spawn_particle(2, 1, Particle::Water { solute: 0 });
+
+        g.update_grid();
+
+        assert_eq!(
+            vec![
+                None,
+                Some(Cell::new(Particle::Water { solute: 0 })),
+                None,
+                Some(Cell::new(Particle::Salt)),
+                Some(Cell::new(Particle::Salt)),
+                Some(Cell::new(Particle::Salt)),
+            ],
+            *g.get_cells()
+        );
+    }
+
+    #[test]
+    fn test_salt_should_sink_in_water_but_water_should_not_climb_salts() {
+        /*
+         * -S- -> -S- -> -w-
+         * -S-    -w-    -S-
+         * -w-    -S-    -S-
+         */
+        let mut g = Grid::new_with_rand(1, 3, Some(|| ParticleHorizontalDirection::Right), None);
+
+        g.spawn_particle(0, 0, Particle::Salt);
+        g.spawn_particle(0, 1, Particle::Salt);
+        g.spawn_particle(0, 2, Particle::Water { solute: 0 });
+
+        assert_eq!(
+            vec![
+                Some(Cell::new(Particle::Salt)),
+                Some(Cell::new(Particle::Salt)),
+                Some(Cell::new(Particle::Water { solute: 0 })),
+            ],
+            *g.get_cells()
+        );
+
+        g.update_grid();
+
+        assert_eq!(
+            vec![
+                Some(Cell::new(Particle::Salt)),
+                Some(Cell::new(Particle::Water { solute: 0 })),
+                Some(Cell::new(Particle::Salt)),
+            ],
+            *g.get_cells()
+        );
+
+        g.update_grid();
+
+        assert_eq!(
+            vec![
+                Some(Cell::new(Particle::Water { solute: 0 })),
+                Some(Cell::new(Particle::Salt)),
+                Some(Cell::new(Particle::Salt)),
+            ],
+            *g.get_cells()
+        );
+    }
 }
