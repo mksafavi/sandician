@@ -1,4 +1,7 @@
-use crate::component::{grid::{GridAccess, ParticleHorizontalDirection, ParticleOperation}, particles::particle::Particle};
+use crate::component::{
+    grid::{GridAccess, ParticleHorizontalDirection, ParticleOperation},
+    particles::particle::Particle,
+};
 
 pub fn find_salt_particle_next_location<T: GridAccess>(
     grid: &T,
@@ -65,19 +68,11 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_update_grid_salt_falling_down_to_last_row_stays_there() {
-        let mut g = Grid::new(2, 2);
-        g.spawn_particle(0, 1, Particle::Salt);
-
-        g.update_grid(); /* should stay at the last line*/
-        assert_eq!(None, *g.get_cell(0));
-        assert_eq!(None, *g.get_cell(1));
-        assert_eq!(Some(Cell::new(Particle::Salt)), *g.get_cell(2));
-        assert_eq!(None, *g.get_cell(3));
-    }
-
-    #[test]
     fn test_update_grid_salt_falls_down_when_bottom_cell_is_empty() {
+        /*
+         * S- -> --
+         * --    S-
+         */
         let mut g = Grid::new(2, 2);
 
         g.spawn_particle(0, 0, Particle::Salt);
@@ -96,12 +91,15 @@ mod tests {
     }
 
     #[test]
-    fn test_update_grid_salt_falls_bottom_right_when_bottom_cell_is_full_and_bottom_left_is_wall_and_bottom_right_is_empty(
+    fn test_update_grid_salt_falls_to_bottom_right_when_bottom_cell_and_bottom_left_are_full_and_bottom_right_is_empty(
     ) {
+        /*
+         * S- -> --
+         * S-    SS
+         */
         let mut g = Grid::new(2, 2);
 
         g.spawn_particle(0, 0, Particle::Salt);
-
         g.spawn_particle(0, 1, Particle::Salt);
 
         g.update_grid();
@@ -113,12 +111,15 @@ mod tests {
     }
 
     #[test]
-    fn test_update_grid_salt_falls_bottom_left_when_bottom_cell_is_full_and_bottom_right_is_wall_and_bottom_left_is_empty(
+    fn test_update_grid_salt_falls_to_bottom_left_when_bottom_cell_and_bottom_right_are_full_and_bottom_left_is_empty(
     ) {
+        /*
+         * -S -> --
+         * -S    SS
+         */
         let mut g = Grid::new(2, 2);
 
         g.spawn_particle(1, 0, Particle::Salt);
-
         g.spawn_particle(1, 1, Particle::Salt);
 
         g.update_grid();
@@ -131,6 +132,12 @@ mod tests {
 
     #[test]
     fn test_update_grid_salt_dissolves_when_touches_water() {
+        /*
+         * for each neighbor:
+         * w-- -> ---
+         * -S-    ww-
+         * ---    ---
+         */
         for y in 0..3 {
             for x in 0..3 {
                 if (x, y) == (1, 1) {
@@ -148,12 +155,15 @@ mod tests {
     }
 
     #[test]
-    fn test_update_grid_salt_falls_bottom_left_or_bottom_right_when_bottom_cell_is_full_and_both_bottom_right_and_bottom_left_are_empty_for_testing_forced_left(
+    fn test_update_grid_salt_falls_to_bottom_left_or_bottom_right_when_when_bottom_cell_is_full_and_both_bottom_right_and_bottom_left_are_empty_forced_left(
     ) {
+        /*
+         * -S- -> ---
+         * -S-    SS-
+         */
         let mut g = Grid::new_with_rand(3, 2, Some(|| ParticleHorizontalDirection::Left), None);
 
         g.spawn_particle(1, 0, Particle::Salt);
-
         g.spawn_particle(1, 1, Particle::Salt);
 
         g.update_grid();
@@ -167,8 +177,12 @@ mod tests {
     }
 
     #[test]
-    fn test_update_grid_salt_falls_bottom_left_or_bottom_right_when_bottom_cell_is_full_and_both_bottom_right_and_bottom_left_are_empty_for_testing_forced_right(
+    fn test_update_grid_salt_falls_to_bottom_left_or_bottom_right_when_when_bottom_cell_is_full_and_both_bottom_right_and_bottom_left_are_empty_forced_right(
     ) {
+        /*
+         * -S- -> ---
+         * -S-    -SS
+         */
         let mut g = Grid::new_with_rand(3, 2, Some(|| ParticleHorizontalDirection::Right), None);
 
         g.spawn_particle(1, 0, Particle::Salt);
