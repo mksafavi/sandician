@@ -43,7 +43,7 @@ pub fn mouse_spawn_brush_system(
                 g.spawn_brush(p, 25, Particle::Sand);
             }
             if mouse_button.pressed(MouseButton::Right) {
-                g.spawn_brush(p, 25, Particle::Water);
+                g.spawn_brush(p, 25, Particle::new_water());
             }
             if mouse_button.pressed(MouseButton::Middle) {
                 g.spawn_brush(p, 25, Particle::Salt);
@@ -57,7 +57,7 @@ fn select_particle_from_mouse_button(button: MouseButton, state: ButtonState) ->
     match state {
         bevy::input::ButtonState::Pressed => match button {
             MouseButton::Left => Some(Particle::Sand),
-            MouseButton::Right => Some(Particle::Water),
+            MouseButton::Right => Some(Particle::new_water()),
             MouseButton::Middle => Some(Particle::Salt),
             _ => None,
         },
@@ -79,7 +79,7 @@ mod tests {
         );
 
         assert_eq!(
-            Some(Particle::Water),
+            Some(Particle::new_water()),
             select_particle_from_mouse_button(MouseButton::Right, ButtonState::Pressed)
         );
 

@@ -155,7 +155,7 @@ mod tests {
         fn fixture_spawn_particle_system(mut grid: Query<&mut Grid>) {
             let mut g = grid.iter_mut().last().unwrap();
             g.spawn_particle(0, 0, Particle::Sand);
-            g.spawn_particle(1, 0, Particle::Water);
+            g.spawn_particle(1, 0, Particle::new_water());
         }
 
         fn assert_read_output_frame_system(
@@ -164,7 +164,10 @@ mod tests {
         ) {
             let image = images.get(&output_frame_handle.0).expect("Image not found");
             assert_color_srgb_eq!(Particle::Sand.color(), image.get_color_at(0, 0).unwrap());
-            assert_color_srgb_eq!(Particle::Water.color(), image.get_color_at(1, 0).unwrap());
+            assert_color_srgb_eq!(
+                Particle::new_water().color(),
+                image.get_color_at(1, 0).unwrap()
+            );
             assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(0, 1).unwrap());
             assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(1, 1).unwrap());
         }

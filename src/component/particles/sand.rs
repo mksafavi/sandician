@@ -6,7 +6,7 @@ pub fn update_sand<T: GridAccess>(grid: &mut T, position: (usize, usize)) {
     let index_bottom = match grid.get_neighbor_index(position, (0, 1)) {
         Ok(i) => match grid.get_cell(i) {
             Some(p) => match p.particle {
-                Particle::Water => match p.simulated {
+                Particle::Water { .. } => match p.simulated {
                     true => None,
                     false => Some(i),
                 },
@@ -20,7 +20,7 @@ pub fn update_sand<T: GridAccess>(grid: &mut T, position: (usize, usize)) {
     let index_bottom_right = match grid.get_neighbor_index(position, (1, 1)) {
         Ok(i) => match grid.get_cell(i) {
             Some(p) => match p.particle {
-                Particle::Water => match p.simulated {
+                Particle::Water { .. } => match p.simulated {
                     true => None,
                     false => Some(i),
                 },
@@ -34,7 +34,7 @@ pub fn update_sand<T: GridAccess>(grid: &mut T, position: (usize, usize)) {
     let index_bottom_left = match grid.get_neighbor_index(position, (-1, 1)) {
         Ok(i) => match grid.get_cell(i) {
             Some(p) => match p.particle {
-                Particle::Water => match p.simulated {
+                Particle::Water { .. } => match p.simulated {
                     true => None,
                     false => Some(i),
                 },

@@ -176,7 +176,7 @@ impl Grid {
                     if !p.simulated {
                         p.particle.clone().update(self, (x, y)); // TODO: is there any other way to handle this double borrow instead of clone?
                     }
-                };
+                }
             }
         }
         self.clear_all_simulated_field();
@@ -254,7 +254,7 @@ mod tests {
         let mut g = Grid::new(2, 3);
         g.spawn_particle(0, 0, Particle::Sand);
 
-        g.spawn_particle(1, 1, Particle::Water);
+        g.spawn_particle(1, 1, Particle::new_water());
 
         match &g.cells[0] {
             Some(p) => assert_eq!(Particle::Sand, p.particle),
@@ -262,7 +262,7 @@ mod tests {
         }
 
         match &g.cells[3] {
-            Some(p) => assert_eq!(Particle::Water, p.particle),
+            Some(p) => assert_eq!(Particle::new_water(), p.particle),
             None => panic!(),
         }
     }
@@ -272,10 +272,10 @@ mod tests {
         let mut g = Grid::new(2, 3);
         g.spawn_particle(0, 0, Particle::Sand);
 
-        g.spawn_particle(0, 0, Particle::Water);
+        g.spawn_particle(0, 0, Particle::new_water());
 
         match &g.cells[0] {
-            Some(p) => assert_eq!(Particle::Water, p.particle),
+            Some(p) => assert_eq!(Particle::new_water(), p.particle),
             None => panic!(),
         }
     }
@@ -283,7 +283,7 @@ mod tests {
     fn test_grid_spawn_particle_out_of_grid_bound_silently_fails() {
         let mut g = Grid::new(2, 3);
         g.spawn_particle(0, 3, Particle::Sand);
-        g.spawn_particle(2, 0, Particle::Water);
+        g.spawn_particle(2, 0, Particle::new_water());
 
         assert_eq!(None, g.cells[0]);
         assert_eq!(None, g.cells[1]);
@@ -333,11 +333,14 @@ mod tests {
         assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(0, 1).unwrap());
         assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(1, 1).unwrap());
 
-        g.spawn_particle(1, 0, Particle::Water);
+        g.spawn_particle(1, 0, Particle::new_water());
         g.cells[0] = None;
         g.draw_grid(&mut image);
         assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(0, 0).unwrap());
-        assert_color_srgb_eq!(Particle::Water.color(), image.get_color_at(1, 0).unwrap());
+        assert_color_srgb_eq!(
+            Particle::new_water().color(),
+            image.get_color_at(1, 0).unwrap()
+        );
         assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(0, 1).unwrap());
         assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(1, 1).unwrap());
     }
@@ -345,7 +348,7 @@ mod tests {
     #[test]
     fn test_get_particle_color() {
         assert_color_srgb_eq!(Color::srgb(0.76, 0.70, 0.50), Particle::Sand.color());
-        assert_color_srgb_eq!(Color::srgb(0.05, 0.53, 0.80), Particle::Water.color());
+        assert_color_srgb_eq!(Color::srgb(0.05, 0.53, 0.80), Particle::new_water().color());
         assert_color_srgb_eq!(Color::srgb(1.00, 1.00, 1.00), Particle::Salt.color());
     }
 }

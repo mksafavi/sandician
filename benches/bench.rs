@@ -9,7 +9,7 @@ fn fill_grid_mixed(g: &mut Grid, (x, y): (usize, usize)) {
     }
     for y in y / 3..y {
         for x in 0..x {
-            g.spawn_particle(x, y, Particle::Water);
+            g.spawn_particle(x, y, Particle::new_water());
         }
     }
     for y in 2 * y / 3..y {
@@ -40,7 +40,7 @@ fn criterion_benchmark(c: &mut Criterion) {
         let mut g = Grid::new(x, y);
         for y in 0..y {
             for x in 0..x {
-                g.spawn_particle(x, y, Particle::Water);
+                g.spawn_particle(x, y, Particle::new_water());
             }
         }
         b.iter(|| {
