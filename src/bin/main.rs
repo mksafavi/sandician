@@ -1,9 +1,9 @@
+use bevy::DefaultPlugins;
 use bevy::app::{App, FixedUpdate, Startup};
 use bevy::core_pipeline::core_2d::Camera2d;
 use bevy::ecs::system::Commands;
 use bevy::prelude::PluginGroup;
 use bevy::render::texture::ImagePlugin;
-use bevy::DefaultPlugins;
 use sandsim::component::grid_plugin::{ConfigResource, GridPlugin};
 use sandsim::component::inputs;
 

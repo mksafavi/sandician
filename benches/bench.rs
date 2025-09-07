@@ -1,4 +1,4 @@
-use criterion::{criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, criterion_group, criterion_main};
 use sandsim::component::{grid::Grid, particles::particle::Particle};
 
 fn criterion_benchmark(c: &mut Criterion) {
@@ -36,4 +36,3 @@ fn criterion_benchmark(c: &mut Criterion) {
 
 criterion_group!(benches, criterion_benchmark);
 criterion_main!(benches);
-

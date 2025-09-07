@@ -91,8 +91,8 @@ mod tests {
     }
 
     #[test]
-    fn test_update_grid_sand_falls_to_bottom_right_when_bottom_cell_and_bottom_left_are_full_and_bottom_right_is_empty(
-    ) {
+    fn test_update_grid_sand_falls_to_bottom_right_when_bottom_cell_and_bottom_left_are_full_and_bottom_right_is_empty()
+     {
         /*
          * s- -> --
          * s-    ss
@@ -111,8 +111,8 @@ mod tests {
     }
 
     #[test]
-    fn test_update_grid_sand_falls_bottom_left_when_bottom_cell_and_bottom_right_are_full_and_bottom_left_is_empty(
-    ) {
+    fn test_update_grid_sand_falls_bottom_left_when_bottom_cell_and_bottom_right_are_full_and_bottom_left_is_empty()
+     {
         /*
          * -s -> --
          * -s    ss
@@ -131,8 +131,8 @@ mod tests {
     }
 
     #[test]
-    fn test_update_grid_sand_falls_bottom_left_or_bottom_right_when_bottom_cell_is_full_and_both_bottom_right_and_bottom_left_are_empty_forced_left(
-    ) {
+    fn test_update_grid_sand_falls_bottom_left_or_bottom_right_when_bottom_cell_is_full_and_both_bottom_right_and_bottom_left_are_empty_forced_left()
+     {
         /*
          * -s- -> ---
          * -s-    ss-
@@ -153,8 +153,8 @@ mod tests {
     }
 
     #[test]
-    fn test_update_grid_sand_falls_bottom_left_or_bottom_right_when_bottom_cell_is_full_and_both_bottom_right_and_bottom_left_are_empty_forced_right(
-    ) {
+    fn test_update_grid_sand_falls_bottom_left_or_bottom_right_when_bottom_cell_is_full_and_both_bottom_right_and_bottom_left_are_empty_forced_right()
+     {
         /*
          * -s- -> ---
          * -s-    -ss

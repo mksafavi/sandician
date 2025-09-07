@@ -72,7 +72,10 @@ pub fn find_water_particle_next_location<T: GridAccess>(
 
 #[cfg(test)]
 mod tests {
-    use crate::component::{grid::{Cell, Grid, RowUpdateDirection}, particles::particle::Particle};
+    use crate::component::{
+        grid::{Cell, Grid, RowUpdateDirection},
+        particles::particle::Particle,
+    };
 
     use super::*;
 
@@ -179,8 +182,8 @@ mod tests {
     }
 
     #[test]
-    fn test_update_grid_water_falls_to_bottom_right_when_bottom_cell_and_bottom_left_are_full_and_bottom_right_is_empty(
-    ) {
+    fn test_update_grid_water_falls_to_bottom_right_when_bottom_cell_and_bottom_left_are_full_and_bottom_right_is_empty()
+     {
         /*
          * w- -> --
          * s-    sw
@@ -199,8 +202,8 @@ mod tests {
     }
 
     #[test]
-    fn test_update_grid_water_falls_bottom_left_when_bottom_cell_and_bottom_right_are_full_and_bottom_left_is_empty(
-    ) {
+    fn test_update_grid_water_falls_bottom_left_when_bottom_cell_and_bottom_right_are_full_and_bottom_left_is_empty()
+     {
         /*
          * -w -> --
          * -s    ws
@@ -219,8 +222,8 @@ mod tests {
     }
 
     #[test]
-    fn test_update_grid_water_falls_bottom_left_or_bottom_right_when_bottom_cell_is_full_and_both_bottom_right_and_bottom_left_are_empty_forced_left(
-    ) {
+    fn test_update_grid_water_falls_bottom_left_or_bottom_right_when_bottom_cell_is_full_and_both_bottom_right_and_bottom_left_are_empty_forced_left()
+     {
         /*
          * -w- -> ---
          * -s-    ws-
@@ -241,8 +244,8 @@ mod tests {
     }
 
     #[test]
-    fn test_update_grid_water_falls_bottom_left_or_bottom_right_when_bottom_cell_is_full_and_both_bottom_right_and_bottom_left_are_empty_forced_right(
-    ) {
+    fn test_update_grid_water_falls_bottom_left_or_bottom_right_when_bottom_cell_is_full_and_both_bottom_right_and_bottom_left_are_empty_forced_right()
+     {
         /*
          * -w- -> ---
          * -s-    -sw
@@ -261,7 +264,6 @@ mod tests {
         assert_eq!(Some(Cell::new(Particle::Sand)), *g.get_cell(4));
         assert_eq!(Some(Cell::new(Particle::Water)), *g.get_cell(5));
     }
-
 
     #[test]
     fn test_updating_rows_in_forward_order_creates_a_left_bias_on_water() {

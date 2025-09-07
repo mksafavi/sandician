@@ -1,6 +1,6 @@
 use bevy::{
     asset::RenderAssetUsages,
-    color::{palettes::css, Color, ColorToPacked},
+    color::{Color, ColorToPacked, palettes::css},
     ecs::component::Component,
     image::Image,
     render::render_resource::{Extent3d, TextureDimension, TextureFormat},
@@ -97,7 +97,6 @@ impl GridAccess for Grid {
     fn get_cells(&self) -> &Vec<Option<Cell>> {
         &self.cells
     }
-
 }
 
 impl Grid {
@@ -244,8 +243,8 @@ impl Grid {
 
 #[cfg(test)]
 mod tests {
-    use crate::component::macros::assert_color_srgb_eq;
     use super::*;
+    use crate::component::macros::assert_color_srgb_eq;
 
     #[test]
     fn test_create_grid() {
@@ -354,5 +353,4 @@ mod tests {
         assert_color_srgb_eq!(Color::srgb(0.05, 0.53, 0.80), Particle::Water.color());
         assert_color_srgb_eq!(Color::srgb(1.00, 1.00, 1.00), Particle::Salt.color());
     }
-
 }

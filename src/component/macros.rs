@@ -1,4 +1,3 @@
-
 #[cfg(test)]
 macro_rules! assert_color_srgb_eq {
     ($a:expr,$b:expr) => {

@@ -1,6 +1,6 @@
 use bevy::{
     ecs::system::{Query, Res},
-    input::{mouse::MouseButton, ButtonInput, ButtonState},
+    input::{ButtonInput, ButtonState, mouse::MouseButton},
     window::Window,
 };
 use bevy::{math::Vec2, window::WindowResolution};
