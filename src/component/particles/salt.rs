@@ -1,9 +1,9 @@
 use crate::component::{
-    grid::{GridAccess, ParticleHorizontalDirection, ParticleOperation},
+    grid::{GridAccess, ParticleHorizontalDirection},
     particles::particle::Particle,
 };
 
-pub fn update_salt<T: GridAccess>(grid: &T, position: (usize, usize)) -> Option<ParticleOperation> {
+pub fn update_salt<T: GridAccess>(grid: &mut T, position: (usize, usize)) {
     let neighboring_water =
         (-1..=1)
             .flat_map(|y| (-1..=1).map(move |x| (y, x)))
@@ -18,7 +18,7 @@ pub fn update_salt<T: GridAccess>(grid: &T, position: (usize, usize)) -> Option<
                 acc || n
             });
     if neighboring_water {
-        return Some(ParticleOperation::Dissolve(Particle::Water));
+        return grid.disolve_particles(grid.to_index(position), Particle::Water);
     }
     let index_bottom = match grid.get_neighbor_index(position, (0, 1)) {
         Ok(i) => match grid.get_cell(i) {
@@ -55,7 +55,9 @@ pub fn update_salt<T: GridAccess>(grid: &T, position: (usize, usize)) -> Option<
         (_, Some(i), _) => Some(i),
     };
 
-    index.map(ParticleOperation::Swap)
+    if let Some(index) = index {
+        grid.swap_particles(grid.to_index(position), index)
+    }
 }
 
 #[cfg(test)]

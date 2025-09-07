@@ -1,8 +1,8 @@
-use crate::component::grid::{GridAccess, ParticleHorizontalDirection, ParticleOperation};
+use crate::component::grid::{GridAccess, ParticleHorizontalDirection};
 
 use super::particle::Particle;
 
-pub fn update_sand<T: GridAccess>(grid: &T, position: (usize, usize)) -> Option<ParticleOperation> {
+pub fn update_sand<T: GridAccess>(grid: &mut T, position: (usize, usize)) {
     let index_bottom = match grid.get_neighbor_index(position, (0, 1)) {
         Ok(i) => match grid.get_cell(i) {
             Some(p) => match p.particle {
@@ -56,7 +56,9 @@ pub fn update_sand<T: GridAccess>(grid: &T, position: (usize, usize)) -> Option<
         (_, Some(i), _) => Some(i),
     };
 
-    index.map(ParticleOperation::Swap)
+    if let Some(index) = index {
+        grid.swap_particles(grid.to_index(position), index)
+    }
 }
 
 #[cfg(test)]

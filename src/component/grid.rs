@@ -17,11 +17,6 @@ pub enum GridError {
 
 pub const BACKGROUND_COLOR: bevy::prelude::Color = Color::srgb(0.82, 0.93, 1.);
 
-pub enum ParticleOperation {
-    Swap(usize),
-    Dissolve(Particle),
-}
-
 #[derive(Clone, Debug)]
 pub enum ParticleHorizontalDirection {
     Left = -1,
