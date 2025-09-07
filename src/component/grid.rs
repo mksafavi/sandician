@@ -149,7 +149,7 @@ impl Grid {
 
     pub fn spawn_particle(&mut self, x: usize, y: usize, particle: Particle) {
         if y < self.height && x < self.width {
-            let index = self.width * y + x;
+            let index = self.to_index((x,y));
             self.cells[index] = Some(Cell::new(particle));
         }
     }
