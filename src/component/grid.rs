@@ -85,13 +85,14 @@ impl GridAccess for Grid {
         (x, y): (usize, usize),
         (ox, oy): (i32, i32),
     ) -> Result<usize, GridError> {
-        let neighbor_index = (y as i32 + oy) * self.width as i32 + (x as i32 + ox);
-        if (0 <= y as i32 + oy)
-            && ((y as i32 + oy) < self.height as i32)
-            && ((x as i32 + ox) < self.width as i32)
-            && (0 <= x as i32 + ox)
+        let y = y as i32;
+        let x = x as i32;
+        if (0 <= y + oy)
+            && ((y + oy) < self.height as i32)
+            && ((x + ox) < self.width as i32)
+            && (0 <= x + ox)
         {
-            Ok(neighbor_index as usize)
+            Ok(self.to_index(((x + ox) as usize, (y + oy) as usize)))
         } else {
             Err(GridError::OutOfBound)
         }
