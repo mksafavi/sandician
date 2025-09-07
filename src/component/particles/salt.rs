@@ -4,22 +4,27 @@ use crate::component::{
 };
 
 pub fn update_salt<T: GridAccess>(grid: &mut T, position: (usize, usize)) {
-    let neighboring_water =
-        (-1..=1)
-            .flat_map(|y| (-1..=1).map(move |x| (y, x)))
-            .fold(false, |acc, (xo, yo)| {
-                let n = match grid.get_neighbor_index(position, (xo, yo)) {
-                    Ok(i) => match grid.get_cell(i) {
-                        Some(p) => matches!(p.particle, Particle::Water),
-                        None => false,
-                    },
-                    Err(_) => false,
-                };
-                acc || n
-            });
-    if neighboring_water {
-        return grid.dissolve_particles(grid.to_index(position), Particle::Water);
+    let index = (-1..=1)
+        .flat_map(|y| (-1..=1).map(move |x| (x, y)))
+        .map(|(x, y)| match grid.get_neighbor_index(position, (x, y)) {
+            Ok(i) => match grid.get_cell(i) {
+                Some(p) => match p.particle {
+                    Particle::Water => Some(i),
+                    _ => None,
+                },
+                None => None,
+            },
+            Err(_) => None,
+        })
+        .filter(|c| c.is_some())
+        .last();
+
+    if let Some(index) = index {
+        if let Some(index) = index {
+            return grid.dissolve_particles(grid.to_index(position), index);
+        }
     }
+
     let index_bottom = match grid.get_neighbor_index(position, (0, 1)) {
         Ok(i) => match grid.get_cell(i) {
             Some(_) => None,
@@ -56,7 +61,7 @@ pub fn update_salt<T: GridAccess>(grid: &mut T, position: (usize, usize)) {
     };
 
     if let Some(index) = index {
-        grid.swap_particles(grid.to_index(position), index)
+        grid.swap_particles(grid.to_index(position), index);
     }
 }
 
@@ -148,7 +153,7 @@ mod tests {
 
                 g.update_grid();
 
-                assert_eq!(Some(Cell::new(Particle::Water)), *g.get_cell(4));
+                assert_eq!(None, *g.get_cell(4));
             }
         }
     }
