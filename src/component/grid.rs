@@ -126,9 +126,7 @@ impl Grid {
     pub fn spawn_particle(&mut self, x: usize, y: usize, particle: Particle) {
         if y < self.height && x < self.width {
             let index = self.width * y + x;
-            if self.cells[index].is_none() {
-                self.cells[index] = Some(Cell::new(particle));
-            }
+            self.cells[index] = Some(Cell::new(particle));
         }
     }
 
@@ -276,14 +274,14 @@ mod tests {
     }
 
     #[test]
-    fn test_grid_spawn_particle_to_non_empty_location_silently_fails() {
+    fn test_grid_spawn_particle_to_non_empty_location_replaces_the_particle() {
         let mut g = Grid::new(2, 3);
         g.spawn_particle(0, 0, Particle::Sand);
 
         g.spawn_particle(0, 0, Particle::Water);
 
         match &g.cells[0] {
-            Some(p) => assert_eq!(Particle::Sand, p.particle),
+            Some(p) => assert_eq!(Particle::Water, p.particle),
             None => panic!(),
         }
     }
