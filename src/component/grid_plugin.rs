@@ -104,7 +104,7 @@ impl GridPlugin {
 #[cfg(test)]
 mod tests {
 
-    use crate::component::particles::Particle;
+    use crate::component::particles::particle::Particle;
     use crate::component::{grid::BACKGROUND_COLOR, macros::assert_color_srgb_eq};
 
     use super::*;

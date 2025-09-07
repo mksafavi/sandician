@@ -1,5 +1,5 @@
 use criterion::{criterion_group, criterion_main, Criterion};
-use sandsim::component::{grid::Grid, particles::Particle};
+use sandsim::component::{grid::Grid, particles::particle::Particle};
 
 fn criterion_benchmark(c: &mut Criterion) {
     c.bench_function("update grid", |b| {

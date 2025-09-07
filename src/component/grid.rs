@@ -7,7 +7,7 @@ use bevy::{
 };
 use rand::random_range;
 
-use super::particles::Particle;
+use super::particles::particle::Particle;
 
 // TODO: remove all unwrap and expects
 
