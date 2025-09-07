@@ -1,6 +1,24 @@
+use super::particle::Particle;
 use crate::component::grid::{GridAccess, ParticleHorizontalDirection};
 
 pub fn update_water<T: GridAccess>(grid: &mut T, position: (usize, usize)) {
+    for y in -1..=1 {
+        for x in -1..=1 {
+            match grid.get_neighbor_index(position, (x, y)) {
+                Ok(i) => match grid.get_cell(i) {
+                    Some(c) => match c.particle {
+                        Particle::Salt => {
+                            return grid.dissolve_particles(grid.to_index(position), i);
+                        }
+                        _ => (),
+                    },
+                    None => (),
+                },
+                Err(_) => (),
+            }
+        }
+    }
+
     let index_bottom = match grid.get_neighbor_index(position, (0, 1)) {
         Ok(i) => match grid.get_cell(i) {
             Some(_) => None,
@@ -472,5 +490,63 @@ mod tests {
             ],
             *g.get_cells()
         );
+    }
+
+    #[test]
+    fn test_solving_particle_counts_as_being_simulated() {
+        /*
+         * s -> s
+         * w    w
+         * S    -
+         */
+
+        let mut g = Grid::new(1, 3);
+        g.spawn_particle(0, 0, Particle::Sand);
+        g.spawn_particle(0, 1, Particle::Water);
+        g.spawn_particle(0, 2, Particle::Salt);
+
+        g.update_grid();
+
+        assert_eq!(
+            vec![
+                Some(Cell::new(Particle::Sand)),
+                Some(Cell::new(Particle::Water)),
+                None
+            ],
+            *g.get_cells()
+        );
+    }
+
+    #[test]
+    fn test_update_grid_salt_dissolves_when_touches_water() {
+        /*
+         * for each neighbor:
+         * S-- -> ---
+         * -w-    ww-
+         * ---    ---
+         */
+        for y in 0..3 {
+            for x in 0..3 {
+                if (x, y) == (1, 1) {
+                    continue;
+                }
+                let mut g = Grid::new(3, 3);
+                g.spawn_particle(1, 1, Particle::Water);
+                g.spawn_particle(x, y, Particle::Salt);
+
+                g.update_grid();
+
+                assert_eq!(Particle::Water, g.get_cell(4).clone().unwrap().particle);
+
+                for y in 0..3 {
+                    for x in 0..3 {
+                        if (x, y) == (1, 1) {
+                            continue;
+                        }
+                        assert_eq!(None, g.get_cell(g.to_index((x, y))).clone());
+                    }
+                }
+            }
+        }
     }
 }

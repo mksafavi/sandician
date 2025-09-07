@@ -112,11 +112,11 @@ impl GridAccess for Grid {
     }
 
     fn dissolve_particles(&mut self, index: usize, next_location_index: usize) {
-        if let Some(_) = &mut self.cells[index] {
-            self.cells[index] = None;
-        }
-        if let Some(p) = &mut self.cells[next_location_index] {
+        if let Some(p) = &mut self.cells[index] {
             p.simulated = true;
+        }
+        if let Some(_) = &mut self.cells[next_location_index] {
+            self.cells[next_location_index] = None;
         }
     }
 }

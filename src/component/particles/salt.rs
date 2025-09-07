@@ -1,30 +1,6 @@
-use crate::component::{
-    grid::{GridAccess, ParticleHorizontalDirection},
-    particles::particle::Particle,
-};
+use crate::component::grid::{GridAccess, ParticleHorizontalDirection};
 
 pub fn update_salt<T: GridAccess>(grid: &mut T, position: (usize, usize)) {
-    let index = (-1..=1)
-        .flat_map(|y| (-1..=1).map(move |x| (x, y)))
-        .map(|(x, y)| match grid.get_neighbor_index(position, (x, y)) {
-            Ok(i) => match grid.get_cell(i) {
-                Some(p) => match p.particle {
-                    Particle::Water => Some(i),
-                    _ => None,
-                },
-                None => None,
-            },
-            Err(_) => None,
-        })
-        .filter(|c| c.is_some())
-        .last();
-
-    if let Some(index) = index {
-        if let Some(index) = index {
-            return grid.dissolve_particles(grid.to_index(position), index);
-        }
-    }
-
     let index_bottom = match grid.get_neighbor_index(position, (0, 1)) {
         Ok(i) => match grid.get_cell(i) {
             Some(_) => None,
@@ -67,7 +43,10 @@ pub fn update_salt<T: GridAccess>(grid: &mut T, position: (usize, usize)) {
 
 #[cfg(test)]
 mod tests {
-    use crate::component::grid::{Cell, Grid};
+    use crate::component::{
+        grid::{Cell, Grid},
+        particles::particle::Particle,
+    };
 
     use super::*;
 
@@ -132,30 +111,6 @@ mod tests {
         assert_eq!(None, *g.get_cell(1));
         assert_eq!(Some(Cell::new(Particle::Salt)), *g.get_cell(2));
         assert_eq!(Some(Cell::new(Particle::Salt)), *g.get_cell(3));
-    }
-
-    #[test]
-    fn test_update_grid_salt_dissolves_when_touches_water() {
-        /*
-         * for each neighbor:
-         * w-- -> ---
-         * -S-    ww-
-         * ---    ---
-         */
-        for y in 0..3 {
-            for x in 0..3 {
-                if (x, y) == (1, 1) {
-                    continue;
-                }
-                let mut g = Grid::new(3, 3);
-                g.spawn_particle(1, 1, Particle::Salt);
-                g.spawn_particle(x, y, Particle::Water);
-
-                g.update_grid();
-
-                assert_eq!(None, *g.get_cell(4));
-            }
-        }
     }
 
     #[test]
