@@ -65,6 +65,7 @@ pub trait GridAccess {
     fn to_index(&self, position: (usize, usize)) -> usize;
     fn swap_particles(&mut self, index: usize, next_location_index: usize);
     fn dissolve_particles(&mut self, index: usize, next_location_index: usize);
+    fn is_empty(&self, position: (usize, usize), offset: (i32, i32)) -> Option<usize>;
 }
 
 impl GridAccess for Grid {
@@ -123,6 +124,17 @@ impl GridAccess for Grid {
         if let Some(_) = &mut self.cells[next_location_index] {
             self.cells[next_location_index] = None;
         }
+    }
+
+    fn is_empty(&self, position: (usize, usize), offset: (i32, i32)) -> Option<usize> {
+        let index = match self.get_neighbor_index(position, offset) {
+            Ok(i) => match self.get_cell(i) {
+                Some(_) => None,
+                None => Some(i),
+            },
+            Err(_) => None,
+        };
+        index
     }
 }
 

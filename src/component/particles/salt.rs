@@ -1,31 +1,11 @@
 use crate::component::grid::{GridAccess, ParticleHorizontalDirection};
 
 pub fn update_salt<T: GridAccess>(grid: &mut T, position: (usize, usize)) {
-    let index_bottom = match grid.get_neighbor_index(position, (0, 1)) {
-        Ok(i) => match grid.get_cell(i) {
-            Some(_) => None,
-            None => Some(i),
-        },
-        Err(_) => None,
-    };
-
-    let index_bottom_right = match grid.get_neighbor_index(position, (1, 1)) {
-        Ok(i) => match grid.get_cell(i) {
-            Some(_) => None,
-            None => Some(i),
-        },
-        Err(_) => None,
-    };
-
-    let index_bottom_left = match grid.get_neighbor_index(position, (-1, 1)) {
-        Ok(i) => match grid.get_cell(i) {
-            Some(_) => None,
-            None => Some(i),
-        },
-        Err(_) => None,
-    };
-
-    let index = match (index_bottom_left, index_bottom, index_bottom_right) {
+    let index = match (
+        grid.is_empty(position, (-1, 1)),
+        grid.is_empty(position, (0, 1)),
+        grid.is_empty(position, (1, 1)),
+    ) {
         (None, None, None) => None,
         (None, None, Some(r)) => Some(r),
         (Some(l), None, None) => Some(l),
