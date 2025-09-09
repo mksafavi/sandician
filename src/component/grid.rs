@@ -121,7 +121,7 @@ impl GridAccess for Grid {
         if let Some(p) = &mut self.cells[index] {
             p.simulated = true;
         }
-        if let Some(_) = &mut self.cells[next_location_index] {
+        if self.cells[next_location_index].is_some() {
             self.cells[next_location_index] = None;
         }
     }
