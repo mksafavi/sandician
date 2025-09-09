@@ -127,14 +127,13 @@ impl GridAccess for Grid {
     }
 
     fn is_empty(&self, position: (usize, usize), offset: (i32, i32)) -> Option<usize> {
-        let index = match self.get_neighbor_index(position, offset) {
+        match self.get_neighbor_index(position, offset) {
             Ok(i) => match self.get_cell(i) {
                 Some(_) => None,
                 None => Some(i),
             },
             Err(_) => None,
-        };
-        index
+        }
     }
 }
 
