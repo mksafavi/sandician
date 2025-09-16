@@ -2,11 +2,16 @@
   <head>
     <meta charset="UTF-8" />
   </head>
+  <style>
+    body {
+      margin: 0;
+    }
+  </style>
   <body>
-    <div class="loader"></div>
     <script type="module">
-        import init from '/main.js'
-        init();
+      import init from "/main.js";
+      init();
     </script>
-</body>
+    <canvas id="window_canvas" width="100vw" height="100vh"></canvas>
+  </body>
 </html>
