@@ -360,8 +360,11 @@ mod tests {
 
     #[test]
     fn test_get_particle_color() {
-        assert_color_srgb_eq!(Color::srgb(0.76, 0.70, 0.50), Particle::Sand.color());
-        assert_color_srgb_eq!(Color::srgb(0.05, 0.53, 0.80), Particle::new_water().color());
-        assert_color_srgb_eq!(Color::srgb(1.00, 1.00, 1.00), Particle::Salt.color());
+        assert_color_srgb_eq!(Color::hsva(43.20, 0.34, 0.76, 1.00), Particle::Sand.color());
+        assert_color_srgb_eq!(
+            Color::hsva(201.60, 1.00, 0.80, 1.00),
+            Particle::new_water().color()
+        );
+        assert_color_srgb_eq!(Color::hsva(0.00, 0.00, 1.00, 1.00), Particle::Salt.color());
     }
 }

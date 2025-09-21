@@ -1,4 +1,3 @@
-//use super::grid::{GridAccess, ParticleHorizontalDirection, ParticleOperation};
 use bevy::prelude::Color;
 
 use crate::component::grid::GridAccess;
@@ -23,9 +22,9 @@ impl Particle {
 
     pub fn color(&self) -> Color {
         match self {
-            Particle::Sand => Color::srgb(0.76, 0.70, 0.50),
-            Particle::Water { .. } => Color::srgb(0.05, 0.53, 0.80),
-            Particle::Salt => Color::srgb(1.00, 1.00, 1.00),
+            Particle::Sand => Color::hsva(43.20, 0.34, 0.76, 1.00),
+            Particle::Water { .. } => Color::hsva(201.60, 1.00, 0.80, 1.00),
+            Particle::Salt => Color::hsva(0.00, 0.00, 1.00, 1.00),
         }
     }
 
