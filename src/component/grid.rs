@@ -367,4 +367,18 @@ mod tests {
         );
         assert_color_srgb_eq!(Color::hsva(0.00, 0.00, 1.00, 1.00), Particle::Salt.color());
     }
+
+    #[test]
+    fn test_water_particle_gets_lighter_color_when_it_cannot_dissolve_anymore_salt() {
+        for s in 1..=3 {
+            assert_color_srgb_eq!(
+                Color::hsva(201.60, 1.00, 0.80, 1.00),
+                Particle::Water { solute: s }.color()
+            );
+        }
+        assert_color_srgb_eq!(
+            Color::hsva(201.60, 0.60, 0.80, 1.00),
+            Particle::Water { solute: 0 }.color()
+        );
+    }
 }
