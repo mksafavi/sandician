@@ -72,6 +72,21 @@ fn criterion_benchmark(c: &mut Criterion) {
         });
     });
 
+    c.bench_function("draw half grid", |b| {
+        let y = 1920;
+        let x = 1080;
+        let mut g = Grid::new(x, y);
+        let mut image = Grid::create_output_frame(x, y);
+        for y in 0..y {
+            for x in 0..x / 2 {
+                g.spawn_particle(x, y, Particle::Sand);
+            }
+        }
+        b.iter(|| {
+            g.draw_grid(&mut image);
+        });
+    });
+
     c.bench_function("draw grid", |b| {
         let y = 1920;
         let x = 1080;
