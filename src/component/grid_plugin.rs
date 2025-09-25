@@ -71,11 +71,11 @@ impl GridPlugin {
     ) {
         if let Ok(mut s) = sprite_transform.single_mut() {
             let sprite_scale = match windows.single() {
-                Ok(window) => Vec3::new(
-                    window.resolution.width() / config.width as f32,
-                    window.resolution.height() / config.height as f32,
-                    1.,
-                ),
+                Ok(window) => {
+                    let scale = (window.resolution.width() / config.width as f32)
+                        .min(window.resolution.height() / config.height as f32);
+                    Vec3::new(scale, scale, 1.)
+                }
                 Err(_) => Vec3::new(1., 1., 1.),
             };
             s.scale = sprite_scale;
@@ -123,9 +123,9 @@ mod tests {
     }
 
     #[test]
-    fn test_scale_output_frame_to_window_system() {
+    fn test_scale_output_frame_to_window_system_scales_and_keeps_aspect_ratio_when_width_is_bigger() {
         let mut app = App::new();
-        app.insert_resource(ConfigResource::new(10, 5, 100.));
+        app.insert_resource(ConfigResource::new(200, 100, 100.));
         app.init_resource::<Assets<Image>>();
         app.add_systems(Startup, GridPlugin::init_grid_system);
         app.add_systems(Startup, |mut c: Commands| {
@@ -134,7 +134,7 @@ mod tests {
         app.add_systems(Update, GridPlugin::scale_output_frame_to_window_system);
         app.add_plugins(WindowPlugin {
             primary_window: Some(Window {
-                resolution: WindowResolution::new(200., 100.),
+                resolution: WindowResolution::new(400., 400.),
                 ..default()
             }),
             ..default()
@@ -144,7 +144,35 @@ mod tests {
 
         let mut t = app.world_mut().query_filtered::<&Transform, With<Sprite>>();
         if let Ok(t) = t.single(app.world()) {
-            assert_eq!(Transform::from_scale(Vec3::new(20., 20., 1.)), *t);
+            assert_eq!(Transform::from_scale(Vec3::new(2., 2., 1.)), *t);
+        } else {
+            panic!("missing the transform component of output frame sprite")
+        }
+    }
+
+    #[test]
+    fn test_scale_output_frame_to_window_system_scales_and_keeps_aspect_ratio_when_height_is_bigger() {
+        let mut app = App::new();
+        app.insert_resource(ConfigResource::new(100, 200, 100.));
+        app.init_resource::<Assets<Image>>();
+        app.add_systems(Startup, GridPlugin::init_grid_system);
+        app.add_systems(Startup, |mut c: Commands| {
+            c.spawn(Transform::default()); /* Insert any transform asset that might be present at app runtime */
+        });
+        app.add_systems(Update, GridPlugin::scale_output_frame_to_window_system);
+        app.add_plugins(WindowPlugin {
+            primary_window: Some(Window {
+                resolution: WindowResolution::new(400., 400.),
+                ..default()
+            }),
+            ..default()
+        });
+
+        app.update();
+
+        let mut t = app.world_mut().query_filtered::<&Transform, With<Sprite>>();
+        if let Ok(t) = t.single(app.world()) {
+            assert_eq!(Transform::from_scale(Vec3::new(2., 2., 1.)), *t);
         } else {
             panic!("missing the transform component of output frame sprite")
         }
