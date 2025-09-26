@@ -9,8 +9,9 @@ macro_rules! assert_color_srgb_eq {
             || ($a.to_srgba().blue - $b.to_srgba().blue).abs() >= $threshold
         {
             panic!(
-                "assertion `left == right` failed left:{:?} left{:?}",
-                $a, $b
+                "assertion `left == right` failed left:{:?} right:{:?}",
+                $a.to_srgba(),
+                $b
             );
         }
     };
