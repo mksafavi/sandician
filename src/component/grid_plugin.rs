@@ -110,28 +110,33 @@ mod tests {
     use super::*;
     use bevy::prelude::default;
     use bevy::window::WindowResolution;
-    use bevy::{ecs::query::With, prelude::IntoScheduleConfigs, window::WindowPlugin};
+    use bevy::{ecs::query::With, window::WindowPlugin};
 
     #[test]
     fn test_init_grid_system_creates_a_grid() {
         let mut app = App::new();
-        app.insert_resource(ConfigResource::new(2, 3, 100.));
         app.init_resource::<Assets<Image>>();
-        app.add_systems(Startup, GridPlugin::init_grid_system);
+        app.add_plugins(GridPlugin {
+            config: ConfigResource::new(2, 3, 100.),
+        });
+
         app.update();
+
         assert_eq!(1, app.world_mut().query::<&Grid>().iter(app.world()).len());
     }
 
     #[test]
-    fn test_scale_output_frame_to_window_system_scales_and_keeps_aspect_ratio_when_width_is_bigger() {
+    fn test_scale_output_frame_to_window_system_scales_and_keeps_aspect_ratio_when_width_is_bigger()
+    {
         let mut app = App::new();
-        app.insert_resource(ConfigResource::new(200, 100, 100.));
         app.init_resource::<Assets<Image>>();
-        app.add_systems(Startup, GridPlugin::init_grid_system);
+        app.add_plugins(GridPlugin {
+            config: ConfigResource::new(200, 100, 100.),
+        });
+
         app.add_systems(Startup, |mut c: Commands| {
             c.spawn(Transform::default()); /* Insert any transform asset that might be present at app runtime */
         });
-        app.add_systems(Update, GridPlugin::scale_output_frame_to_window_system);
         app.add_plugins(WindowPlugin {
             primary_window: Some(Window {
                 resolution: WindowResolution::new(400., 400.),
@@ -151,15 +156,17 @@ mod tests {
     }
 
     #[test]
-    fn test_scale_output_frame_to_window_system_scales_and_keeps_aspect_ratio_when_height_is_bigger() {
+    fn test_scale_output_frame_to_window_system_scales_and_keeps_aspect_ratio_when_height_is_bigger()
+     {
         let mut app = App::new();
-        app.insert_resource(ConfigResource::new(100, 200, 100.));
         app.init_resource::<Assets<Image>>();
-        app.add_systems(Startup, GridPlugin::init_grid_system);
+        app.add_plugins(GridPlugin {
+            config: ConfigResource::new(100, 200, 100.),
+        });
+
         app.add_systems(Startup, |mut c: Commands| {
             c.spawn(Transform::default()); /* Insert any transform asset that might be present at app runtime */
         });
-        app.add_systems(Update, GridPlugin::scale_output_frame_to_window_system);
         app.add_plugins(WindowPlugin {
             primary_window: Some(Window {
                 resolution: WindowResolution::new(400., 400.),
@@ -180,41 +187,36 @@ mod tests {
 
     #[test]
     fn test_draw_grid_system() {
-        fn fixture_spawn_particle_system(mut grid: Query<&mut Grid>) {
-            let mut g = grid.iter_mut().last().unwrap();
-            g.spawn_particle(0, 0, Particle::Sand);
-            g.spawn_particle(1, 0, Particle::new_water());
+        let mut app = App::new();
+        app.init_resource::<Assets<Image>>();
+        app.add_plugins(GridPlugin {
+            config: ConfigResource::new(2, 2, 100.),
+        });
+
+        app.update();
+
+        let mut grid = app.world_mut().query::<&mut Grid>();
+        if let Ok(mut g) = grid.single_mut(app.world_mut()) {
+            g.spawn_particle(0, 1, Particle::new_water());
+            g.spawn_particle(1, 1, Particle::Sand);
+        } else {
+            panic!("grid not found");
         }
 
-        fn assert_read_output_frame_system(
-            output_frame_handle: Res<OutputFrameHandle>,
-            images: Res<Assets<Image>>,
-        ) {
-            let image = images.get(&output_frame_handle.0).expect("Image not found");
-            assert_color_srgb_eq!(Particle::Sand.color(), image.get_color_at(0, 0).unwrap());
+        app.update();
+
+        let frame = app.world().resource::<OutputFrameHandle>();
+        if let Some(images) = app.world().get_resource::<Assets<Image>>() {
+            let image = images.get(&frame.0).expect("image not found");
+            assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(0, 0).unwrap());
+            assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(1, 0).unwrap());
             assert_color_srgb_eq!(
                 Particle::new_water().color(),
-                image.get_color_at(1, 0).unwrap()
+                image.get_color_at(0, 1).unwrap()
             );
-            assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(0, 1).unwrap());
-            assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(1, 1).unwrap());
+            assert_color_srgb_eq!(Particle::Sand.color(), image.get_color_at(1, 1).unwrap());
+        } else {
+            panic!("image not found");
         }
-
-        let mut app = App::new();
-        app.insert_resource(ConfigResource::new(5, 6, 100.));
-        app.init_resource::<Assets<Image>>();
-
-        //app.insert_resource(OutputFrameHandle);
-        app.add_systems(Startup, GridPlugin::init_grid_system);
-        app.add_systems(
-            Update,
-            (
-                fixture_spawn_particle_system,
-                GridPlugin::draw_grid_system,
-                assert_read_output_frame_system,
-            )
-                .chain(),
-        );
-        app.update();
     }
 }
