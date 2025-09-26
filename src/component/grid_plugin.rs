@@ -45,15 +45,11 @@ impl ParticleBrush {
         self.spawning = false;
     }
 
-    fn convert_position_to_pixel_position(
-        position: Vec3,
-        grid_size: (usize, usize),
-        grid_scale: (f32, f32),
-    ) -> (usize, usize) {
-        (
-            ((position.x / grid_scale.0) + (grid_size.0 as f32 / 2.)) as usize,
-            ((-position.y / grid_scale.1) + (grid_size.1 as f32 / 2.)) as usize,
-        )
+    fn move_brush(&mut self, position: Vec3, grid_size: (usize, usize), grid_scale: Vec3) {
+        self.position = (
+            ((position.x / grid_scale.x) + (grid_size.0 as f32 / 2.)) as usize,
+            ((-position.y / grid_scale.y) + (grid_size.1 as f32 / 2.)) as usize,
+        );
     }
 }
 
@@ -389,41 +385,19 @@ mod tests {
     }
 
     #[test]
-    fn test_convert_position_to_pixel_position() {
-        assert_eq!(
-            (0, 0),
-            ParticleBrush::convert_position_to_pixel_position(
-                vec3(-150., 100., 0.),
-                (300, 200),
-                (1., 1.)
-            )
-        );
+    fn test_particle_brush_move_brush() {
+        let mut pb = ParticleBrush::new();
 
-        assert_eq!(
-            (300, 200),
-            ParticleBrush::convert_position_to_pixel_position(
-                vec3(150., -100., 0.),
-                (300, 200),
-                (1., 1.)
-            )
-        );
+        pb.move_brush(vec3(-150., 100., 0.), (300, 200), vec3(1., 1., 1.));
+        assert_eq!((0, 0), pb.position);
 
-        assert_eq!(
-            (0, 0),
-            ParticleBrush::convert_position_to_pixel_position(
-                vec3(-450., 300., 0.),
-                (300, 200),
-                (3., 3.)
-            )
-        );
+        pb.move_brush(vec3(150., -100., 0.), (300, 200), vec3(1., 1., 1.));
+        assert_eq!((300, 200), pb.position);
 
-        assert_eq!(
-            (300, 200),
-            ParticleBrush::convert_position_to_pixel_position(
-                vec3(450., -300., 0.),
-                (300, 200),
-                (3., 3.)
-            )
-        );
+        pb.move_brush(vec3(-450., 300., 0.), (300, 200), vec3(3., 3., 1.));
+        assert_eq!((0, 0), pb.position);
+
+        pb.move_brush(vec3(450., -300., 0.), (300, 200), vec3(3., 3., 1.));
+        assert_eq!((300, 200), pb.position);
     }
 }
