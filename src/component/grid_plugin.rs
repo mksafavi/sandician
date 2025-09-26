@@ -2,6 +2,7 @@ use bevy::{
     app::{App, FixedUpdate, Plugin, Startup, Update},
     asset::{Assets, Handle},
     ecs::{
+        component::Component,
         query::With,
         resource::Resource,
         system::{Commands, Query, Res, ResMut},
@@ -14,10 +15,28 @@ use bevy::{
     window::Window,
 };
 
-use super::grid::Grid;
+use super::{grid::Grid, particles::particle::Particle};
 
 #[derive(Resource)]
 struct OutputFrameHandle(Handle<Image>);
+
+#[derive(Component)]
+pub struct ParticleBrush {
+    pub spawning: bool,
+    pub position: (usize, usize),
+    pub particle: Particle,
+    pub size: usize,
+}
+impl ParticleBrush {
+    pub fn new() -> Self {
+        Self {
+            spawning: false,
+            position: (0, 0),
+            particle: Particle::Sand,
+            size: 1,
+        }
+    }
+}
 
 #[derive(Resource, Clone)]
 pub struct ConfigResource {
@@ -45,7 +64,8 @@ impl Plugin for GridPlugin {
             .add_systems(Startup, GridPlugin::init_grid_system)
             .add_systems(FixedUpdate, GridPlugin::update_grid_system)
             .add_systems(Update, GridPlugin::draw_grid_system)
-            .add_systems(Update, GridPlugin::scale_output_frame_to_window_system);
+            .add_systems(Update, GridPlugin::scale_output_frame_to_window_system)
+            .add_systems(Update, GridPlugin::spawn_brush_system);
     }
 }
 
@@ -62,6 +82,7 @@ impl GridPlugin {
             Transform::from_scale(Vec3::new(1., 1., 1.)),
         ));
         commands.insert_resource(OutputFrameHandle(handle));
+        commands.spawn(ParticleBrush::new());
     }
 
     fn scale_output_frame_to_window_system(
@@ -99,11 +120,22 @@ impl GridPlugin {
             }
         }
     }
+
+    fn spawn_brush_system(particle_brush: Query<&ParticleBrush>, mut grid: Query<&mut Grid>) {
+        if let Ok(mut g) = grid.single_mut() {
+            if let Ok(pb) = particle_brush.single() {
+                if pb.spawning {
+                    g.spawn_brush(pb.position, pb.size, &pb.particle)
+                }
+            }
+        }
+    }
 }
 
 #[cfg(test)]
 mod tests {
 
+    use crate::component::grid::{Cell, GridAccess};
     use crate::component::particles::particle::Particle;
     use crate::component::{grid::BACKGROUND_COLOR, macros::assert_color_srgb_eq};
 
@@ -217,6 +249,109 @@ mod tests {
             assert_color_srgb_eq!(Particle::Sand.color(), image.get_color_at(1, 1).unwrap());
         } else {
             panic!("image not found");
+        }
+    }
+
+    #[test]
+    fn test_particle_brush() {
+        let mut app = App::new();
+        app.init_resource::<Assets<Image>>();
+        app.add_plugins(GridPlugin {
+            config: ConfigResource::new(2, 2, 100.),
+        });
+
+        app.update();
+
+        let mut grid = app.world_mut().query::<&Grid>();
+        if let Ok(g) = grid.single(app.world()) {
+            assert_eq!(&vec![None, None, None, None], g.get_cells());
+        } else {
+            panic!("grid not found");
+        }
+
+        let mut s = app.world_mut().query::<&mut ParticleBrush>();
+        if let Ok(mut s) = s.single_mut(app.world_mut()) {
+            s.spawning = true;
+            s.position = (1, 1);
+        } else {
+            panic!("ParticleBrush not found");
+        }
+        app.update();
+
+        let mut grid = app.world_mut().query::<&Grid>();
+        if let Ok(g) = grid.single(app.world()) {
+            assert_eq!(
+                &vec![None, None, None, Some(Cell::new(Particle::Sand))],
+                g.get_cells()
+            );
+        } else {
+            panic!("grid not found");
+        }
+
+        let mut s = app.world_mut().query::<&mut ParticleBrush>();
+        if let Ok(mut s) = s.single_mut(app.world_mut()) {
+            s.particle = Particle::Salt;
+            s.position = (0, 1);
+        } else {
+            panic!("ParticleBrush not found");
+        }
+        app.update();
+
+        let mut grid = app.world_mut().query::<&Grid>();
+        if let Ok(g) = grid.single(app.world()) {
+            assert_eq!(
+                &vec![
+                    None,
+                    None,
+                    Some(Cell::new(Particle::Salt)),
+                    Some(Cell::new(Particle::Sand))
+                ],
+                g.get_cells()
+            );
+        } else {
+            panic!("grid not found");
+        }
+    }
+
+    #[test]
+    fn test_particle_brush_size() {
+        let mut app = App::new();
+        app.init_resource::<Assets<Image>>();
+        app.add_plugins(GridPlugin {
+            config: ConfigResource::new(2, 2, 100.),
+        });
+
+        app.update();
+
+        let mut grid = app.world_mut().query::<&Grid>();
+        if let Ok(g) = grid.single(app.world()) {
+            assert_eq!(&vec![None, None, None, None], g.get_cells());
+        } else {
+            panic!("grid not found");
+        }
+
+        let mut s = app.world_mut().query::<&mut ParticleBrush>();
+        if let Ok(mut s) = s.single_mut(app.world_mut()) {
+            s.spawning = true;
+            s.size = 2;
+        } else {
+            panic!("ParticleBrush not found");
+        }
+        app.update();
+
+        let mut grid = app.world_mut().query::<&Grid>();
+        if let Ok(g) = grid.single(app.world()) {
+            assert_eq!(
+                &vec![
+                    Some(Cell::new(Particle::Sand)),
+                    Some(Cell::new(Particle::Sand)),
+                    Some(Cell::new(Particle::Sand)),
+                    Some(Cell::new(Particle::Sand)),
+                ],
+                g.get_cells()
+            );
+        } else {
+            panic!("grid not found");
         }
     }
 }
