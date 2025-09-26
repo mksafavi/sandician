@@ -36,6 +36,14 @@ impl ParticleBrush {
             size: 1,
         }
     }
+
+    fn start_spawning(&mut self) {
+        self.spawning = true;
+    }
+
+    fn stop_spawning(&mut self) {
+        self.spawning = false;
+    }
 }
 
 #[derive(Resource, Clone)]
@@ -354,4 +362,18 @@ mod tests {
             panic!("grid not found");
         }
     }
+
+    #[test]
+    fn test_particle_brush_start_and_stop_spawning() {
+        let mut pb = ParticleBrush::new();
+
+        pb.start_spawning();
+
+        assert_eq!(true, pb.spawning);
+
+        pb.stop_spawning();
+
+        assert_eq!(false, pb.spawning);
+    }
+
 }
