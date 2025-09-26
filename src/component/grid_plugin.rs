@@ -44,6 +44,17 @@ impl ParticleBrush {
     fn stop_spawning(&mut self) {
         self.spawning = false;
     }
+
+    fn convert_position_to_pixel_position(
+        position: Vec3,
+        grid_size: (usize, usize),
+        grid_scale: (f32, f32),
+    ) -> (usize, usize) {
+        (
+            ((position.x / grid_scale.0) + (grid_size.0 as f32 / 2.)) as usize,
+            ((-position.y / grid_scale.1) + (grid_size.1 as f32 / 2.)) as usize,
+        )
+    }
 }
 
 #[derive(Resource, Clone)]
@@ -148,6 +159,7 @@ mod tests {
     use crate::component::{grid::BACKGROUND_COLOR, macros::assert_color_srgb_eq};
 
     use super::*;
+    use bevy::math::vec3;
     use bevy::prelude::default;
     use bevy::window::WindowResolution;
     use bevy::{ecs::query::With, window::WindowPlugin};
@@ -376,4 +388,42 @@ mod tests {
         assert_eq!(false, pb.spawning);
     }
 
+    #[test]
+    fn test_convert_position_to_pixel_position() {
+        assert_eq!(
+            (0, 0),
+            ParticleBrush::convert_position_to_pixel_position(
+                vec3(-150., 100., 0.),
+                (300, 200),
+                (1., 1.)
+            )
+        );
+
+        assert_eq!(
+            (300, 200),
+            ParticleBrush::convert_position_to_pixel_position(
+                vec3(150., -100., 0.),
+                (300, 200),
+                (1., 1.)
+            )
+        );
+
+        assert_eq!(
+            (0, 0),
+            ParticleBrush::convert_position_to_pixel_position(
+                vec3(-450., 300., 0.),
+                (300, 200),
+                (3., 3.)
+            )
+        );
+
+        assert_eq!(
+            (300, 200),
+            ParticleBrush::convert_position_to_pixel_position(
+                vec3(450., -300., 0.),
+                (300, 200),
+                (3., 3.)
+            )
+        );
+    }
 }
