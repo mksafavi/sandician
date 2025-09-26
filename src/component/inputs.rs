@@ -5,7 +5,11 @@ use bevy::{
 };
 use bevy::{math::Vec2, window::WindowResolution};
 
-use super::{grid::Grid, grid_plugin::ConfigResource, particles::particle::Particle};
+use super::{
+    grid::Grid,
+    grid_plugin::{ConfigResource, ParticleBrush},
+    particles::particle::Particle,
+};
 
 fn scale_input_position(
     cursor: Option<Vec2>,
@@ -26,7 +30,7 @@ pub fn mouse_spawn_brush_system(
     mouse_button: Res<ButtonInput<MouseButton>>,
     config: Res<ConfigResource>,
     window_query: Query<&Window>,
-    mut grid: Query<&mut Grid>,
+    mut particle_brush: Query<&mut ParticleBrush>,
 ) {
     let cursor_position = match window_query.single() {
         Ok(w) => scale_input_position(
@@ -37,16 +41,22 @@ pub fn mouse_spawn_brush_system(
         Err(_) => None,
     };
 
-    if let Ok(mut g) = grid.single_mut() {
+    if let Ok(mut pb) = particle_brush.single_mut() {
         if let Some(p) = cursor_position {
+            pb.size = 25;
+            pb.spawning = false;
+            pb.position = p;
             if mouse_button.pressed(MouseButton::Left) {
-                g.spawn_brush(p, 25, &Particle::Sand);
+                pb.spawning = true;
+                pb.particle = Particle::Sand;
             }
             if mouse_button.pressed(MouseButton::Right) {
-                g.spawn_brush(p, 25, &Particle::new_water());
+                pb.spawning = true;
+                pb.particle = Particle::new_water();
             }
             if mouse_button.pressed(MouseButton::Middle) {
-                g.spawn_brush(p, 25, &Particle::Salt);
+                pb.spawning = true;
+                pb.particle = Particle::Salt;
             }
         }
     }
