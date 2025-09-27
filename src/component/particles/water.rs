@@ -14,12 +14,12 @@ pub fn update_water<T: GridAccess>(grid: &mut T, solute: u8, position: (usize, u
                         grid.dissolve_particles(index, i);
                         return;
                     }
-                    match grid.cycle() < c.cycle {
+                    match grid.is_simulated(c) {
                         true => None,
                         false => Some(i),
                     }
                 }
-                Some(Particle::Sand) => match grid.cycle() < c.cycle {
+                Some(Particle::Sand) => match grid.is_simulated(c) {
                     true => None,
                     false => Some(i),
                 },
@@ -41,12 +41,12 @@ pub fn update_water<T: GridAccess>(grid: &mut T, solute: u8, position: (usize, u
                         grid.dissolve_particles(index, i);
                         return;
                     }
-                    match grid.cycle() < c.cycle {
+                    match grid.is_simulated(c) {
                         true => None,
                         false => Some(i),
                     }
                 }
-                Some(Particle::Sand) => match grid.cycle() < c.cycle {
+                Some(Particle::Sand) => match grid.is_simulated(c) {
                     true => None,
                     false => Some(i),
                 },
@@ -68,12 +68,12 @@ pub fn update_water<T: GridAccess>(grid: &mut T, solute: u8, position: (usize, u
                         grid.dissolve_particles(index, i);
                         return;
                     }
-                    match grid.cycle() < c.cycle {
+                    match grid.is_simulated(c) {
                         true => None,
                         false => Some(i),
                     }
                 }
-                Some(Particle::Sand) => match grid.cycle() < c.cycle {
+                Some(Particle::Sand) => match grid.is_simulated(c) {
                     true => None,
                     false => Some(i),
                 },

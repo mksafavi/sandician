@@ -67,6 +67,7 @@ pub trait GridAccess {
     fn swap_particles(&mut self, index: usize, next_location_index: usize);
     fn dissolve_particles(&mut self, index: usize, next_location_index: usize);
     fn is_empty(&self, position: (usize, usize), offset: (i32, i32)) -> Option<usize>;
+    fn is_simulated(&self, c: &Cell) -> bool;
     fn cycle(&self) -> u32;
 }
 
@@ -134,6 +135,10 @@ impl GridAccess for Grid {
     fn cycle(&self) -> u32 {
         self.cycle
     }
+
+    fn is_simulated(&self, c: &Cell) -> bool {
+        self.cycle() < c.cycle
+    }
 }
 
 impl Grid {
@@ -177,9 +182,9 @@ impl Grid {
                     RowUpdateDirection::Forward => x,
                     RowUpdateDirection::Reverse => self.width - 1 - x,
                 };
-                let p = self.get_cell(self.to_index((x, y)));
-                if p.cycle <= self.cycle {
-                    if let Some(p) = &p.particle {
+                let c = self.get_cell(self.to_index((x, y)));
+                if !self.is_simulated(c) {
+                    if let Some(p) = &c.particle {
                         p.clone().update(self, (x, y)); // TODO: is there any other way to handle this double borrow instead of clone?
                     };
                 }
