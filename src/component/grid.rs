@@ -51,6 +51,7 @@ pub struct Grid {
     water_direction: fn() -> ParticleHorizontalDirection,
     row_update_direction: fn() -> RowUpdateDirection,
     cycle: u32,
+    draw_cycle: u32,
 }
 
 pub trait GridAccess {
@@ -162,6 +163,7 @@ impl Grid {
             water_direction: random_water_direction,
             row_update_direction: random_row_update_direction,
             cycle: 0,
+            draw_cycle: 0,
         }
     }
 
@@ -169,7 +171,7 @@ impl Grid {
         if y < self.height && x < self.width {
             let index = self.to_index((x, y));
             if self.cells[index].particle.is_none() {
-                self.cells[index] = Cell::new(Some(particle), 0);
+                self.cells[index] = Cell::new(Some(particle), self.cycle);
             }
         }
     }
@@ -207,19 +209,18 @@ impl Grid {
         )
     }
 
-    pub fn draw_grid(&self, image: &mut Image) {
+    pub fn draw_grid(&mut self, image: &mut Image) {
         for (index, cell) in self.cells.iter().enumerate() {
-            let x: u32 = index as u32 % self.width as u32;
-            let y: u32 = (index as u32 - x) / self.width as u32;
-            match &cell.particle {
-                Some(p) => {
-                    image.set_color_at(x, y, p.color());
-                }
-                _ => {
-                    image.set_color_at(x, y, BACKGROUND_COLOR);
-                }
-            };
+            if self.draw_cycle <= cell.cycle {
+                let x: u32 = index as u32 % self.width as u32;
+                let y: u32 = (index as u32 - x) / self.width as u32;
+                let _ = match &cell.particle {
+                    Some(p) => image.set_color_at(x, y, p.color()),
+                    _ => image.set_color_at(x, y, BACKGROUND_COLOR),
+                };
+            }
         }
+        self.draw_cycle = self.cycle;
     }
 
     pub fn spawn_brush(&mut self, (x, y): (usize, usize), size: usize, particle: &Particle) {
@@ -253,6 +254,8 @@ impl Grid {
 
 #[cfg(test)]
 mod tests {
+    use bevy::color::{Gray, Hsva};
+
     use super::*;
     use crate::component::macros::assert_color_srgb_eq;
 
@@ -348,6 +351,71 @@ mod tests {
         );
         assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(0, 1).unwrap());
         assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(1, 1).unwrap());
+    }
+
+    #[test]
+    fn test_draw_grid_only_redraw_changed_cells() {
+        let mut g = Grid::new(2, 2);
+        g.spawn_particle(0, 0, Particle::Sand);
+
+        /*
+         * draw_cycle: 0
+         * cycles:
+         *  0 0
+         *  0 0
+         */
+        let mut image = Grid::create_output_frame(2, 2);
+        g.draw_grid(&mut image);
+
+        assert_color_srgb_eq!(Particle::Sand.color(), image.get_color_at(0, 0).unwrap());
+        assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(1, 0).unwrap());
+        assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(0, 1).unwrap());
+        assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(1, 1).unwrap());
+
+        g.update_grid();
+        /*
+         * draw_cycle: 0
+         * cycles:
+         *  1 0
+         *  1 0
+         */
+        let mut image = Grid::create_output_frame(2, 2);
+        g.draw_grid(&mut image);
+
+        assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(0, 0).unwrap());
+        assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(1, 0).unwrap());
+        assert_color_srgb_eq!(Particle::Sand.color(), image.get_color_at(0, 1).unwrap());
+        assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(1, 1).unwrap());
+
+        g.update_grid();
+        /*
+         * draw_cycle: 1
+         * cycles:
+         *  1 0
+         *  1 0
+         */
+        let mut image = Grid::create_output_frame(2, 2);
+        g.draw_grid(&mut image);
+
+        assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(0, 0).unwrap());
+        assert_color_srgb_eq!(Color::Hsva(Hsva::BLACK), image.get_color_at(1, 0).unwrap());
+        assert_color_srgb_eq!(Particle::Sand.color(), image.get_color_at(0, 1).unwrap());
+        assert_color_srgb_eq!(Color::Hsva(Hsva::BLACK), image.get_color_at(1, 1).unwrap());
+
+        g.update_grid();
+        /*
+         * draw_cycle: 2
+         * cycles:
+         *  1 0
+         *  1 0
+         */
+        let mut image = Grid::create_output_frame(2, 2);
+        g.draw_grid(&mut image);
+
+        assert_color_srgb_eq!(Color::Hsva(Hsva::BLACK), image.get_color_at(0, 0).unwrap());
+        assert_color_srgb_eq!(Color::Hsva(Hsva::BLACK), image.get_color_at(1, 0).unwrap());
+        assert_color_srgb_eq!(Color::Hsva(Hsva::BLACK), image.get_color_at(0, 1).unwrap());
+        assert_color_srgb_eq!(Color::Hsva(Hsva::BLACK), image.get_color_at(1, 1).unwrap());
     }
 
     #[test]

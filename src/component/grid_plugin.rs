@@ -125,11 +125,11 @@ impl GridPlugin {
     }
 
     fn draw_grid_system(
-        grid: Query<&Grid>,
+        mut grid: Query<&mut Grid>,
         output_frame_handle: Res<OutputFrameHandle>,
         mut images: ResMut<Assets<Image>>,
     ) {
-        if let Ok(g) = grid.single() {
+        if let Ok(mut g) = grid.single_mut() {
             if let Some(image) = images.get_mut(&output_frame_handle.0) {
                 g.draw_grid(image);
             }
