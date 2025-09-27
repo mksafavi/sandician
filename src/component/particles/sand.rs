@@ -39,7 +39,7 @@ mod tests {
         let mut g = Grid::new(2, 2);
         g.spawn_particle(0, 0, Particle::Sand);
 
-        assert_eq!(Some(Cell::new(Particle::Sand)), *g.get_cell(0));
+        assert_eq!(Some(Cell::new(Particle::Sand, 0)), *g.get_cell(0));
         assert_eq!(None, *g.get_cell(1));
         assert_eq!(None, *g.get_cell(2));
         assert_eq!(None, *g.get_cell(3));
@@ -48,7 +48,7 @@ mod tests {
 
         assert_eq!(None, *g.get_cell(0));
         assert_eq!(None, *g.get_cell(1));
-        assert_eq!(Some(Cell::new(Particle::Sand)), *g.get_cell(2));
+        assert_eq!(Some(Cell::new(Particle::Sand, 1)), *g.get_cell(2));
         assert_eq!(None, *g.get_cell(3));
     }
 
@@ -68,8 +68,8 @@ mod tests {
 
         assert_eq!(None, *g.get_cell(0));
         assert_eq!(None, *g.get_cell(1));
-        assert_eq!(Some(Cell::new(Particle::Sand)), *g.get_cell(2));
-        assert_eq!(Some(Cell::new(Particle::Sand)), *g.get_cell(3));
+        assert_eq!(Some(Cell::new(Particle::Sand, 0)), *g.get_cell(2));
+        assert_eq!(Some(Cell::new(Particle::Sand, 1)), *g.get_cell(3));
     }
 
     #[test]
@@ -88,8 +88,8 @@ mod tests {
 
         assert_eq!(None, *g.get_cell(0));
         assert_eq!(None, *g.get_cell(1));
-        assert_eq!(Some(Cell::new(Particle::Sand)), *g.get_cell(2));
-        assert_eq!(Some(Cell::new(Particle::Sand)), *g.get_cell(3));
+        assert_eq!(Some(Cell::new(Particle::Sand, 1)), *g.get_cell(2));
+        assert_eq!(Some(Cell::new(Particle::Sand, 0)), *g.get_cell(3));
     }
 
     #[test]
@@ -109,8 +109,8 @@ mod tests {
         assert_eq!(None, *g.get_cell(0));
         assert_eq!(None, *g.get_cell(1));
         assert_eq!(None, *g.get_cell(2));
-        assert_eq!(Some(Cell::new(Particle::Sand)), *g.get_cell(3));
-        assert_eq!(Some(Cell::new(Particle::Sand)), *g.get_cell(4));
+        assert_eq!(Some(Cell::new(Particle::Sand, 1)), *g.get_cell(3));
+        assert_eq!(Some(Cell::new(Particle::Sand, 0)), *g.get_cell(4));
         assert_eq!(None, *g.get_cell(5));
     }
 
@@ -132,7 +132,7 @@ mod tests {
         assert_eq!(None, *g.get_cell(1));
         assert_eq!(None, *g.get_cell(2));
         assert_eq!(None, *g.get_cell(3));
-        assert_eq!(Some(Cell::new(Particle::Sand)), *g.get_cell(4));
-        assert_eq!(Some(Cell::new(Particle::Sand)), *g.get_cell(5));
+        assert_eq!(Some(Cell::new(Particle::Sand, 0)), *g.get_cell(4));
+        assert_eq!(Some(Cell::new(Particle::Sand, 1)), *g.get_cell(5));
     }
 }

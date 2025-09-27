@@ -31,15 +31,12 @@ pub enum RowUpdateDirection {
 #[derive(Clone, PartialEq, Debug)]
 pub struct Cell {
     pub particle: Particle,
-    pub simulated: bool,
+    pub cycle: u32,
 }
 
 impl Cell {
-    pub fn new(particle: Particle) -> Self {
-        Self {
-            particle,
-            simulated: false,
-        }
+    pub fn new(particle: Particle, cycle: u32) -> Self {
+        Self { particle, cycle }
     }
 }
 
@@ -50,6 +47,7 @@ pub struct Grid {
     height: usize,
     water_direction: fn() -> ParticleHorizontalDirection,
     row_update_direction: fn() -> RowUpdateDirection,
+    cycle: u32,
 }
 
 pub trait GridAccess {
@@ -66,6 +64,7 @@ pub trait GridAccess {
     fn swap_particles(&mut self, index: usize, next_location_index: usize);
     fn dissolve_particles(&mut self, index: usize, next_location_index: usize);
     fn is_empty(&self, position: (usize, usize), offset: (i32, i32)) -> Option<usize>;
+    fn cycle(&self) -> u32;
 }
 
 impl GridAccess for Grid {
@@ -110,16 +109,16 @@ impl GridAccess for Grid {
     fn swap_particles(&mut self, index: usize, next_location_index: usize) {
         self.cells.swap(index, next_location_index);
         if let Some(p) = &mut self.cells[index] {
-            p.simulated = true;
+            p.cycle = self.cycle.wrapping_add(1);
         }
         if let Some(p) = &mut self.cells[next_location_index] {
-            p.simulated = true;
+            p.cycle = self.cycle.wrapping_add(1);
         }
     }
 
     fn dissolve_particles(&mut self, index: usize, next_location_index: usize) {
         if let Some(p) = &mut self.cells[index] {
-            p.simulated = true;
+            p.cycle = self.cycle.wrapping_add(1);
         }
         if self.cells[next_location_index].is_some() {
             self.cells[next_location_index] = None;
@@ -134,6 +133,10 @@ impl GridAccess for Grid {
             },
             Err(_) => None,
         }
+    }
+
+    fn cycle(&self) -> u32 {
+        self.cycle
     }
 }
 
@@ -157,6 +160,7 @@ impl Grid {
             height,
             water_direction: random_water_direction,
             row_update_direction: random_row_update_direction,
+            cycle: 0,
         }
     }
 
@@ -164,17 +168,9 @@ impl Grid {
         if y < self.height && x < self.width {
             let index = self.to_index((x, y));
             if self.cells[index].is_none() {
-                self.cells[index] = Some(Cell::new(particle));
+                self.cells[index] = Some(Cell::new(particle, 0));
             }
         }
-    }
-
-    fn clear_all_simulated_field(&mut self) {
-        self.cells.iter_mut().for_each(|x| {
-            if let Some(x) = x {
-                x.simulated = false;
-            }
-        });
     }
 
     pub fn update_grid(&mut self) {
@@ -186,13 +182,13 @@ impl Grid {
                     RowUpdateDirection::Reverse => self.width - 1 - x,
                 };
                 if let Some(p) = self.get_cell(self.to_index((x, y))) {
-                    if !p.simulated {
+                    if p.cycle <= self.cycle {
                         p.particle.clone().update(self, (x, y)); // TODO: is there any other way to handle this double borrow instead of clone?
                     }
                 }
             }
         }
-        self.clear_all_simulated_field();
+        self.cycle = self.cycle.wrapping_add(1);
     }
 
     pub fn create_output_frame(width: usize, height: usize) -> Image {
@@ -310,16 +306,16 @@ mod tests {
     fn test_spawn_particles_brush() {
         let mut g = Grid::new(2, 2);
         g.spawn_brush((0, 0), 1, &Particle::Sand);
-        assert_eq!(Some(Cell::new(Particle::Sand)), g.cells[0]);
+        assert_eq!(Some(Cell::new(Particle::Sand, 0)), g.cells[0]);
 
         let mut g = Grid::new(2, 2);
         g.spawn_brush((0, 0), 2, &Particle::Sand);
         assert_eq!(
             vec![
-                Some(Cell::new(Particle::Sand)),
-                Some(Cell::new(Particle::Sand)),
-                Some(Cell::new(Particle::Sand)),
-                Some(Cell::new(Particle::Sand)),
+                Some(Cell::new(Particle::Sand, 0)),
+                Some(Cell::new(Particle::Sand, 0)),
+                Some(Cell::new(Particle::Sand, 0)),
+                Some(Cell::new(Particle::Sand, 0)),
             ],
             g.cells
         );

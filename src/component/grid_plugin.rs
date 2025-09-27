@@ -297,7 +297,7 @@ mod tests {
         let mut grid = app.world_mut().query::<&Grid>();
         if let Ok(g) = grid.single(app.world()) {
             assert_eq!(
-                &vec![None, None, None, Some(Cell::new(Particle::Sand))],
+                &vec![None, None, None, Some(Cell::new(Particle::Sand, 0))],
                 g.get_cells()
             );
         } else {
@@ -319,8 +319,8 @@ mod tests {
                 &vec![
                     None,
                     None,
-                    Some(Cell::new(Particle::Salt)),
-                    Some(Cell::new(Particle::Sand))
+                    Some(Cell::new(Particle::Salt, 0)),
+                    Some(Cell::new(Particle::Sand, 0))
                 ],
                 g.get_cells()
             );
@@ -359,10 +359,10 @@ mod tests {
         if let Ok(g) = grid.single(app.world()) {
             assert_eq!(
                 &vec![
-                    Some(Cell::new(Particle::Sand)),
-                    Some(Cell::new(Particle::Sand)),
-                    Some(Cell::new(Particle::Sand)),
-                    Some(Cell::new(Particle::Sand)),
+                    Some(Cell::new(Particle::Sand, 0)),
+                    Some(Cell::new(Particle::Sand, 0)),
+                    Some(Cell::new(Particle::Sand, 0)),
+                    Some(Cell::new(Particle::Sand, 0)),
                 ],
                 g.get_cells()
             );

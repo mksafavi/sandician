@@ -40,7 +40,7 @@ mod tests {
 
         g.spawn_particle(0, 0, Particle::Salt);
 
-        assert_eq!(Some(Cell::new(Particle::Salt)), *g.get_cell(0));
+        assert_eq!(Some(Cell::new(Particle::Salt, 0)), *g.get_cell(0));
         assert_eq!(None, *g.get_cell(1));
         assert_eq!(None, *g.get_cell(2));
         assert_eq!(None, *g.get_cell(3));
@@ -49,7 +49,7 @@ mod tests {
 
         assert_eq!(None, *g.get_cell(0));
         assert_eq!(None, *g.get_cell(1));
-        assert_eq!(Some(Cell::new(Particle::Salt)), *g.get_cell(2));
+        assert_eq!(Some(Cell::new(Particle::Salt, 1)), *g.get_cell(2));
         assert_eq!(None, *g.get_cell(3));
     }
 
@@ -69,8 +69,8 @@ mod tests {
 
         assert_eq!(None, *g.get_cell(0));
         assert_eq!(None, *g.get_cell(1));
-        assert_eq!(Some(Cell::new(Particle::Salt)), *g.get_cell(2));
-        assert_eq!(Some(Cell::new(Particle::Salt)), *g.get_cell(3));
+        assert_eq!(Some(Cell::new(Particle::Salt, 0)), *g.get_cell(2));
+        assert_eq!(Some(Cell::new(Particle::Salt, 1)), *g.get_cell(3));
     }
 
     #[test]
@@ -89,8 +89,8 @@ mod tests {
 
         assert_eq!(None, *g.get_cell(0));
         assert_eq!(None, *g.get_cell(1));
-        assert_eq!(Some(Cell::new(Particle::Salt)), *g.get_cell(2));
-        assert_eq!(Some(Cell::new(Particle::Salt)), *g.get_cell(3));
+        assert_eq!(Some(Cell::new(Particle::Salt, 1)), *g.get_cell(2));
+        assert_eq!(Some(Cell::new(Particle::Salt, 0)), *g.get_cell(3));
     }
 
     #[test]
@@ -110,8 +110,8 @@ mod tests {
         assert_eq!(None, *g.get_cell(0));
         assert_eq!(None, *g.get_cell(1));
         assert_eq!(None, *g.get_cell(2));
-        assert_eq!(Some(Cell::new(Particle::Salt)), *g.get_cell(3));
-        assert_eq!(Some(Cell::new(Particle::Salt)), *g.get_cell(4));
+        assert_eq!(Some(Cell::new(Particle::Salt, 1)), *g.get_cell(3));
+        assert_eq!(Some(Cell::new(Particle::Salt, 0)), *g.get_cell(4));
         assert_eq!(None, *g.get_cell(5));
     }
 
@@ -134,7 +134,7 @@ mod tests {
         assert_eq!(None, *g.get_cell(1));
         assert_eq!(None, *g.get_cell(2));
         assert_eq!(None, *g.get_cell(3));
-        assert_eq!(Some(Cell::new(Particle::Salt)), *g.get_cell(4));
-        assert_eq!(Some(Cell::new(Particle::Salt)), *g.get_cell(5));
+        assert_eq!(Some(Cell::new(Particle::Salt, 0)), *g.get_cell(4));
+        assert_eq!(Some(Cell::new(Particle::Salt, 1)), *g.get_cell(5));
     }
 }
