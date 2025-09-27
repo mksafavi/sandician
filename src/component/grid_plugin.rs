@@ -1,13 +1,19 @@
 use bevy::{
-    app::{App, FixedUpdate, Plugin, Startup, Update},
+    app::{App, FixedUpdate, Plugin, PostStartup, Startup, Update},
     asset::{Assets, Handle},
     ecs::{
         component::Component,
+        entity::Entity,
+        observer::Trigger,
         query::With,
         resource::Resource,
         system::{Commands, Query, Res, ResMut},
     },
     image::Image,
+    picking::{
+        Pickable,
+        events::{Move, Out, Pointer, Pressed, Released},
+    },
     prelude::Vec3,
     sprite::Sprite,
     time::{Fixed, Time},
@@ -27,6 +33,7 @@ pub struct ParticleBrush {
     pub particle: Particle,
     pub size: usize,
 }
+
 impl ParticleBrush {
     pub fn new() -> Self {
         Self {
@@ -80,6 +87,7 @@ impl Plugin for GridPlugin {
             .add_systems(FixedUpdate, GridPlugin::update_grid_system)
             .add_systems(Update, GridPlugin::draw_grid_system)
             .add_systems(Update, GridPlugin::scale_output_frame_to_window_system)
+            .add_systems(PostStartup, GridPlugin::init_inputs_system)
             .add_systems(Update, GridPlugin::spawn_brush_system);
     }
 }
@@ -95,6 +103,7 @@ impl GridPlugin {
         commands.spawn((
             Sprite::from_image(handle.clone()),
             Transform::from_scale(Vec3::new(1., 1., 1.)),
+            Pickable::default(),
         ));
         commands.insert_resource(OutputFrameHandle(handle));
         commands.spawn(ParticleBrush::new());
@@ -145,6 +154,50 @@ impl GridPlugin {
             }
         }
     }
+
+    fn init_inputs_system(mut commands: Commands, sprite_query: Query<Entity, With<Sprite>>) {
+        if let Ok(sprite_entity) = sprite_query.single() {
+            commands
+                .entity(sprite_entity)
+                .observe(
+                    |_: Trigger<Pointer<Pressed>>,
+                     mut particle_brush: Query<&mut ParticleBrush>| {
+                        if let Ok(mut pb) = particle_brush.single_mut() {
+                            pb.start_spawning();
+                        }
+                    },
+                )
+                .observe(
+                    |_: Trigger<Pointer<Released>>,
+                     mut particle_brush: Query<&mut ParticleBrush>| {
+                        if let Ok(mut pb) = particle_brush.single_mut() {
+                            pb.stop_spawning();
+                        }
+                    },
+                )
+                .observe(
+                    |_: Trigger<Pointer<Out>>, mut particle_brush: Query<&mut ParticleBrush>| {
+                        if let Ok(mut pb) = particle_brush.single_mut() {
+                            pb.stop_spawning();
+                        }
+                    },
+                )
+                .observe(
+                    |m: Trigger<Pointer<Move>>,
+                     mut particle_brush: Query<&mut ParticleBrush>,
+                     config: Res<ConfigResource>,
+                     sprite_transform: Query<&Transform, With<Sprite>>| {
+                        if let Ok(mut pb) = particle_brush.single_mut() {
+                            if let Ok(s) = sprite_transform.single() {
+                                if let Some(p) = m.hit.position {
+                                    pb.move_brush(p, (config.width, config.height), s.scale);
+                                }
+                            }
+                        }
+                    },
+                );
+        }
+    }
 }
 
 #[cfg(test)]
@@ -155,10 +208,17 @@ mod tests {
     use crate::component::{grid::BACKGROUND_COLOR, macros::assert_color_srgb_eq};
 
     use super::*;
-    use bevy::math::vec3;
+    use bevy::input::InputPlugin;
+    use bevy::math::{Vec2, vec3};
+    use bevy::picking::DefaultPickingPlugins;
+    use bevy::picking::backend::HitData;
+    use bevy::picking::pointer::{Location, PointerButton, PointerId};
     use bevy::prelude::default;
-    use bevy::window::WindowResolution;
-    use bevy::{ecs::query::With, window::WindowPlugin};
+    use bevy::render::camera::NormalizedRenderTarget;
+    use bevy::{
+        ecs::query::With,
+        window::{WindowPlugin, WindowRef, WindowResolution},
+    };
 
     #[test]
     fn test_init_grid_system_creates_a_grid() {
@@ -394,31 +454,226 @@ mod tests {
 
     #[test]
     fn test_particle_brush_start_and_stop_spawning() {
-        let mut pb = ParticleBrush::new();
+        let mut app = App::new();
+        app.init_resource::<Assets<Image>>();
+        app.add_plugins(InputPlugin);
+        app.add_plugins(DefaultPickingPlugins);
+        app.add_plugins(WindowPlugin {
+            primary_window: Some(Window {
+                resolution: WindowResolution::new(300., 200.),
+                ..default()
+            }),
+            ..default()
+        });
+        app.add_plugins(GridPlugin {
+            config: ConfigResource::new(300, 200, 100.),
+        });
 
-        pb.start_spawning();
+        app.update();
 
-        assert_eq!(true, pb.spawning);
+        trigger_pressed_event(&mut app);
 
-        pb.stop_spawning();
+        let mut s = app.world_mut().query::<&ParticleBrush>();
+        if let Ok(s) = s.single(app.world()) {
+            assert_eq!(true, s.spawning);
+        } else {
+            panic!("ParticleBrush not found");
+        }
 
-        assert_eq!(false, pb.spawning);
+        trigger_released_event(&mut app);
+
+        let mut s = app.world_mut().query::<&ParticleBrush>();
+        if let Ok(s) = s.single(app.world()) {
+            assert_eq!(false, s.spawning);
+        } else {
+            panic!("ParticleBrush not found");
+        }
+
+        trigger_pressed_event(&mut app);
+
+        let mut s = app.world_mut().query::<&ParticleBrush>();
+        if let Ok(s) = s.single(app.world()) {
+            assert_eq!(true, s.spawning);
+        } else {
+            panic!("ParticleBrush not found");
+        }
+
+        trigger_out_event(&mut app);
+
+        let mut s = app.world_mut().query::<&ParticleBrush>();
+        if let Ok(s) = s.single(app.world()) {
+            assert_eq!(false, s.spawning);
+        } else {
+            panic!("ParticleBrush not found");
+        }
     }
 
     #[test]
     fn test_particle_brush_move_brush() {
-        let mut pb = ParticleBrush::new();
+        let app = trigger_move_event(vec3(-150., 100., 0.), (300, 200), (300., 200.));
+        assert_particle_brush_position(app, (0, 0));
 
-        pb.move_brush(vec3(-150., 100., 0.), (300, 200), vec3(1., 1., 1.));
-        assert_eq!((0, 0), pb.position);
+        let app = trigger_move_event(vec3(150., -100., 0.), (300, 200), (300., 200.));
+        assert_particle_brush_position(app, (300, 200));
 
-        pb.move_brush(vec3(150., -100., 0.), (300, 200), vec3(1., 1., 1.));
-        assert_eq!((300, 200), pb.position);
+        let app = trigger_move_event(vec3(-450., 300., 0.), (300, 200), (900., 600.));
+        assert_particle_brush_position(app, (0, 0));
 
-        pb.move_brush(vec3(-450., 300., 0.), (300, 200), vec3(3., 3., 1.));
-        assert_eq!((0, 0), pb.position);
+        let app = trigger_move_event(vec3(450., -300., 0.), (300, 200), (900., 600.));
+        assert_particle_brush_position(app, (300, 200));
+    }
 
-        pb.move_brush(vec3(450., -300., 0.), (300, 200), vec3(3., 3., 1.));
-        assert_eq!((300, 200), pb.position);
+    fn trigger_pressed_event(app: &mut App) {
+        let event = Pointer::new(
+            PointerId::Mouse,
+            Location {
+                target: NormalizedRenderTarget::Window(
+                    WindowRef::Entity(Entity::from_raw(0))
+                        .normalize(Some(Entity::from_raw(0)))
+                        .unwrap(),
+                ),
+                position: Vec2::ZERO,
+            },
+            Entity::from_raw(0),
+            Pressed {
+                button: PointerButton::Primary,
+                hit: HitData {
+                    camera: Entity::from_raw(0),
+                    depth: 0.,
+                    position: None,
+                    normal: None,
+                },
+            },
+        );
+
+        let mut s = app.world_mut().query_filtered::<Entity, With<Sprite>>();
+        if let Ok(s) = s.single(app.world()) {
+            app.world_mut().trigger_targets(event, s);
+        } else {
+            panic!("sprite not found");
+        }
+    }
+
+    fn trigger_released_event(app: &mut App) {
+        let event = Pointer::new(
+            PointerId::Mouse,
+            Location {
+                target: NormalizedRenderTarget::Window(
+                    WindowRef::Entity(Entity::from_raw(0))
+                        .normalize(Some(Entity::from_raw(0)))
+                        .unwrap(),
+                ),
+                position: Vec2::ZERO,
+            },
+            Entity::from_raw(0),
+            Released {
+                button: PointerButton::Primary,
+                hit: HitData {
+                    camera: Entity::from_raw(0),
+                    depth: 0.,
+                    position: None,
+                    normal: None,
+                },
+            },
+        );
+
+        let mut s = app.world_mut().query_filtered::<Entity, With<Sprite>>();
+        if let Ok(s) = s.single(app.world()) {
+            app.world_mut().trigger_targets(event, s);
+        } else {
+            panic!("sprite not found");
+        }
+    }
+
+    fn trigger_out_event(app: &mut App) {
+        let event = Pointer::new(
+            PointerId::Mouse,
+            Location {
+                target: NormalizedRenderTarget::Window(
+                    WindowRef::Entity(Entity::from_raw(0))
+                        .normalize(Some(Entity::from_raw(0)))
+                        .unwrap(),
+                ),
+                position: Vec2::ZERO,
+            },
+            Entity::from_raw(0),
+            Out {
+                hit: HitData {
+                    camera: Entity::from_raw(0),
+                    depth: 0.,
+                    position: None,
+                    normal: None,
+                },
+            },
+        );
+
+        let mut s = app.world_mut().query_filtered::<Entity, With<Sprite>>();
+        if let Ok(s) = s.single(app.world()) {
+            app.world_mut().trigger_targets(event, s);
+        } else {
+            panic!("sprite not found");
+        }
+    }
+
+    fn trigger_move_event(
+        position: Vec3,
+        grid_size: (usize, usize),
+        window_size: (f32, f32),
+    ) -> App {
+        let mut app = App::new();
+        app.init_resource::<Assets<Image>>();
+        app.add_plugins(InputPlugin);
+        app.add_plugins(DefaultPickingPlugins);
+        app.add_plugins(WindowPlugin {
+            primary_window: Some(Window {
+                resolution: WindowResolution::new(window_size.0, window_size.1),
+                ..default()
+            }),
+            ..default()
+        });
+        app.add_plugins(GridPlugin {
+            config: ConfigResource::new(grid_size.0, grid_size.1, 100.),
+        });
+
+        app.update();
+
+        let event = Pointer::new(
+            PointerId::Mouse,
+            Location {
+                target: NormalizedRenderTarget::Window(
+                    WindowRef::Entity(Entity::from_raw(0))
+                        .normalize(Some(Entity::from_raw(0)))
+                        .unwrap(),
+                ),
+                position: Vec2::ZERO,
+            },
+            Entity::from_raw(0),
+            Move {
+                hit: HitData {
+                    camera: Entity::from_raw(0),
+                    depth: 0.,
+                    position: Some(position),
+                    normal: None,
+                },
+                delta: Vec2::ZERO,
+            },
+        );
+
+        let mut s = app.world_mut().query_filtered::<Entity, With<Sprite>>();
+        if let Ok(s) = s.single(app.world()) {
+            app.world_mut().trigger_targets(event, s);
+        } else {
+            panic!("sprite not found");
+        }
+        app
+    }
+
+    fn assert_particle_brush_position(mut app: App, position: (usize, usize)) {
+        let mut s = app.world_mut().query::<&ParticleBrush>();
+        if let Ok(s) = s.single(app.world()) {
+            assert_eq!(position, s.position);
+        } else {
+            panic!("ParticleBrush not found");
+        }
     }
 }
