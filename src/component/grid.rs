@@ -30,19 +30,22 @@ pub enum RowUpdateDirection {
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct Cell {
-    pub particle: Particle,
+    pub particle: Option<Particle>,
     pub cycle: u32,
 }
 
 impl Cell {
-    pub fn new(particle: Particle, cycle: u32) -> Self {
-        Self { particle, cycle }
+    pub fn new(particle: Option<Particle>, cycle: u32) -> Self {
+        Self {
+            particle: particle,
+            cycle,
+        }
     }
 }
 
 #[derive(Component, Clone, PartialEq, Debug)]
 pub struct Grid {
-    cells: Vec<Option<Cell>>,
+    cells: Vec<Cell>,
     width: usize,
     height: usize,
     water_direction: fn() -> ParticleHorizontalDirection,
@@ -57,9 +60,9 @@ pub trait GridAccess {
         position: (usize, usize),
         offset: (i32, i32),
     ) -> Result<usize, GridError>;
-    fn get_cell(&self, index: usize) -> &Option<Cell>;
-    fn get_cell_mut(&mut self, index: usize) -> &mut Option<Cell>;
-    fn get_cells(&self) -> &Vec<Option<Cell>>;
+    fn get_cell(&self, index: usize) -> &Cell;
+    fn get_cell_mut(&mut self, index: usize) -> &mut Cell;
+    fn get_cells(&self) -> &Vec<Cell>;
     fn to_index(&self, position: (usize, usize)) -> usize;
     fn swap_particles(&mut self, index: usize, next_location_index: usize);
     fn dissolve_particles(&mut self, index: usize, next_location_index: usize);
@@ -68,11 +71,11 @@ pub trait GridAccess {
 }
 
 impl GridAccess for Grid {
-    fn get_cell(&self, index: usize) -> &Option<Cell> {
+    fn get_cell(&self, index: usize) -> &Cell {
         &self.cells[index]
     }
 
-    fn get_cell_mut(&mut self, index: usize) -> &mut Option<Cell> {
+    fn get_cell_mut(&mut self, index: usize) -> &mut Cell {
         &mut self.cells[index]
     }
 
@@ -102,32 +105,25 @@ impl GridAccess for Grid {
         (self.water_direction)()
     }
 
-    fn get_cells(&self) -> &Vec<Option<Cell>> {
+    fn get_cells(&self) -> &Vec<Cell> {
         &self.cells
     }
 
     fn swap_particles(&mut self, index: usize, next_location_index: usize) {
         self.cells.swap(index, next_location_index);
-        if let Some(p) = &mut self.cells[index] {
-            p.cycle = self.cycle.wrapping_add(1);
-        }
-        if let Some(p) = &mut self.cells[next_location_index] {
-            p.cycle = self.cycle.wrapping_add(1);
-        }
+        self.cells[index].cycle = self.cycle.wrapping_add(1);
+        self.cells[next_location_index].cycle = self.cycle.wrapping_add(1);
     }
 
     fn dissolve_particles(&mut self, index: usize, next_location_index: usize) {
-        if let Some(p) = &mut self.cells[index] {
-            p.cycle = self.cycle.wrapping_add(1);
-        }
-        if self.cells[next_location_index].is_some() {
-            self.cells[next_location_index] = None;
-        }
+        self.cells[next_location_index].particle = None;
+        self.cells[index].cycle = self.cycle.wrapping_add(1);
+        self.cells[next_location_index].cycle = self.cycle.wrapping_add(1);
     }
 
     fn is_empty(&self, position: (usize, usize), offset: (i32, i32)) -> Option<usize> {
         match self.get_neighbor_index(position, offset) {
-            Ok(i) => match self.get_cell(i) {
+            Ok(i) => match self.get_cell(i).particle {
                 Some(_) => None,
                 None => Some(i),
             },
@@ -155,7 +151,7 @@ impl Grid {
             }
         }
         Self {
-            cells: (0..width * height).map(|_| None).collect(),
+            cells: (0..width * height).map(|_| Cell::new(None, 0)).collect(),
             width,
             height,
             water_direction: random_water_direction,
@@ -167,8 +163,8 @@ impl Grid {
     pub fn spawn_particle(&mut self, x: usize, y: usize, particle: Particle) {
         if y < self.height && x < self.width {
             let index = self.to_index((x, y));
-            if self.cells[index].is_none() {
-                self.cells[index] = Some(Cell::new(particle, 0));
+            if self.cells[index].particle.is_none() {
+                self.cells[index] = Cell::new(Some(particle), 0);
             }
         }
     }
@@ -181,10 +177,11 @@ impl Grid {
                     RowUpdateDirection::Forward => x,
                     RowUpdateDirection::Reverse => self.width - 1 - x,
                 };
-                if let Some(p) = self.get_cell(self.to_index((x, y))) {
-                    if p.cycle <= self.cycle {
-                        p.particle.clone().update(self, (x, y)); // TODO: is there any other way to handle this double borrow instead of clone?
-                    }
+                let p = self.get_cell(self.to_index((x, y)));
+                if p.cycle <= self.cycle {
+                    if let Some(p) = &p.particle {
+                        p.clone().update(self, (x, y)); // TODO: is there any other way to handle this double borrow instead of clone?
+                    };
                 }
             }
         }
@@ -206,12 +203,16 @@ impl Grid {
     }
 
     pub fn draw_grid(&self, image: &mut Image) {
-        for (index, particle) in self.cells.iter().enumerate() {
+        for (index, cell) in self.cells.iter().enumerate() {
             let x: u32 = index as u32 % self.width as u32;
             let y: u32 = (index as u32 - x) / self.width as u32;
-            let _ = match particle {
-                Some(p) => image.set_color_at(x, y, p.particle.color()),
-                _ => image.set_color_at(x, y, BACKGROUND_COLOR),
+            match &cell.particle {
+                Some(p) => {
+                    image.set_color_at(x, y, p.color());
+                }
+                _ => {
+                    image.set_color_at(x, y, BACKGROUND_COLOR);
+                }
             };
         }
     }
@@ -265,15 +266,8 @@ mod tests {
 
         g.spawn_particle(1, 1, Particle::new_water());
 
-        match &g.cells[0] {
-            Some(p) => assert_eq!(Particle::Sand, p.particle),
-            None => panic!(),
-        }
-
-        match &g.cells[3] {
-            Some(p) => assert_eq!(Particle::new_water(), p.particle),
-            None => panic!(),
-        }
+        assert_eq!(Some(Particle::Sand), g.cells[0].particle);
+        assert_eq!(Some(Particle::new_water()), g.cells[3].particle);
     }
 
     #[test]
@@ -283,10 +277,7 @@ mod tests {
 
         g.spawn_particle(0, 0, Particle::new_water());
 
-        match &g.cells[0] {
-            Some(p) => assert_eq!(Particle::Sand, p.particle),
-            None => panic!(),
-        }
+        assert_eq!(Some(Particle::Sand), g.cells[0].particle);
     }
     #[test]
     fn test_grid_spawn_particle_out_of_grid_bound_silently_fails() {
@@ -294,28 +285,28 @@ mod tests {
         g.spawn_particle(0, 3, Particle::Sand);
         g.spawn_particle(2, 0, Particle::new_water());
 
-        assert_eq!(None, g.cells[0]);
-        assert_eq!(None, g.cells[1]);
-        assert_eq!(None, g.cells[2]);
-        assert_eq!(None, g.cells[3]);
-        assert_eq!(None, g.cells[4]);
-        assert_eq!(None, g.cells[5]);
+        assert_eq!(Cell::new(None, 0), g.cells[0]);
+        assert_eq!(Cell::new(None, 0), g.cells[1]);
+        assert_eq!(Cell::new(None, 0), g.cells[2]);
+        assert_eq!(Cell::new(None, 0), g.cells[3]);
+        assert_eq!(Cell::new(None, 0), g.cells[4]);
+        assert_eq!(Cell::new(None, 0), g.cells[5]);
     }
 
     #[test]
     fn test_spawn_particles_brush() {
         let mut g = Grid::new(2, 2);
         g.spawn_brush((0, 0), 1, &Particle::Sand);
-        assert_eq!(Some(Cell::new(Particle::Sand, 0)), g.cells[0]);
+        assert_eq!(Cell::new(Some(Particle::Sand), 0), g.cells[0]);
 
         let mut g = Grid::new(2, 2);
         g.spawn_brush((0, 0), 2, &Particle::Sand);
         assert_eq!(
             vec![
-                Some(Cell::new(Particle::Sand, 0)),
-                Some(Cell::new(Particle::Sand, 0)),
-                Some(Cell::new(Particle::Sand, 0)),
-                Some(Cell::new(Particle::Sand, 0)),
+                Cell::new(Some(Particle::Sand), 0),
+                Cell::new(Some(Particle::Sand), 0),
+                Cell::new(Some(Particle::Sand), 0),
+                Cell::new(Some(Particle::Sand), 0),
             ],
             g.cells
         );
@@ -343,7 +334,7 @@ mod tests {
         assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(1, 1).unwrap());
 
         g.spawn_particle(1, 0, Particle::new_water());
-        g.cells[0] = None;
+        g.cells[0].particle = None;
         g.draw_grid(&mut image);
         assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(0, 0).unwrap());
         assert_color_srgb_eq!(

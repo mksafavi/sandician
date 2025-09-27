@@ -280,7 +280,15 @@ mod tests {
 
         let mut grid = app.world_mut().query::<&Grid>();
         if let Ok(g) = grid.single(app.world()) {
-            assert_eq!(&vec![None, None, None, None], g.get_cells());
+            assert_eq!(
+                &vec![
+                    Cell::new(None, 0),
+                    Cell::new(None, 0),
+                    Cell::new(None, 0),
+                    Cell::new(None, 0),
+                ],
+                g.get_cells()
+            );
         } else {
             panic!("grid not found");
         }
@@ -297,7 +305,12 @@ mod tests {
         let mut grid = app.world_mut().query::<&Grid>();
         if let Ok(g) = grid.single(app.world()) {
             assert_eq!(
-                &vec![None, None, None, Some(Cell::new(Particle::Sand, 0))],
+                &vec![
+                    Cell::new(None, 0),
+                    Cell::new(None, 0),
+                    Cell::new(None, 0),
+                    Cell::new(Some(Particle::Sand), 0)
+                ],
                 g.get_cells()
             );
         } else {
@@ -317,10 +330,10 @@ mod tests {
         if let Ok(g) = grid.single(app.world()) {
             assert_eq!(
                 &vec![
-                    None,
-                    None,
-                    Some(Cell::new(Particle::Salt, 0)),
-                    Some(Cell::new(Particle::Sand, 0))
+                    Cell::new(None, 0),
+                    Cell::new(None, 0),
+                    Cell::new(Some(Particle::Salt), 0),
+                    Cell::new(Some(Particle::Sand), 0)
                 ],
                 g.get_cells()
             );
@@ -341,7 +354,15 @@ mod tests {
 
         let mut grid = app.world_mut().query::<&Grid>();
         if let Ok(g) = grid.single(app.world()) {
-            assert_eq!(&vec![None, None, None, None], g.get_cells());
+            assert_eq!(
+                &vec![
+                    Cell::new(None, 0),
+                    Cell::new(None, 0),
+                    Cell::new(None, 0),
+                    Cell::new(None, 0),
+                ],
+                g.get_cells()
+            );
         } else {
             panic!("grid not found");
         }
@@ -359,10 +380,10 @@ mod tests {
         if let Ok(g) = grid.single(app.world()) {
             assert_eq!(
                 &vec![
-                    Some(Cell::new(Particle::Sand, 0)),
-                    Some(Cell::new(Particle::Sand, 0)),
-                    Some(Cell::new(Particle::Sand, 0)),
-                    Some(Cell::new(Particle::Sand, 0)),
+                    Cell::new(Some(Particle::Sand), 0),
+                    Cell::new(Some(Particle::Sand), 0),
+                    Cell::new(Some(Particle::Sand), 0),
+                    Cell::new(Some(Particle::Sand), 0),
                 ],
                 g.get_cells()
             );
