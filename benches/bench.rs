@@ -75,6 +75,7 @@ fn criterion_benchmark(c: &mut Criterion) {
             }
         }
         b.iter(|| {
+            g.update_grid();
             g.draw_grid(&mut image);
         });
     });
@@ -84,6 +85,7 @@ fn criterion_benchmark(c: &mut Criterion) {
         let mut image = Grid::create_output_frame(x, y);
         fill_grid_mixed(&mut g, (x, y));
         b.iter(|| {
+            g.update_grid();
             g.draw_grid(&mut image);
         });
     });
