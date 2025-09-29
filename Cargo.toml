@@ -4,9 +4,56 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-bevy = "0.16.1"
 getrandom = { version = "0.3.3", features = ["wasm_js"] }
 rand = "0.9.2"
+
+[dependencies.bevy]
+version = "0.16.1"
+default-features = false
+features = [
+"android-game-activity",
+"android_shared_stdcxx",
+"animation",
+"async_executor",
+"bevy_animation",
+"bevy_asset",
+"bevy_audio",
+"bevy_color",
+"bevy_core_pipeline",
+"bevy_gilrs",
+"bevy_gizmos",
+"bevy_gltf",
+"bevy_input_focus",
+"bevy_log",
+"bevy_mesh_picking_backend",
+"bevy_pbr",
+"bevy_picking",
+"bevy_render",
+"bevy_scene",
+"bevy_sprite",
+"bevy_sprite_picking_backend",
+"bevy_state",
+"bevy_text",
+"bevy_ui",
+"bevy_ui_picking_backend",
+"bevy_window",
+"bevy_winit",
+"custom_cursor",
+"default_font",
+"hdr",
+"ktx2",
+"multi_threaded",
+"png",
+"smaa_luts",
+"std",
+"sysinfo_plugin",
+"tonemapping_luts",
+"vorbis",
+"webgl2",
+"x11",
+"zstd",
+]
+
 [lib]
 name = "sandsim"
 path = "src/lib.rs"
