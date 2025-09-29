@@ -160,10 +160,17 @@ impl GridPlugin {
             commands
                 .entity(sprite_entity)
                 .observe(
-                    |_: Trigger<Pointer<Pressed>>,
-                     mut particle_brush: Query<&mut ParticleBrush>| {
+                    |m: Trigger<Pointer<Pressed>>,
+                     mut particle_brush: Query<&mut ParticleBrush>,
+                     config: Res<ConfigResource>,
+                     sprite_transform: Query<&Transform, With<Sprite>>| {
                         if let Ok(mut pb) = particle_brush.single_mut() {
                             pb.start_spawning();
+                            if let Ok(s) = sprite_transform.single() {
+                                if let Some(p) = m.hit.position {
+                                    pb.move_brush(p, (config.width, config.height), s.scale);
+                                }
+                            }
                         }
                     },
                 )
@@ -471,13 +478,13 @@ mod tests {
 
         app.update();
 
-        trigger_pressed_event(&mut app);
+        trigger_pressed_event(&mut app, Vec3::ZERO);
         assert_particle_brush_spawning(&mut app, true);
 
         trigger_released_event(&mut app);
         assert_particle_brush_spawning(&mut app, false);
 
-        trigger_pressed_event(&mut app);
+        trigger_pressed_event(&mut app, Vec3::ZERO);
         assert_particle_brush_spawning(&mut app, true);
 
         trigger_out_event(&mut app);
@@ -485,21 +492,48 @@ mod tests {
     }
 
     #[test]
-    fn test_particle_brush_move_brush() {
-        let app = trigger_move_event(vec3(-150., 100., 0.), (300, 200), (300., 200.));
-        assert_particle_brush_position(app, (0, 0));
+    fn test_particle_brush_pressed_event_sets_brush_position() {
+        let mut app = App::new();
+        app.init_resource::<Assets<Image>>();
+        app.add_plugins(InputPlugin);
+        app.add_plugins(DefaultPickingPlugins);
+        app.add_plugins(WindowPlugin {
+            primary_window: Some(Window {
+                resolution: WindowResolution::new(300., 200.),
+                ..default()
+            }),
+            ..default()
+        });
 
-        let app = trigger_move_event(vec3(150., -100., 0.), (300, 200), (300., 200.));
-        assert_particle_brush_position(app, (300, 200));
+        app.add_plugins(GridPlugin {
+            config: ConfigResource::new(300, 200, 100.),
+        });
 
-        let app = trigger_move_event(vec3(-450., 300., 0.), (300, 200), (900., 600.));
-        assert_particle_brush_position(app, (0, 0));
+        app.update();
 
-        let app = trigger_move_event(vec3(450., -300., 0.), (300, 200), (900., 600.));
-        assert_particle_brush_position(app, (300, 200));
+        trigger_pressed_event(&mut app, vec3(-150., 100., 0.));
+        assert_particle_brush_position(&mut app, (0, 0));
+
+        trigger_pressed_event(&mut app, vec3(150., -100., 0.));
+        assert_particle_brush_position(&mut app, (300, 200));
     }
 
-    fn trigger_pressed_event(app: &mut App) {
+    #[test]
+    fn test_particle_brush_move_brush() {
+        let mut app = trigger_move_event(vec3(-150., 100., 0.), (300, 200), (300., 200.));
+        assert_particle_brush_position(&mut app, (0, 0));
+
+        let mut app = trigger_move_event(vec3(150., -100., 0.), (300, 200), (300., 200.));
+        assert_particle_brush_position(&mut app, (300, 200));
+
+        let mut app = trigger_move_event(vec3(-450., 300., 0.), (300, 200), (900., 600.));
+        assert_particle_brush_position(&mut app, (0, 0));
+
+        let mut app = trigger_move_event(vec3(450., -300., 0.), (300, 200), (900., 600.));
+        assert_particle_brush_position(&mut app, (300, 200));
+    }
+
+    fn trigger_pressed_event(app: &mut App, position: Vec3) {
         let event = Pointer::new(
             PointerId::Mouse,
             Location {
@@ -516,7 +550,7 @@ mod tests {
                 hit: HitData {
                     camera: Entity::from_raw(0),
                     depth: 0.,
-                    position: None,
+                    position: Some(position),
                     normal: None,
                 },
             },
@@ -644,7 +678,7 @@ mod tests {
         app
     }
 
-    fn assert_particle_brush_position(mut app: App, position: (usize, usize)) {
+    fn assert_particle_brush_position(app: &mut App, position: (usize, usize)) {
         let mut s = app.world_mut().query::<&ParticleBrush>();
         if let Ok(s) = s.single(app.world()) {
             assert_eq!(position, s.position);
