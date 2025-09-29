@@ -472,40 +472,16 @@ mod tests {
         app.update();
 
         trigger_pressed_event(&mut app);
-
-        let mut s = app.world_mut().query::<&ParticleBrush>();
-        if let Ok(s) = s.single(app.world()) {
-            assert_eq!(true, s.spawning);
-        } else {
-            panic!("ParticleBrush not found");
-        }
+        assert_particle_brush_spawning(&mut app, true);
 
         trigger_released_event(&mut app);
-
-        let mut s = app.world_mut().query::<&ParticleBrush>();
-        if let Ok(s) = s.single(app.world()) {
-            assert_eq!(false, s.spawning);
-        } else {
-            panic!("ParticleBrush not found");
-        }
+        assert_particle_brush_spawning(&mut app, false);
 
         trigger_pressed_event(&mut app);
-
-        let mut s = app.world_mut().query::<&ParticleBrush>();
-        if let Ok(s) = s.single(app.world()) {
-            assert_eq!(true, s.spawning);
-        } else {
-            panic!("ParticleBrush not found");
-        }
+        assert_particle_brush_spawning(&mut app, true);
 
         trigger_out_event(&mut app);
-
-        let mut s = app.world_mut().query::<&ParticleBrush>();
-        if let Ok(s) = s.single(app.world()) {
-            assert_eq!(false, s.spawning);
-        } else {
-            panic!("ParticleBrush not found");
-        }
+        assert_particle_brush_spawning(&mut app, false);
     }
 
     #[test]
@@ -672,6 +648,15 @@ mod tests {
         let mut s = app.world_mut().query::<&ParticleBrush>();
         if let Ok(s) = s.single(app.world()) {
             assert_eq!(position, s.position);
+        } else {
+            panic!("ParticleBrush not found");
+        }
+    }
+
+    fn assert_particle_brush_spawning(app: &mut App, expected: bool) {
+        let mut s = app.world_mut().query::<&ParticleBrush>();
+        if let Ok(s) = s.single(app.world()) {
+            assert_eq!(expected, s.spawning);
         } else {
             panic!("ParticleBrush not found");
         }
