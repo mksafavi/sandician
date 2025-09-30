@@ -22,7 +22,6 @@ fn main() {
                     primary_window: Some(Window {
                         resolution: WindowResolution::new(300., 300.),
                         canvas: Some("#window_canvas".to_string()),
-                        fit_canvas_to_parent: true,
                         ..default()
                     }),
                     ..default()

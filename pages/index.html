@@ -5,13 +5,33 @@
   <style>
     body {
       margin: 0;
+      width: 100vw;
+      height: 100vh;
+      justify-content: center;
+      display: flex;
+    }
+    #window_canvas {
+      width: 300px;
+      height: 300px;
+      transform-origin: top;
+      image-rendering: pixelated;
     }
   </style>
-  <body>
+  <body id="body">
     <script type="module">
       import init from "/main.js";
       init();
+      const resize_canvas = () => {
+        let canvas = document.getElementById("window_canvas");
+        let body = document.getElementById("body");
+        canvas.style.scale = Math.min(
+          body.offsetHeight / canvas.offsetHeight,
+          body.offsetWidth / canvas.offsetWidth,
+        );
+      };
+      window.addEventListener("load", resize_canvas);
+      window.addEventListener("resize", resize_canvas);
     </script>
-    <canvas id="window_canvas" width="100vw" height="100vh"></canvas>
+    <canvas id="window_canvas"></canvas>
   </body>
 </html>
