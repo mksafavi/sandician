@@ -36,10 +36,7 @@ pub struct Cell {
 
 impl Cell {
     pub fn new(particle: Option<Particle>, cycle: u32) -> Self {
-        Self {
-            particle: particle,
-            cycle,
-        }
+        Self { particle, cycle }
     }
 }
 
