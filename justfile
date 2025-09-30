@@ -37,4 +37,4 @@ ci-build-pages BIN : (ci-build-wasm BIN)
     sed --in-place 's/binary.js/{{BIN}}.js/' ./target/pages/index.html
 
 clippy:
-    RUSTFLAGS='-Dwarnings' cargo clippy --all-targets --all-features
+    RUSTFLAGS='-Dwarnings' cargo clippy --release --all-targets --all-features
