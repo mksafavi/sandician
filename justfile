@@ -13,6 +13,12 @@ build-wasm BIN:
     RUSTFLAGS='--cfg getrandom_backend="wasm_js"' cargo build --release --target wasm32-unknown-unknown --bin {{BIN}}
     wasm-bindgen --target web --no-typescript --out-dir ./target/wasm-bind ./target/wasm32-unknown-unknown/release/{{BIN}}.wasm
 
+build-pages BIN : (build-wasm BIN)
+    rm -fr ./target/pages
+    cp -r ./pages ./target/pages
+    cp ./target/wasm-bind/* ./target/pages
+    sed --in-place 's/binary.js/{{BIN}}.js/' ./target/pages/index.html
+
 ci-test:
    RUSTFLAGS='-Dwarnings' cargo test
 
