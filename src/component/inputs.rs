@@ -6,7 +6,6 @@ use bevy::{
 use bevy::{math::Vec2, window::WindowResolution};
 
 use super::{
-    grid::Grid,
     grid_plugin::{ConfigResource, ParticleBrush},
     particles::particle::Particle,
 };
