@@ -4,7 +4,7 @@ use bevy::ecs::system::Commands;
 use bevy::prelude::PluginGroup;
 use bevy::render::texture::ImagePlugin;
 use bevy::utils::default;
-use bevy::window::{Window, WindowPlugin};
+use bevy::window::{Window, WindowPlugin, WindowResolution};
 use bevy::DefaultPlugins;
 use sandsim::component::grid_plugin::{ConfigResource, GridPlugin};
 use sandsim::component::inputs;
@@ -20,6 +20,7 @@ fn main() {
                 .set(ImagePlugin::default_nearest())
                 .set(WindowPlugin {
                     primary_window: Some(Window {
+                        resolution: WindowResolution::new(300., 300.),
                         canvas: Some("#window_canvas".to_string()),
                         fit_canvas_to_parent: true,
                         ..default()
@@ -28,7 +29,7 @@ fn main() {
                 }),
         )
         .add_plugins(GridPlugin {
-            config: ConfigResource::new(400, 300, 120.),
+            config: ConfigResource::new(300, 300, 120.),
         })
         .add_systems(Startup, setup_camera)
         .add_systems(FixedUpdate, inputs::mouse_spawn_brush_system)
