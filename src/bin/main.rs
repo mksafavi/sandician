@@ -29,7 +29,7 @@ fn main() {
                 }),
         )
         .add_plugins(GridPlugin {
-            config: ConfigResource::new(300, 300, 120.),
+            config: ConfigResource::new(300, 300, 240.),
         })
         .add_systems(Startup, setup_camera)
         .add_systems(FixedUpdate, inputs::mouse_spawn_brush_system)
