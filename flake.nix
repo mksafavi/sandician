@@ -14,7 +14,7 @@
           buildInputs = [
             rustc
             just
-            wasm-bindgen-cli_0_2_100
+            wasm-bindgen-cli
             binaryen
             lld
             cargo
