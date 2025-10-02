@@ -4,7 +4,7 @@ use bevy::{
     ecs::{
         component::Component,
         entity::Entity,
-        observer::Trigger,
+        observer::On,
         query::With,
         resource::Resource,
         system::{Commands, Query, Res, ResMut},
@@ -12,7 +12,7 @@ use bevy::{
     image::Image,
     picking::{
         Pickable,
-        events::{Move, Out, Pointer, Pressed, Released},
+        events::{Move, Out, Pointer, Press, Release},
     },
     prelude::Vec3,
     sprite::Sprite,
@@ -160,7 +160,7 @@ impl GridPlugin {
             commands
                 .entity(sprite_entity)
                 .observe(
-                    |m: Trigger<Pointer<Pressed>>,
+                    |m: On<Pointer<Press>>,
                      mut particle_brush: Query<&mut ParticleBrush>,
                      config: Res<ConfigResource>,
                      sprite_transform: Query<&Transform, With<Sprite>>| {
@@ -175,22 +175,21 @@ impl GridPlugin {
                     },
                 )
                 .observe(
-                    |_: Trigger<Pointer<Released>>,
-                     mut particle_brush: Query<&mut ParticleBrush>| {
+                    |_: On<Pointer<Release>>, mut particle_brush: Query<&mut ParticleBrush>| {
                         if let Ok(mut pb) = particle_brush.single_mut() {
                             pb.stop_spawning();
                         }
                     },
                 )
                 .observe(
-                    |_: Trigger<Pointer<Out>>, mut particle_brush: Query<&mut ParticleBrush>| {
+                    |_: On<Pointer<Out>>, mut particle_brush: Query<&mut ParticleBrush>| {
                         if let Ok(mut pb) = particle_brush.single_mut() {
                             pb.stop_spawning();
                         }
                     },
                 )
                 .observe(
-                    |m: Trigger<Pointer<Move>>,
+                    |m: On<Pointer<Move>>,
                      mut particle_brush: Query<&mut ParticleBrush>,
                      config: Res<ConfigResource>,
                      sprite_transform: Query<&Transform, With<Sprite>>| {
@@ -215,13 +214,13 @@ mod tests {
     use crate::component::{grid::BACKGROUND_COLOR, macros::assert_color_srgb_eq};
 
     use super::*;
+    use bevy::camera::NormalizedRenderTarget;
     use bevy::input::InputPlugin;
     use bevy::math::{Vec2, vec3};
     use bevy::picking::DefaultPickingPlugins;
     use bevy::picking::backend::HitData;
     use bevy::picking::pointer::{Location, PointerButton, PointerId};
     use bevy::prelude::default;
-    use bevy::render::camera::NormalizedRenderTarget;
     use bevy::{
         ecs::query::With,
         window::{WindowPlugin, WindowRef, WindowResolution},
@@ -254,7 +253,7 @@ mod tests {
         });
         app.add_plugins(WindowPlugin {
             primary_window: Some(Window {
-                resolution: WindowResolution::new(400., 400.),
+                resolution: WindowResolution::new(400, 400),
                 ..default()
             }),
             ..default()
@@ -284,7 +283,7 @@ mod tests {
         });
         app.add_plugins(WindowPlugin {
             primary_window: Some(Window {
-                resolution: WindowResolution::new(400., 400.),
+                resolution: WindowResolution::new(400, 400),
                 ..default()
             }),
             ..default()
@@ -467,7 +466,7 @@ mod tests {
         app.add_plugins(DefaultPickingPlugins);
         app.add_plugins(WindowPlugin {
             primary_window: Some(Window {
-                resolution: WindowResolution::new(300., 200.),
+                resolution: WindowResolution::new(300, 200),
                 ..default()
             }),
             ..default()
@@ -499,7 +498,7 @@ mod tests {
         app.add_plugins(DefaultPickingPlugins);
         app.add_plugins(WindowPlugin {
             primary_window: Some(Window {
-                resolution: WindowResolution::new(300., 200.),
+                resolution: WindowResolution::new(300, 200),
                 ..default()
             }),
             ..default()
@@ -520,106 +519,103 @@ mod tests {
 
     #[test]
     fn test_particle_brush_move_brush() {
-        let mut app = trigger_move_event(vec3(-150., 100., 0.), (300, 200), (300., 200.));
+        let mut app = trigger_move_event(vec3(-150., 100., 0.), (300, 200), (300, 200));
         assert_particle_brush_position(&mut app, (0, 0));
 
-        let mut app = trigger_move_event(vec3(150., -100., 0.), (300, 200), (300., 200.));
+        let mut app = trigger_move_event(vec3(150., -100., 0.), (300, 200), (300, 200));
         assert_particle_brush_position(&mut app, (300, 200));
 
-        let mut app = trigger_move_event(vec3(-450., 300., 0.), (300, 200), (900., 600.));
+        let mut app = trigger_move_event(vec3(-450., 300., 0.), (300, 200), (900, 600));
         assert_particle_brush_position(&mut app, (0, 0));
 
-        let mut app = trigger_move_event(vec3(450., -300., 0.), (300, 200), (900., 600.));
+        let mut app = trigger_move_event(vec3(450., -300., 0.), (300, 200), (900, 600));
         assert_particle_brush_position(&mut app, (300, 200));
     }
 
     fn trigger_pressed_event(app: &mut App, position: Vec3) {
-        let event = Pointer::new(
-            PointerId::Mouse,
-            Location {
-                target: NormalizedRenderTarget::Window(
-                    WindowRef::Entity(Entity::from_raw(0))
-                        .normalize(Some(Entity::from_raw(0)))
-                        .unwrap(),
-                ),
-                position: Vec2::ZERO,
-            },
-            Entity::from_raw(0),
-            Pressed {
-                button: PointerButton::Primary,
-                hit: HitData {
-                    camera: Entity::from_raw(0),
-                    depth: 0.,
-                    position: Some(position),
-                    normal: None,
+        let mut entity_query = app.world_mut().query_filtered::<Entity, With<Sprite>>();
+        if let Ok(entity) = entity_query.single(app.world()) {
+            let event = Pointer::new(
+                PointerId::Mouse,
+                Location {
+                    target: NormalizedRenderTarget::Window(
+                        WindowRef::Entity(Entity::from_raw_u32(0).unwrap())
+                            .normalize(Some(Entity::from_raw_u32(0).unwrap()))
+                            .unwrap(),
+                    ),
+                    position: Vec2::ZERO,
                 },
-            },
-        );
-
-        let mut s = app.world_mut().query_filtered::<Entity, With<Sprite>>();
-        if let Ok(s) = s.single(app.world()) {
-            app.world_mut().trigger_targets(event, s);
+                Press {
+                    button: PointerButton::Primary,
+                    hit: HitData {
+                        camera: Entity::from_raw_u32(0).unwrap(),
+                        depth: 0.,
+                        position: Some(position),
+                        normal: None,
+                    },
+                },
+                entity,
+            );
+            app.world_mut().trigger(event);
         } else {
             panic!("sprite not found");
         }
     }
 
     fn trigger_released_event(app: &mut App) {
-        let event = Pointer::new(
-            PointerId::Mouse,
-            Location {
-                target: NormalizedRenderTarget::Window(
-                    WindowRef::Entity(Entity::from_raw(0))
-                        .normalize(Some(Entity::from_raw(0)))
-                        .unwrap(),
-                ),
-                position: Vec2::ZERO,
-            },
-            Entity::from_raw(0),
-            Released {
-                button: PointerButton::Primary,
-                hit: HitData {
-                    camera: Entity::from_raw(0),
-                    depth: 0.,
-                    position: None,
-                    normal: None,
+        let mut entity_query = app.world_mut().query_filtered::<Entity, With<Sprite>>();
+        if let Ok(entity) = entity_query.single(app.world()) {
+            let event = Pointer::new(
+                PointerId::Mouse,
+                Location {
+                    target: NormalizedRenderTarget::Window(
+                        WindowRef::Entity(Entity::from_raw_u32(0).unwrap())
+                            .normalize(Some(Entity::from_raw_u32(0).unwrap()))
+                            .unwrap(),
+                    ),
+                    position: Vec2::ZERO,
                 },
-            },
-        );
-
-        let mut s = app.world_mut().query_filtered::<Entity, With<Sprite>>();
-        if let Ok(s) = s.single(app.world()) {
-            app.world_mut().trigger_targets(event, s);
+                Release {
+                    button: PointerButton::Primary,
+                    hit: HitData {
+                        camera: Entity::from_raw_u32(0).unwrap(),
+                        depth: 0.,
+                        position: None,
+                        normal: None,
+                    },
+                },
+                entity,
+            );
+            app.world_mut().trigger(event);
         } else {
             panic!("sprite not found");
         }
     }
 
     fn trigger_out_event(app: &mut App) {
-        let event = Pointer::new(
-            PointerId::Mouse,
-            Location {
-                target: NormalizedRenderTarget::Window(
-                    WindowRef::Entity(Entity::from_raw(0))
-                        .normalize(Some(Entity::from_raw(0)))
-                        .unwrap(),
-                ),
-                position: Vec2::ZERO,
-            },
-            Entity::from_raw(0),
-            Out {
-                hit: HitData {
-                    camera: Entity::from_raw(0),
-                    depth: 0.,
-                    position: None,
-                    normal: None,
+        let mut entity_query = app.world_mut().query_filtered::<Entity, With<Sprite>>();
+        if let Ok(entity) = entity_query.single(app.world()) {
+            let event = Pointer::new(
+                PointerId::Mouse,
+                Location {
+                    target: NormalizedRenderTarget::Window(
+                        WindowRef::Entity(Entity::from_raw_u32(0).unwrap())
+                            .normalize(Some(Entity::from_raw_u32(0).unwrap()))
+                            .unwrap(),
+                    ),
+                    position: Vec2::ZERO,
                 },
-            },
-        );
-
-        let mut s = app.world_mut().query_filtered::<Entity, With<Sprite>>();
-        if let Ok(s) = s.single(app.world()) {
-            app.world_mut().trigger_targets(event, s);
+                Out {
+                    hit: HitData {
+                        camera: Entity::from_raw_u32(0).unwrap(),
+                        depth: 0.,
+                        position: None,
+                        normal: None,
+                    },
+                },
+                entity,
+            );
+            app.world_mut().trigger(event);
         } else {
             panic!("sprite not found");
         }
@@ -628,7 +624,7 @@ mod tests {
     fn trigger_move_event(
         position: Vec3,
         grid_size: (usize, usize),
-        window_size: (f32, f32),
+        window_size: (u32, u32),
     ) -> App {
         let mut app = App::new();
         app.init_resource::<Assets<Image>>();
@@ -647,31 +643,30 @@ mod tests {
 
         app.update();
 
-        let event = Pointer::new(
-            PointerId::Mouse,
-            Location {
-                target: NormalizedRenderTarget::Window(
-                    WindowRef::Entity(Entity::from_raw(0))
-                        .normalize(Some(Entity::from_raw(0)))
-                        .unwrap(),
-                ),
-                position: Vec2::ZERO,
-            },
-            Entity::from_raw(0),
-            Move {
-                hit: HitData {
-                    camera: Entity::from_raw(0),
-                    depth: 0.,
-                    position: Some(position),
-                    normal: None,
+        let mut entity_query = app.world_mut().query_filtered::<Entity, With<Sprite>>();
+        if let Ok(entity) = entity_query.single(app.world()) {
+            let event = Pointer::new(
+                PointerId::Mouse,
+                Location {
+                    target: NormalizedRenderTarget::Window(
+                        WindowRef::Entity(Entity::from_raw_u32(0).unwrap())
+                            .normalize(Some(Entity::from_raw_u32(0).unwrap()))
+                            .unwrap(),
+                    ),
+                    position: Vec2::ZERO,
                 },
-                delta: Vec2::ZERO,
-            },
-        );
-
-        let mut s = app.world_mut().query_filtered::<Entity, With<Sprite>>();
-        if let Ok(s) = s.single(app.world()) {
-            app.world_mut().trigger_targets(event, s);
+                Move {
+                    hit: HitData {
+                        camera: Entity::from_raw_u32(0).unwrap(),
+                        depth: 0.,
+                        position: Some(position),
+                        normal: None,
+                    },
+                    delta: Vec2::ZERO,
+                },
+                entity,
+            );
+            app.world_mut().trigger(event);
         } else {
             panic!("sprite not found");
         }

@@ -8,11 +8,14 @@ getrandom = { version = "0.3.3", features = ["wasm_js"] }
 rand = "0.9.2"
 
 [dependencies.bevy]
-version = "0.16.1"
+version = "0.17"
 default-features = false
 features = [
+"bevy_sprite_render",
+"bevy_sprite",
 "bevy_sprite_picking_backend",
 "bevy_ui",
+"bevy_ui_render",
 "bevy_ui_picking_backend",
 "bevy_winit",
 "default_font",

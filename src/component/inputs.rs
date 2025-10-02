@@ -110,7 +110,7 @@ mod tests {
     fn test_scale_input_position_to_window_size_at_none() {
         assert_eq!(
             None,
-            scale_input_position(None, &WindowResolution::new(100., 100.), (10, 10))
+            scale_input_position(None, &WindowResolution::new(100, 100), (10, 10))
         );
     }
 
@@ -120,7 +120,7 @@ mod tests {
             Some((0, 0)),
             scale_input_position(
                 Some(vec2(0., 0.)),
-                &WindowResolution::new(100., 100.),
+                &WindowResolution::new(100, 100),
                 (10, 10)
             )
         );
@@ -132,7 +132,7 @@ mod tests {
             Some((5, 5)),
             scale_input_position(
                 Some(vec2(50., 100.)),
-                &WindowResolution::new(100., 200.),
+                &WindowResolution::new(100, 200),
                 (10, 10)
             )
         );
@@ -144,7 +144,7 @@ mod tests {
             Some((500, 500)),
             scale_input_position(
                 Some(vec2(50., 100.)),
-                &WindowResolution::new(100., 200.),
+                &WindowResolution::new(100, 200),
                 (1000, 1000)
             )
         );
