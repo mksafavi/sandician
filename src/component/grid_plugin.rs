@@ -34,6 +34,12 @@ pub struct ParticleBrush {
     pub size: usize,
 }
 
+impl Default for ParticleBrush {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ParticleBrush {
     pub fn new() -> Self {
         Self {
