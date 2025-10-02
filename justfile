@@ -7,7 +7,7 @@ test-log:
    cargo test -- --nocapture
 
 build BIN:
-    cargo build --bin {{BIN}}
+    cargo build --release --bin {{BIN}}
 
 build-wasm BIN:
     RUSTFLAGS='--cfg getrandom_backend="wasm_js"' cargo build --release --target wasm32-unknown-unknown --bin {{BIN}}
