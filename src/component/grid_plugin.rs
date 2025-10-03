@@ -2,6 +2,7 @@ use bevy::{
     app::{App, FixedUpdate, Plugin, PostStartup, Startup, Update},
     asset::{Assets, Handle},
     ecs::{
+        bundle::Bundle,
         component::Component,
         entity::Entity,
         observer::On,
@@ -104,15 +105,7 @@ impl GridPlugin {
     ) {
         commands.spawn(Grid::new(config.width, config.height));
         let handle = images.add(Grid::create_output_frame(config.width, config.height));
-        commands.spawn((
-            Node {
-                width: Val::Auto,
-                height: Val::Auto,
-                ..default()
-            },
-            ImageNode::new(handle.clone()),
-            Pickable::default(),
-        ));
+        commands.spawn(grid_node(&handle));
 
         commands.insert_resource(OutputFrameHandle(handle));
         commands.spawn(ParticleBrush::new());
@@ -192,6 +185,18 @@ impl GridPlugin {
                 );
         }
     }
+}
+
+fn grid_node(handle: &Handle<Image>) -> impl Bundle {
+    (
+        Node {
+            width: Val::Auto,
+            height: Val::Auto,
+            ..default()
+        },
+        ImageNode::new(handle.clone()),
+        Pickable::default(),
+    )
 }
 
 #[cfg(test)]
