@@ -91,108 +91,103 @@ impl Plugin for GridPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(self.config.clone())
             .insert_resource(Time::<Fixed>::from_hz(self.config.update_rate))
-            .add_systems(Startup, GridPlugin::init_grid_system)
-            .add_systems(FixedUpdate, GridPlugin::update_grid_system)
-            .add_systems(Update, GridPlugin::draw_grid_system)
-            .add_systems(PostStartup, GridPlugin::init_inputs_system)
-            .add_systems(Update, GridPlugin::spawn_brush_system);
+            .add_systems(Startup, init_grid_system)
+            .add_systems(FixedUpdate, update_grid_system)
+            .add_systems(Update, draw_grid_system)
+            .add_systems(PostStartup, init_inputs_system)
+            .add_systems(Update, spawn_brush_system);
     }
 }
 
-impl GridPlugin {
-    fn init_grid_system(
-        mut commands: Commands,
-        config: Res<ConfigResource>,
-        mut images: ResMut<Assets<Image>>,
-    ) {
-        commands.spawn(Grid::new(config.width, config.height));
-        let handle = images.add(Grid::create_output_frame(config.width, config.height));
-        commands.spawn((
-            Node {
-                display: Display::Flex,
-                flex_direction: FlexDirection::Column,
-                ..default()
-            },
-            children![brush_node(), grid_node(&handle)],
-        ));
+fn init_grid_system(
+    mut commands: Commands,
+    config: Res<ConfigResource>,
+    mut images: ResMut<Assets<Image>>,
+) {
+    commands.spawn(Grid::new(config.width, config.height));
+    let handle = images.add(Grid::create_output_frame(config.width, config.height));
+    commands.spawn((
+        Node {
+            display: Display::Flex,
+            flex_direction: FlexDirection::Column,
+            ..default()
+        },
+        children![brush_node(), grid_node(&handle)],
+    ));
 
-        commands.insert_resource(OutputFrameHandle(handle));
-        commands.spawn(ParticleBrush::new());
+    commands.insert_resource(OutputFrameHandle(handle));
+    commands.spawn(ParticleBrush::new());
+}
+
+fn update_grid_system(mut grid: Query<&mut Grid>) {
+    if let Ok(mut g) = grid.single_mut() {
+        g.update_grid();
     }
+}
 
-    fn update_grid_system(mut grid: Query<&mut Grid>) {
-        if let Ok(mut g) = grid.single_mut() {
-            g.update_grid();
+fn draw_grid_system(
+    mut grid: Query<&mut Grid>,
+    output_frame_handle: Res<OutputFrameHandle>,
+    mut images: ResMut<Assets<Image>>,
+) {
+    if let Ok(mut g) = grid.single_mut() {
+        if let Some(image) = images.get_mut(&output_frame_handle.0) {
+            g.draw_grid(image);
         }
     }
+}
 
-    fn draw_grid_system(
-        mut grid: Query<&mut Grid>,
-        output_frame_handle: Res<OutputFrameHandle>,
-        mut images: ResMut<Assets<Image>>,
-    ) {
-        if let Ok(mut g) = grid.single_mut() {
-            if let Some(image) = images.get_mut(&output_frame_handle.0) {
-                g.draw_grid(image);
+fn spawn_brush_system(particle_brush: Query<&ParticleBrush>, mut grid: Query<&mut Grid>) {
+    if let Ok(mut g) = grid.single_mut() {
+        if let Ok(pb) = particle_brush.single() {
+            if pb.spawning {
+                g.spawn_brush(pb.position, pb.size, &pb.particle)
             }
         }
     }
+}
 
-    fn spawn_brush_system(particle_brush: Query<&ParticleBrush>, mut grid: Query<&mut Grid>) {
-        if let Ok(mut g) = grid.single_mut() {
-            if let Ok(pb) = particle_brush.single() {
-                if pb.spawning {
-                    g.spawn_brush(pb.position, pb.size, &pb.particle)
-                }
-            }
-        }
-    }
-
-    fn init_inputs_system(
-        mut commands: Commands,
-        image_node_query: Query<Entity, With<ImageNode>>,
-    ) {
-        if let Ok(image_node_entity) = image_node_query.single() {
-            commands
-                .entity(image_node_entity)
-                .observe(
-                    |m: On<Pointer<Press>>,
-                     mut particle_brush: Query<&mut ParticleBrush>,
-                     config: Res<ConfigResource>| {
-                        if let Ok(mut pb) = particle_brush.single_mut() {
-                            pb.start_spawning();
-                            if let Some(p) = m.hit.position {
-                                pb.move_brush(p, (config.width, config.height));
-                            }
+fn init_inputs_system(mut commands: Commands, image_node_query: Query<Entity, With<ImageNode>>) {
+    if let Ok(image_node_entity) = image_node_query.single() {
+        commands
+            .entity(image_node_entity)
+            .observe(
+                |m: On<Pointer<Press>>,
+                 mut particle_brush: Query<&mut ParticleBrush>,
+                 config: Res<ConfigResource>| {
+                    if let Ok(mut pb) = particle_brush.single_mut() {
+                        pb.start_spawning();
+                        if let Some(p) = m.hit.position {
+                            pb.move_brush(p, (config.width, config.height));
                         }
-                    },
-                )
-                .observe(
-                    |_: On<Pointer<Release>>, mut particle_brush: Query<&mut ParticleBrush>| {
-                        if let Ok(mut pb) = particle_brush.single_mut() {
-                            pb.stop_spawning();
+                    }
+                },
+            )
+            .observe(
+                |_: On<Pointer<Release>>, mut particle_brush: Query<&mut ParticleBrush>| {
+                    if let Ok(mut pb) = particle_brush.single_mut() {
+                        pb.stop_spawning();
+                    }
+                },
+            )
+            .observe(
+                |_: On<Pointer<Out>>, mut particle_brush: Query<&mut ParticleBrush>| {
+                    if let Ok(mut pb) = particle_brush.single_mut() {
+                        pb.stop_spawning();
+                    }
+                },
+            )
+            .observe(
+                |m: On<Pointer<Move>>,
+                 mut particle_brush: Query<&mut ParticleBrush>,
+                 config: Res<ConfigResource>| {
+                    if let Ok(mut pb) = particle_brush.single_mut() {
+                        if let Some(p) = m.hit.position {
+                            pb.move_brush(p, (config.width, config.height));
                         }
-                    },
-                )
-                .observe(
-                    |_: On<Pointer<Out>>, mut particle_brush: Query<&mut ParticleBrush>| {
-                        if let Ok(mut pb) = particle_brush.single_mut() {
-                            pb.stop_spawning();
-                        }
-                    },
-                )
-                .observe(
-                    |m: On<Pointer<Move>>,
-                     mut particle_brush: Query<&mut ParticleBrush>,
-                     config: Res<ConfigResource>| {
-                        if let Ok(mut pb) = particle_brush.single_mut() {
-                            if let Some(p) = m.hit.position {
-                                pb.move_brush(p, (config.width, config.height));
-                            }
-                        }
-                    },
-                );
-        }
+                    }
+                },
+            );
     }
 }
 
