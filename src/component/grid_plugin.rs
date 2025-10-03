@@ -1,8 +1,10 @@
 use bevy::{
     app::{App, FixedUpdate, Plugin, PostStartup, Startup, Update},
     asset::{Assets, Handle},
+    color::Color,
     ecs::{
         bundle::Bundle,
+        children,
         component::Component,
         entity::Entity,
         observer::On,
@@ -15,9 +17,9 @@ use bevy::{
         Pickable,
         events::{Move, Out, Pointer, Press, Release},
     },
-    prelude::Vec3,
+    prelude::{SpawnRelated, Vec3},
     time::{Fixed, Time},
-    ui::{Node, Val, widget::ImageNode},
+    ui::{BackgroundColor, Display, FlexDirection, Node, Val, px, widget::ImageNode},
     utils::default,
 };
 
@@ -105,7 +107,14 @@ impl GridPlugin {
     ) {
         commands.spawn(Grid::new(config.width, config.height));
         let handle = images.add(Grid::create_output_frame(config.width, config.height));
-        commands.spawn(grid_node(&handle));
+        commands.spawn((
+            Node {
+                display: Display::Flex,
+                flex_direction: FlexDirection::Column,
+                ..default()
+            },
+            children![brush_node(), grid_node(&handle)],
+        ));
 
         commands.insert_resource(OutputFrameHandle(handle));
         commands.spawn(ParticleBrush::new());
@@ -185,6 +194,17 @@ impl GridPlugin {
                 );
         }
     }
+}
+
+fn brush_node() -> impl Bundle {
+    (
+        Node {
+            width: Val::Auto,
+            height: px(40),
+            ..default()
+        },
+        BackgroundColor(Color::srgb(0.35, 0.75, 0.35)),
+    )
 }
 
 fn grid_node(handle: &Handle<Image>) -> impl Bundle {
