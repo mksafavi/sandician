@@ -15,10 +15,9 @@ use bevy::{
         events::{Move, Out, Pointer, Press, Release},
     },
     prelude::Vec3,
-    sprite::Sprite,
     time::{Fixed, Time},
-    transform::components::Transform,
-    window::Window,
+    ui::{Node, Val, widget::ImageNode},
+    utils::default,
 };
 
 use super::{grid::Grid, particles::particle::Particle};
@@ -58,10 +57,10 @@ impl ParticleBrush {
         self.spawning = false;
     }
 
-    fn move_brush(&mut self, position: Vec3, grid_size: (usize, usize), grid_scale: Vec3) {
+    fn move_brush(&mut self, position: Vec3, grid_size: (usize, usize)) {
         self.position = (
-            ((position.x / grid_scale.x) + (grid_size.0 as f32 / 2.)) as usize,
-            ((-position.y / grid_scale.y) + (grid_size.1 as f32 / 2.)) as usize,
+            ((position.x + 0.5) * grid_size.0 as f32) as usize,
+            ((position.y + 0.5) * grid_size.1 as f32) as usize,
         );
     }
 }
@@ -92,7 +91,6 @@ impl Plugin for GridPlugin {
             .add_systems(Startup, GridPlugin::init_grid_system)
             .add_systems(FixedUpdate, GridPlugin::update_grid_system)
             .add_systems(Update, GridPlugin::draw_grid_system)
-            .add_systems(Update, GridPlugin::scale_output_frame_to_window_system)
             .add_systems(PostStartup, GridPlugin::init_inputs_system)
             .add_systems(Update, GridPlugin::spawn_brush_system);
     }
@@ -107,30 +105,17 @@ impl GridPlugin {
         commands.spawn(Grid::new(config.width, config.height));
         let handle = images.add(Grid::create_output_frame(config.width, config.height));
         commands.spawn((
-            Sprite::from_image(handle.clone()),
-            Transform::from_scale(Vec3::new(1., 1., 1.)),
+            Node {
+                width: Val::Auto,
+                height: Val::Auto,
+                ..default()
+            },
+            ImageNode::new(handle.clone()),
             Pickable::default(),
         ));
+
         commands.insert_resource(OutputFrameHandle(handle));
         commands.spawn(ParticleBrush::new());
-    }
-
-    fn scale_output_frame_to_window_system(
-        config: Res<ConfigResource>,
-        windows: Query<&Window>,
-        mut sprite_transform: Query<&mut Transform, With<Sprite>>,
-    ) {
-        if let Ok(mut s) = sprite_transform.single_mut() {
-            let sprite_scale = match windows.single() {
-                Ok(window) => {
-                    let scale = (window.resolution.width() / config.width as f32)
-                        .min(window.resolution.height() / config.height as f32);
-                    Vec3::new(scale, scale, 1.)
-                }
-                Err(_) => Vec3::new(1., 1., 1.),
-            };
-            s.scale = sprite_scale;
-        };
     }
 
     fn update_grid_system(mut grid: Query<&mut Grid>) {
@@ -161,21 +146,21 @@ impl GridPlugin {
         }
     }
 
-    fn init_inputs_system(mut commands: Commands, sprite_query: Query<Entity, With<Sprite>>) {
-        if let Ok(sprite_entity) = sprite_query.single() {
+    fn init_inputs_system(
+        mut commands: Commands,
+        image_node_query: Query<Entity, With<ImageNode>>,
+    ) {
+        if let Ok(image_node_entity) = image_node_query.single() {
             commands
-                .entity(sprite_entity)
+                .entity(image_node_entity)
                 .observe(
                     |m: On<Pointer<Press>>,
                      mut particle_brush: Query<&mut ParticleBrush>,
-                     config: Res<ConfigResource>,
-                     sprite_transform: Query<&Transform, With<Sprite>>| {
+                     config: Res<ConfigResource>| {
                         if let Ok(mut pb) = particle_brush.single_mut() {
                             pb.start_spawning();
-                            if let Ok(s) = sprite_transform.single() {
-                                if let Some(p) = m.hit.position {
-                                    pb.move_brush(p, (config.width, config.height), s.scale);
-                                }
+                            if let Some(p) = m.hit.position {
+                                pb.move_brush(p, (config.width, config.height));
                             }
                         }
                     },
@@ -197,13 +182,10 @@ impl GridPlugin {
                 .observe(
                     |m: On<Pointer<Move>>,
                      mut particle_brush: Query<&mut ParticleBrush>,
-                     config: Res<ConfigResource>,
-                     sprite_transform: Query<&Transform, With<Sprite>>| {
+                     config: Res<ConfigResource>| {
                         if let Ok(mut pb) = particle_brush.single_mut() {
-                            if let Ok(s) = sprite_transform.single() {
-                                if let Some(p) = m.hit.position {
-                                    pb.move_brush(p, (config.width, config.height), s.scale);
-                                }
+                            if let Some(p) = m.hit.position {
+                                pb.move_brush(p, (config.width, config.height));
                             }
                         }
                     },
@@ -227,6 +209,7 @@ mod tests {
     use bevy::picking::backend::HitData;
     use bevy::picking::pointer::{Location, PointerButton, PointerId};
     use bevy::prelude::default;
+    use bevy::window::Window;
     use bevy::{
         ecs::query::With,
         window::{WindowPlugin, WindowRef, WindowResolution},
@@ -243,66 +226,6 @@ mod tests {
         app.update();
 
         assert_eq!(1, app.world_mut().query::<&Grid>().iter(app.world()).len());
-    }
-
-    #[test]
-    fn test_scale_output_frame_to_window_system_scales_and_keeps_aspect_ratio_when_width_is_bigger()
-    {
-        let mut app = App::new();
-        app.init_resource::<Assets<Image>>();
-        app.add_plugins(GridPlugin {
-            config: ConfigResource::new(200, 100, 100.),
-        });
-
-        app.add_systems(Startup, |mut c: Commands| {
-            c.spawn(Transform::default()); /* Insert any transform asset that might be present at app runtime */
-        });
-        app.add_plugins(WindowPlugin {
-            primary_window: Some(Window {
-                resolution: WindowResolution::new(400, 400),
-                ..default()
-            }),
-            ..default()
-        });
-
-        app.update();
-
-        let mut t = app.world_mut().query_filtered::<&Transform, With<Sprite>>();
-        if let Ok(t) = t.single(app.world()) {
-            assert_eq!(Transform::from_scale(Vec3::new(2., 2., 1.)), *t);
-        } else {
-            panic!("missing the transform component of output frame sprite")
-        }
-    }
-
-    #[test]
-    fn test_scale_output_frame_to_window_system_scales_and_keeps_aspect_ratio_when_height_is_bigger()
-     {
-        let mut app = App::new();
-        app.init_resource::<Assets<Image>>();
-        app.add_plugins(GridPlugin {
-            config: ConfigResource::new(100, 200, 100.),
-        });
-
-        app.add_systems(Startup, |mut c: Commands| {
-            c.spawn(Transform::default()); /* Insert any transform asset that might be present at app runtime */
-        });
-        app.add_plugins(WindowPlugin {
-            primary_window: Some(Window {
-                resolution: WindowResolution::new(400, 400),
-                ..default()
-            }),
-            ..default()
-        });
-
-        app.update();
-
-        let mut t = app.world_mut().query_filtered::<&Transform, With<Sprite>>();
-        if let Ok(t) = t.single(app.world()) {
-            assert_eq!(Transform::from_scale(Vec3::new(2., 2., 1.)), *t);
-        } else {
-            panic!("missing the transform component of output frame sprite")
-        }
     }
 
     #[test]
@@ -516,30 +439,24 @@ mod tests {
 
         app.update();
 
-        trigger_pressed_event(&mut app, vec3(-150., 100., 0.));
+        trigger_pressed_event(&mut app, vec3(-0.5, -0.5, 0.));
         assert_particle_brush_position(&mut app, (0, 0));
 
-        trigger_pressed_event(&mut app, vec3(150., -100., 0.));
+        trigger_pressed_event(&mut app, vec3(0.5, 0.5, 0.));
         assert_particle_brush_position(&mut app, (300, 200));
     }
 
     #[test]
     fn test_particle_brush_move_brush() {
-        let mut app = trigger_move_event(vec3(-150., 100., 0.), (300, 200), (300, 200));
+        let mut app = trigger_move_event(vec3(-0.5, -0.5, 0.), (300, 200));
         assert_particle_brush_position(&mut app, (0, 0));
 
-        let mut app = trigger_move_event(vec3(150., -100., 0.), (300, 200), (300, 200));
-        assert_particle_brush_position(&mut app, (300, 200));
-
-        let mut app = trigger_move_event(vec3(-450., 300., 0.), (300, 200), (900, 600));
-        assert_particle_brush_position(&mut app, (0, 0));
-
-        let mut app = trigger_move_event(vec3(450., -300., 0.), (300, 200), (900, 600));
+        let mut app = trigger_move_event(vec3(0.5, 0.5, 0.), (300, 200));
         assert_particle_brush_position(&mut app, (300, 200));
     }
 
     fn trigger_pressed_event(app: &mut App, position: Vec3) {
-        let mut entity_query = app.world_mut().query_filtered::<Entity, With<Sprite>>();
+        let mut entity_query = app.world_mut().query_filtered::<Entity, With<ImageNode>>();
         if let Ok(entity) = entity_query.single(app.world()) {
             let event = Pointer::new(
                 PointerId::Mouse,
@@ -564,12 +481,12 @@ mod tests {
             );
             app.world_mut().trigger(event);
         } else {
-            panic!("sprite not found");
+            panic!("image node not found");
         }
     }
 
     fn trigger_released_event(app: &mut App) {
-        let mut entity_query = app.world_mut().query_filtered::<Entity, With<Sprite>>();
+        let mut entity_query = app.world_mut().query_filtered::<Entity, With<ImageNode>>();
         if let Ok(entity) = entity_query.single(app.world()) {
             let event = Pointer::new(
                 PointerId::Mouse,
@@ -594,12 +511,12 @@ mod tests {
             );
             app.world_mut().trigger(event);
         } else {
-            panic!("sprite not found");
+            panic!("image node not found");
         }
     }
 
     fn trigger_out_event(app: &mut App) {
-        let mut entity_query = app.world_mut().query_filtered::<Entity, With<Sprite>>();
+        let mut entity_query = app.world_mut().query_filtered::<Entity, With<ImageNode>>();
         if let Ok(entity) = entity_query.single(app.world()) {
             let event = Pointer::new(
                 PointerId::Mouse,
@@ -623,22 +540,18 @@ mod tests {
             );
             app.world_mut().trigger(event);
         } else {
-            panic!("sprite not found");
+            panic!("image node not found");
         }
     }
 
-    fn trigger_move_event(
-        position: Vec3,
-        grid_size: (usize, usize),
-        window_size: (u32, u32),
-    ) -> App {
+    fn trigger_move_event(position: Vec3, grid_size: (usize, usize)) -> App {
         let mut app = App::new();
         app.init_resource::<Assets<Image>>();
         app.add_plugins(InputPlugin);
         app.add_plugins(DefaultPickingPlugins);
         app.add_plugins(WindowPlugin {
             primary_window: Some(Window {
-                resolution: WindowResolution::new(window_size.0, window_size.1),
+                resolution: WindowResolution::new(300, 200),
                 ..default()
             }),
             ..default()
@@ -649,7 +562,7 @@ mod tests {
 
         app.update();
 
-        let mut entity_query = app.world_mut().query_filtered::<Entity, With<Sprite>>();
+        let mut entity_query = app.world_mut().query_filtered::<Entity, With<ImageNode>>();
         if let Ok(entity) = entity_query.single(app.world()) {
             let event = Pointer::new(
                 PointerId::Mouse,
@@ -674,7 +587,7 @@ mod tests {
             );
             app.world_mut().trigger(event);
         } else {
-            panic!("sprite not found");
+            panic!("image node not found");
         }
         app
     }
