@@ -1,3 +1,5 @@
+use core::fmt;
+
 use bevy::prelude::Color;
 
 use crate::component::grid::GridAccess;
@@ -33,5 +35,28 @@ impl Particle {
 
     pub fn new_water() -> Particle {
         Particle::Water { solute: 3 }
+    }
+}
+
+impl fmt::Display for Particle {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let s = match self {
+            Particle::Sand => "sand",
+            Particle::Water { .. } => "water",
+            Particle::Salt => "salt",
+        };
+        write!(f, "{s}")
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_particle_string_names() {
+        assert_eq!("sand", Particle::Sand.to_string());
+        assert_eq!("salt", Particle::Salt.to_string());
+        assert_eq!("water", Particle::new_water().to_string());
     }
 }
