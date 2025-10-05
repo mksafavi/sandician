@@ -468,10 +468,27 @@ mod tests {
 
     #[test]
     fn test_particle_brush_move_brush() {
-        let mut app = trigger_move_event(vec3(-0.5, -0.5, 0.), (300, 200));
+        let mut app = App::new();
+        app.init_resource::<Assets<Image>>();
+        app.add_plugins(InputPlugin);
+        app.add_plugins(DefaultPickingPlugins);
+        app.add_plugins(WindowPlugin {
+            primary_window: Some(Window {
+                resolution: WindowResolution::new(300, 200),
+                ..default()
+            }),
+            ..default()
+        });
+        app.add_plugins(GridPlugin {
+            config: ConfigResource::new(300, 200, 100.),
+        });
+
+        app.update();
+
+        trigger_move_event(&mut app, vec3(-0.5, -0.5, 0.));
         assert_particle_brush_position(&mut app, (0, 0));
 
-        let mut app = trigger_move_event(vec3(0.5, 0.5, 0.), (300, 200));
+        trigger_move_event(&mut app, vec3(0.5, 0.5, 0.));
         assert_particle_brush_position(&mut app, (300, 200));
     }
 
@@ -564,24 +581,7 @@ mod tests {
         }
     }
 
-    fn trigger_move_event(position: Vec3, grid_size: (usize, usize)) -> App {
-        let mut app = App::new();
-        app.init_resource::<Assets<Image>>();
-        app.add_plugins(InputPlugin);
-        app.add_plugins(DefaultPickingPlugins);
-        app.add_plugins(WindowPlugin {
-            primary_window: Some(Window {
-                resolution: WindowResolution::new(300, 200),
-                ..default()
-            }),
-            ..default()
-        });
-        app.add_plugins(GridPlugin {
-            config: ConfigResource::new(grid_size.0, grid_size.1, 100.),
-        });
-
-        app.update();
-
+    fn trigger_move_event(app: &mut App, position: Vec3) {
         let mut entity_query = app.world_mut().query_filtered::<Entity, With<ImageNode>>();
         if let Ok(entity) = entity_query.single(app.world()) {
             let event = Pointer::new(
@@ -609,7 +609,6 @@ mod tests {
         } else {
             panic!("image node not found");
         }
-        app
     }
 
     fn assert_particle_brush_position(app: &mut App, position: (usize, usize)) {
