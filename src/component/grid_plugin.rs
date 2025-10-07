@@ -251,14 +251,14 @@ fn radio(particle: Particle) -> impl Bundle {
             ..default()
         },
         BorderColor::all(particle.color()),
-        BorderRadius::all(px(5)),
+        BorderRadius::all(px(3)),
         ParticleRadio(particle.clone()),
         BackgroundColor(particle.color().with_alpha(0.3)),
         Button,
         children![(
             Text::new(particle.to_string()),
             TextFont {
-                font_size: 14.,
+                font_size: 12.,
                 ..default()
             }
         )],
