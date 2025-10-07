@@ -1,7 +1,7 @@
 use bevy::{
     app::{App, FixedUpdate, Plugin, PostStartup, Startup, Update},
     asset::{Assets, Handle},
-    color::Color,
+    color::Alpha,
     ecs::{
         bundle::Bundle,
         children,
@@ -15,11 +15,16 @@ use bevy::{
     image::Image,
     picking::{
         Pickable,
-        events::{Move, Out, Pointer, Press, Release},
+        events::{Click, Move, Out, Pointer, Press, Release},
     },
     prelude::{SpawnRelated, Vec3},
+    text::TextFont,
     time::{Fixed, Time},
-    ui::{BackgroundColor, Display, FlexDirection, Node, Val, px, widget::ImageNode},
+    ui::{
+        AlignItems, BackgroundColor, BorderColor, BorderRadius, Display, FlexDirection, FlexWrap,
+        Node, UiRect, Val, px,
+        widget::{Button, ImageNode, Text},
+    },
     utils::default,
 };
 
@@ -27,6 +32,9 @@ use super::{grid::Grid, particles::particle::Particle};
 
 #[derive(Resource)]
 struct OutputFrameHandle(Handle<Image>);
+
+#[derive(Component, Debug)]
+struct ParticleRadio(Particle);
 
 #[derive(Component)]
 pub struct ParticleBrush {
@@ -95,6 +103,7 @@ impl Plugin for GridPlugin {
             .add_systems(FixedUpdate, update_grid_system)
             .add_systems(Update, draw_grid_system)
             .add_systems(PostStartup, init_inputs_system)
+            .add_systems(PostStartup, observe_particle_button_particle_brush_system)
             .add_systems(Update, spawn_brush_system);
     }
 }
@@ -147,6 +156,28 @@ fn spawn_brush_system(particle_brush: Query<&ParticleBrush>, mut grid: Query<&mu
     }
 }
 
+fn observe_particle_button_particle_brush_system(
+    mut commands: Commands,
+    particle_buttons: Query<Entity, With<Button>>,
+) {
+    particle_buttons.iter().for_each(|e| {
+        commands.entity(e).observe(
+            |m: On<Pointer<Click>>,
+             mut particle_brush: Query<&mut ParticleBrush>,
+             particle_buttons: Query<(Entity, &ParticleRadio), With<Button>>| {
+                particle_buttons
+                    .iter()
+                    .filter(|(e, _)| m.entity == *e)
+                    .for_each(|(_, pr)| {
+                        if let Ok(mut pb) = particle_brush.single_mut() {
+                            pb.particle = pr.0.clone();
+                        }
+                    });
+            },
+        );
+    });
+}
+
 fn init_inputs_system(mut commands: Commands, image_node_query: Query<Entity, With<ImageNode>>) {
     if let Ok(image_node_entity) = image_node_query.single() {
         commands
@@ -194,11 +225,43 @@ fn init_inputs_system(mut commands: Commands, image_node_query: Query<Entity, Wi
 fn brush_node() -> impl Bundle {
     (
         Node {
-            width: Val::Auto,
-            height: px(40),
+            display: Display::Flex,
+            flex_direction: FlexDirection::Row,
+            align_items: AlignItems::Stretch,
+            flex_wrap: FlexWrap::Wrap,
+            column_gap: px(4),
             ..default()
         },
-        BackgroundColor(Color::srgb(0.35, 0.75, 0.35)),
+        children![
+            (radio(Particle::Sand)),
+            (radio(Particle::Salt)),
+            (radio(Particle::new_water())),
+        ],
+    )
+}
+
+fn radio(particle: Particle) -> impl Bundle {
+    (
+        Node {
+            height: px(26),
+            padding: UiRect::all(px(2)),
+            margin: UiRect::all(px(2)),
+            border: UiRect::all(px(3)),
+            align_items: AlignItems::Center,
+            ..default()
+        },
+        BorderColor::all(particle.color()),
+        BorderRadius::all(px(5)),
+        ParticleRadio(particle.clone()),
+        BackgroundColor(particle.color().with_alpha(0.3)),
+        Button,
+        children![(
+            Text::new(particle.to_string()),
+            TextFont {
+                font_size: 14.,
+                ..default()
+            }
+        )],
     )
 }
 
@@ -217,6 +280,8 @@ fn grid_node(handle: &Handle<Image>) -> impl Bundle {
 #[cfg(test)]
 mod tests {
 
+    use std::time::Duration;
+
     use crate::component::grid::{Cell, GridAccess};
     use crate::component::particles::particle::Particle;
     use crate::component::{grid::BACKGROUND_COLOR, macros::assert_color_srgb_eq};
@@ -227,6 +292,7 @@ mod tests {
     use bevy::math::{Vec2, vec3};
     use bevy::picking::DefaultPickingPlugins;
     use bevy::picking::backend::HitData;
+    use bevy::picking::events::Click;
     use bevy::picking::pointer::{Location, PointerButton, PointerId};
     use bevy::prelude::default;
     use bevy::window::Window;
@@ -492,6 +558,37 @@ mod tests {
         assert_particle_brush_position(&mut app, (300, 200));
     }
 
+    #[test]
+    fn test_particle_buttons_set_the_particle_type_in_particle_brush() {
+        let mut app = App::new();
+        app.init_resource::<Assets<Image>>();
+        app.add_plugins(InputPlugin);
+        app.add_plugins(DefaultPickingPlugins);
+        app.add_plugins(WindowPlugin {
+            primary_window: Some(Window {
+                resolution: WindowResolution::new(300, 200),
+                ..default()
+            }),
+            ..default()
+        });
+        app.add_plugins(GridPlugin {
+            config: ConfigResource::new(300, 200, 100.),
+        });
+
+        app.update();
+
+        trigger_particle_button_click_event(&mut app, Particle::Salt);
+        assert_particle_brush_particle(&mut app, Particle::Salt);
+
+        trigger_particle_button_click_event(&mut app, Particle::Sand);
+
+        assert_particle_brush_particle(&mut app, Particle::Sand);
+
+        trigger_particle_button_click_event(&mut app, Particle::new_water());
+
+        assert_particle_brush_particle(&mut app, Particle::new_water());
+    }
+
     fn trigger_pressed_event(app: &mut App, position: Vec3) {
         let mut entity_query = app.world_mut().query_filtered::<Entity, With<ImageNode>>();
         if let Ok(entity) = entity_query.single(app.world()) {
@@ -627,5 +724,48 @@ mod tests {
         } else {
             panic!("ParticleBrush not found");
         }
+    }
+
+    fn assert_particle_brush_particle(app: &mut App, particle: Particle) {
+        let mut s = app.world_mut().query::<&ParticleBrush>();
+        if let Ok(s) = s.single(app.world()) {
+            assert_eq!(particle, s.particle);
+        } else {
+            panic!("ParticleBrush not found");
+        }
+    }
+
+    fn trigger_particle_button_click_event(app: &mut App, particle: Particle) {
+        let radio_button = app
+            .world_mut()
+            .query::<(Entity, &ParticleRadio)>()
+            .iter(app.world())
+            .filter(|(_, p)| p.0 == particle)
+            .collect::<Vec<_>>();
+
+        let (entity, _) = radio_button[0];
+        let event = Pointer::new(
+            PointerId::Mouse,
+            Location {
+                target: NormalizedRenderTarget::Window(
+                    WindowRef::Entity(Entity::from_raw_u32(0).unwrap())
+                        .normalize(Some(Entity::from_raw_u32(0).unwrap()))
+                        .unwrap(),
+                ),
+                position: Vec2::ZERO,
+            },
+            Click {
+                hit: HitData {
+                    camera: Entity::from_raw_u32(0).unwrap(),
+                    depth: 0.,
+                    position: None,
+                    normal: None,
+                },
+                button: PointerButton::Primary,
+                duration: Duration::from_secs(1),
+            },
+            entity,
+        );
+        app.world_mut().trigger(event);
     }
 }
