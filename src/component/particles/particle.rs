@@ -4,13 +4,14 @@ use bevy::prelude::Color;
 
 use crate::component::grid::GridAccess;
 
-use super::{salt::update_salt, sand::update_sand, water::update_water};
+use super::{rock::update_rock, salt::update_salt, sand::update_sand, water::update_water};
 
 #[derive(Clone, PartialEq, Debug)]
 pub enum Particle {
     Sand,
     Water { solute: u8 },
     Salt,
+    Rock,
 }
 
 impl Particle {
@@ -19,6 +20,7 @@ impl Particle {
             Particle::Sand => update_sand(grid, (x, y)),
             Particle::Water { solute } => update_water(grid, *solute, (x, y)),
             Particle::Salt => update_salt(grid, (x, y)),
+            Particle::Rock => update_rock(grid, (x, y)),
         };
     }
 
@@ -30,6 +32,7 @@ impl Particle {
                 _ => Color::hsva(201.60, 1.00, 0.80, 1.00),
             },
             Particle::Salt => Color::hsva(0.00, 0.00, 1.00, 1.00),
+            Particle::Rock => Color::hsva(28.0, 0.25, 0.30, 1.00),
         }
     }
 
@@ -44,6 +47,7 @@ impl fmt::Display for Particle {
             Particle::Sand => "sand",
             Particle::Water { .. } => "water",
             Particle::Salt => "salt",
+            Particle::Rock => "rock",
         };
         write!(f, "{s}")
     }
@@ -58,5 +62,6 @@ mod tests {
         assert_eq!("sand", Particle::Sand.to_string());
         assert_eq!("salt", Particle::Salt.to_string());
         assert_eq!("water", Particle::new_water().to_string());
+        assert_eq!("rock", Particle::Rock.to_string());
     }
 }

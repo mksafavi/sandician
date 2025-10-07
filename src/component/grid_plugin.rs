@@ -233,9 +233,10 @@ fn brush_node() -> impl Bundle {
             ..default()
         },
         children![
-            (radio(Particle::Sand)),
-            (radio(Particle::Salt)),
-            (radio(Particle::new_water())),
+            radio(Particle::Sand),
+            radio(Particle::Salt),
+            radio(Particle::new_water()),
+            radio(Particle::Rock),
         ],
     )
 }
@@ -581,12 +582,13 @@ mod tests {
         assert_particle_brush_particle(&mut app, Particle::Salt);
 
         trigger_particle_button_click_event(&mut app, Particle::Sand);
-
         assert_particle_brush_particle(&mut app, Particle::Sand);
 
         trigger_particle_button_click_event(&mut app, Particle::new_water());
-
         assert_particle_brush_particle(&mut app, Particle::new_water());
+
+        trigger_particle_button_click_event(&mut app, Particle::Rock);
+        assert_particle_brush_particle(&mut app, Particle::Rock);
     }
 
     fn trigger_pressed_event(app: &mut App, position: Vec3) {

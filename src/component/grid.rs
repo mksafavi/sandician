@@ -423,6 +423,7 @@ mod tests {
             Particle::new_water().color()
         );
         assert_color_srgb_eq!(Color::hsva(0.00, 0.00, 1.00, 1.00), Particle::Salt.color());
+        assert_color_srgb_eq!(Color::hsva(28.0, 0.25, 0.30, 1.00), Particle::Rock.color());
     }
 
     #[test]
