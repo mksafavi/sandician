@@ -465,7 +465,7 @@ mod tests {
                     Cell::new(Some(Particle::Sand), 0),
                     Cell::new(Some(Particle::Sand), 0),
                     Cell::new(Some(Particle::Sand), 0),
-                    Cell::new(Some(Particle::Sand), 0),
+                    Cell::new(None, 0),
                 ],
                 g.get_cells()
             );
