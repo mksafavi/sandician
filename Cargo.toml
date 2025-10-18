@@ -22,6 +22,7 @@ features = [
 "bevy_ui_picking_backend",
 "bevy_winit",
 "default_font",
+"bevy_post_process",
 "std",
 "webgl2",
 "x11",
