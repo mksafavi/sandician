@@ -1,16 +1,11 @@
 use bevy::DefaultPlugins;
-use bevy::app::{App, Startup};
-use bevy::camera::Camera2d;
-use bevy::ecs::system::Commands;
+use bevy::app::App;
 use bevy::image::ImagePlugin;
 use bevy::prelude::PluginGroup;
 use bevy::utils::default;
 use bevy::window::{Window, WindowPlugin, WindowResolution};
 use sandsim::component::grid_plugin::{ConfigResource, GridPlugin};
-
-fn setup_camera(mut commands: Commands) {
-    commands.spawn(Camera2d);
-}
+use sandsim::component::render::RenderSimPlugin;
 
 fn main() {
     App::new()
@@ -29,6 +24,6 @@ fn main() {
         .add_plugins(GridPlugin {
             config: ConfigResource::new(300, 300, 240.),
         })
-        .add_systems(Startup, setup_camera)
+        .add_plugins(RenderSimPlugin)
         .run();
 }
