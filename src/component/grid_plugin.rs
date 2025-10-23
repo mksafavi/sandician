@@ -1,3 +1,5 @@
+use std::collections::VecDeque;
+
 use bevy::{
     app::{App, FixedUpdate, Plugin, PostStartup, Startup, Update},
     asset::{Assets, Handle},
@@ -39,7 +41,7 @@ struct ParticleRadio(Particle);
 #[derive(Component)]
 pub struct ParticleBrush {
     pub spawning: bool,
-    pub position: (usize, usize),
+    pub positions: VecDeque<(usize, usize)>,
     pub particle: Particle,
     pub size: usize,
 }
@@ -54,7 +56,7 @@ impl ParticleBrush {
     pub fn new() -> Self {
         Self {
             spawning: false,
-            position: (0, 0),
+            positions: VecDeque::from([(0, 0)]), // TODO: maybe start with empty?
             particle: Particle::Sand,
             size: 1,
         }
@@ -69,7 +71,7 @@ impl ParticleBrush {
     }
 
     fn move_brush(&mut self, position: Vec3, grid_size: (usize, usize)) {
-        self.position = (
+        self.positions[0] = (
             ((position.x + 0.5) * grid_size.0 as f32) as usize,
             ((position.y + 0.5) * grid_size.1 as f32) as usize,
         );
@@ -146,11 +148,18 @@ fn draw_grid_system(
     }
 }
 
-fn spawn_brush_system(particle_brush: Query<&ParticleBrush>, mut grid: Query<&mut Grid>) {
+fn spawn_brush_system(mut particle_brush: Query<&mut ParticleBrush>, mut grid: Query<&mut Grid>) {
     if let Ok(mut g) = grid.single_mut() {
-        if let Ok(pb) = particle_brush.single() {
+        if let Ok(mut pb) = particle_brush.single_mut() {
             if pb.spawning {
-                g.spawn_brush(pb.position, pb.size, &pb.particle)
+                let position = if pb.positions.len() == 1 {
+                    pb.positions.front().cloned()
+                } else {
+                    pb.positions.pop_front()
+                };
+                if let Some(position) = position {
+                    g.spawn_brush(position, pb.size, &pb.particle)
+                }
             }
         }
     }
@@ -352,7 +361,7 @@ mod tests {
     }
 
     #[test]
-    fn test_particle_brush() {
+    fn test_particle_brush_spawn_position_until_no_positions_remains_but_keep_the_last_one() {
         let mut app = App::new();
         app.init_resource::<Assets<Image>>();
         app.add_plugins(GridPlugin {
@@ -379,7 +388,7 @@ mod tests {
         let mut s = app.world_mut().query::<&mut ParticleBrush>();
         if let Ok(mut s) = s.single_mut(app.world_mut()) {
             s.spawning = true;
-            s.position = (1, 1);
+            s.positions = vec![(1, 1), (0, 1)].into();
         } else {
             panic!("ParticleBrush not found");
         }
@@ -401,12 +410,12 @@ mod tests {
         }
 
         let mut s = app.world_mut().query::<&mut ParticleBrush>();
-        if let Ok(mut s) = s.single_mut(app.world_mut()) {
-            s.particle = Particle::Salt;
-            s.position = (0, 1);
+        if let Ok(s) = s.single(app.world_mut()) {
+            assert_eq!(VecDeque::from([(0, 1)]), s.positions);
         } else {
             panic!("ParticleBrush not found");
         }
+
         app.update();
 
         let mut grid = app.world_mut().query::<&Grid>();
@@ -415,13 +424,20 @@ mod tests {
                 &vec![
                     Cell::new(None, 0),
                     Cell::new(None, 0),
-                    Cell::new(Some(Particle::Salt), 0),
+                    Cell::new(Some(Particle::Sand), 0),
                     Cell::new(Some(Particle::Sand), 0)
                 ],
                 g.get_cells()
             );
         } else {
             panic!("grid not found");
+        }
+
+        let mut s = app.world_mut().query::<&mut ParticleBrush>();
+        if let Ok(s) = s.single(app.world_mut()) {
+            assert_eq!(VecDeque::from([(0, 1)]), s.positions);
+        } else {
+            panic!("ParticleBrush not found");
         }
     }
 
@@ -528,10 +544,10 @@ mod tests {
         app.update();
 
         trigger_pressed_event(&mut app, vec3(-0.5, -0.5, 0.));
-        assert_particle_brush_position(&mut app, (0, 0));
+        assert_particle_brush_spositions(&mut app, &[(0, 0)]);
 
         trigger_pressed_event(&mut app, vec3(0.5, 0.5, 0.));
-        assert_particle_brush_position(&mut app, (300, 200));
+        assert_particle_brush_spositions(&mut app, &[(300, 200)]);
     }
 
     #[test]
@@ -554,10 +570,10 @@ mod tests {
         app.update();
 
         trigger_move_event(&mut app, vec3(-0.5, -0.5, 0.));
-        assert_particle_brush_position(&mut app, (0, 0));
+        assert_particle_brush_spositions(&mut app, &[(0, 0)]);
 
         trigger_move_event(&mut app, vec3(0.5, 0.5, 0.));
-        assert_particle_brush_position(&mut app, (300, 200));
+        assert_particle_brush_spositions(&mut app, &[(300, 200)]);
     }
 
     #[test]
@@ -711,10 +727,16 @@ mod tests {
         }
     }
 
-    fn assert_particle_brush_position(app: &mut App, position: (usize, usize)) {
+    fn assert_particle_brush_spositions(app: &mut App, positions: &[(usize, usize)]) {
         let mut s = app.world_mut().query::<&ParticleBrush>();
         if let Ok(s) = s.single(app.world()) {
-            assert_eq!(position, s.position);
+            assert_eq!(
+                positions
+                    .iter()
+                    .map(|x| *x)
+                    .collect::<VecDeque<(usize, usize)>>(),
+                s.positions
+            );
         } else {
             panic!("ParticleBrush not found");
         }
