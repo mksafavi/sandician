@@ -56,7 +56,7 @@ impl ParticleBrush {
     pub fn new() -> Self {
         Self {
             spawning: false,
-            positions: VecDeque::from([(0, 0)]), // TODO: maybe start with empty?
+            positions: VecDeque::new(),
             particle: Particle::Sand,
             size: 1,
         }
@@ -71,10 +71,10 @@ impl ParticleBrush {
     }
 
     fn move_brush(&mut self, position: Vec3, grid_size: (usize, usize)) {
-        self.positions[0] = (
+        self.positions.push_back((
             ((position.x + 0.5) * grid_size.0 as f32) as usize,
             ((position.y + 0.5) * grid_size.1 as f32) as usize,
-        );
+        ));
     }
 }
 
@@ -470,6 +470,7 @@ mod tests {
         if let Ok(mut s) = s.single_mut(app.world_mut()) {
             s.spawning = true;
             s.size = 2;
+            s.positions.push_back((0, 0));
         } else {
             panic!("ParticleBrush not found");
         }
@@ -543,11 +544,8 @@ mod tests {
 
         app.update();
 
-        trigger_pressed_event(&mut app, vec3(-0.5, -0.5, 0.));
-        assert_particle_brush_spositions(&mut app, &[(0, 0)]);
-
-        trigger_pressed_event(&mut app, vec3(0.5, 0.5, 0.));
-        assert_particle_brush_spositions(&mut app, &[(300, 200)]);
+        trigger_pressed_event(&mut app, vec3(0., 0., 0.));
+        assert_particle_brush_spositions(&mut app, &[(150, 100)]);
     }
 
     #[test]
@@ -573,7 +571,7 @@ mod tests {
         assert_particle_brush_spositions(&mut app, &[(0, 0)]);
 
         trigger_move_event(&mut app, vec3(0.5, 0.5, 0.));
-        assert_particle_brush_spositions(&mut app, &[(300, 200)]);
+        assert_particle_brush_spositions(&mut app, &[(0, 0), (300, 200)]);
     }
 
     #[test]
