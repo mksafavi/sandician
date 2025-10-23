@@ -215,6 +215,7 @@ fn init_inputs_system(mut commands: Commands, image_node_query: Query<Entity, Wi
                         if let Some(p) = m.hit.position {
                             pb.positions = VecDeque::new();
                             pb.set_position(p, (config.width, config.height));
+                            pb.last_position = Some(p);
                         }
                     }
                 },
@@ -541,11 +542,19 @@ mod tests {
             VecDeque::from([(150, 100)]),
             query_particle_brush(&mut app).positions
         );
+        assert_eq!(
+            vec3(0., 0., 0.),
+            query_particle_brush(&mut app).last_position.unwrap()
+        );
 
         trigger_pressed_event(&mut app, vec3(0.5, 0.5, 0.));
         assert_eq!(
             VecDeque::from([(300, 200)]),
             query_particle_brush(&mut app).positions
+        );
+        assert_eq!(
+            vec3(0.5, 0.5, 0.),
+            query_particle_brush(&mut app).last_position.unwrap()
         );
     }
 
