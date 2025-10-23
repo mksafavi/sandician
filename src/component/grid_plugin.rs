@@ -240,7 +240,9 @@ fn init_inputs_system(mut commands: Commands, image_node_query: Query<Entity, Wi
                  config: Res<ConfigResource>| {
                     if let Ok(mut pb) = particle_brush.single_mut() {
                         if let Some(p) = m.hit.position {
-                            pb.set_position_linear(p, (config.width, config.height));
+                            if pb.spawning {
+                                pb.set_position_linear(p, (config.width, config.height));
+                            }
                         }
                     }
                 },
@@ -557,9 +559,8 @@ mod tests {
             query_particle_brush(&mut app).last_position.unwrap()
         );
     }
-
     #[test]
-    fn test_particle_brush_move_brush() {
+    fn test_particle_brush_move_brush_after_press_event() {
         let mut app = App::new();
         app.init_resource::<Assets<Image>>();
         app.add_plugins(InputPlugin);
@@ -577,11 +578,7 @@ mod tests {
 
         app.update();
 
-        trigger_move_event(&mut app, vec3(-0.5, -0.5, 0.));
-        assert_eq!(
-            VecDeque::from([(0, 0)]),
-            query_particle_brush(&mut app).positions
-        );
+        trigger_pressed_event(&mut app, vec3(-0.5, -0.5, 0.));
 
         trigger_move_event(&mut app, vec3(-0.4, -0.4, 0.));
 
@@ -626,6 +623,49 @@ mod tests {
                 (9, 6),
                 (5, 3),
                 (2, 1),
+                (0, 0),
+            ]),
+            query_particle_brush(&mut app).positions
+        );
+    }
+
+    #[test]
+    fn test_particle_brush_move_brush_only_set_positions_when_spawning() {
+        let mut app = App::new();
+        app.init_resource::<Assets<Image>>();
+        app.add_plugins(InputPlugin);
+        app.add_plugins(DefaultPickingPlugins);
+        app.add_plugins(WindowPlugin {
+            primary_window: Some(Window {
+                resolution: WindowResolution::new(300, 200),
+                ..default()
+            }),
+            ..default()
+        });
+        app.add_plugins(GridPlugin {
+            config: ConfigResource::new(300, 200, 100.),
+        });
+
+        app.update();
+
+        trigger_move_event(&mut app, vec3(-0.5, -0.5, 0.));
+        assert_eq!(VecDeque::from([]), query_particle_brush(&mut app).positions);
+
+        trigger_pressed_event(&mut app, vec3(-0.5, -0.5, 0.));
+
+        trigger_move_event(&mut app, vec3(-0.5, -0.5, 0.));
+        assert_eq!(
+            VecDeque::from([
+                (0, 0),
+                (0, 0),
+                (0, 0),
+                (0, 0),
+                (0, 0),
+                (0, 0),
+                (0, 0),
+                (0, 0),
+                (0, 0),
+                (0, 0),
                 (0, 0),
             ]),
             query_particle_brush(&mut app).positions
