@@ -1,7 +1,7 @@
 use bevy::{
     app::{App, FixedUpdate, Plugin, PostStartup, Startup, Update},
     asset::{Assets, Handle},
-    color::Alpha,
+    color::{Alpha, Color},
     ecs::{
         bundle::Bundle,
         children,
@@ -232,6 +232,7 @@ fn brush_node() -> impl Bundle {
             column_gap: px(4),
             ..default()
         },
+        BackgroundColor(Color::BLACK),
         children![
             radio(Particle::Sand),
             radio(Particle::Salt),
