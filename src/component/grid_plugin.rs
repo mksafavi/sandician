@@ -504,16 +504,16 @@ mod tests {
         app.update();
 
         trigger_pressed_event(&mut app, Vec3::ZERO);
-        assert_particle_brush_spawning(&mut app, true);
+        assert_eq!(true, query_particle_brush(&mut app).spawning);
 
         trigger_released_event(&mut app);
-        assert_particle_brush_spawning(&mut app, false);
+        assert_eq!(false, query_particle_brush(&mut app).spawning);
 
         trigger_pressed_event(&mut app, Vec3::ZERO);
-        assert_particle_brush_spawning(&mut app, true);
+        assert_eq!(true, query_particle_brush(&mut app).spawning);
 
         trigger_out_event(&mut app);
-        assert_particle_brush_spawning(&mut app, false);
+        assert_eq!(false, query_particle_brush(&mut app).spawning);
     }
 
     #[test]
@@ -537,10 +537,16 @@ mod tests {
         app.update();
 
         trigger_pressed_event(&mut app, vec3(0., 0., 0.));
-        assert_particle_brush_positions(&mut app, &[(150, 100)]);
+        assert_eq!(
+            VecDeque::from([(150, 100)]),
+            query_particle_brush(&mut app).positions
+        );
 
         trigger_pressed_event(&mut app, vec3(0.5, 0.5, 0.));
-        assert_particle_brush_positions(&mut app, &[(300, 200)]);
+        assert_eq!(
+            VecDeque::from([(300, 200)]),
+            query_particle_brush(&mut app).positions
+        );
     }
 
     #[test]
@@ -563,12 +569,15 @@ mod tests {
         app.update();
 
         trigger_move_event(&mut app, vec3(-0.5, -0.5, 0.));
-        assert_particle_brush_positions(&mut app, &[(0, 0)]);
+        assert_eq!(
+            VecDeque::from([(0, 0)]),
+            query_particle_brush(&mut app).positions
+        );
 
         trigger_move_event(&mut app, vec3(-0.4, -0.4, 0.));
-        assert_particle_brush_positions(
-            &mut app,
-            &[
+
+        assert_eq!(
+            VecDeque::from([
                 (0, 0),
                 (3, 2),
                 (5, 3),
@@ -580,13 +589,14 @@ mod tests {
                 (23, 15),
                 (27, 18),
                 (29, 19),
-            ],
+            ]),
+            query_particle_brush(&mut app).positions
         );
 
         trigger_move_event(&mut app, vec3(-0.5, -0.5, 0.));
-        assert_particle_brush_positions(
-            &mut app,
-            &[
+
+        assert_eq!(
+            VecDeque::from([
                 (0, 0),
                 (3, 2),
                 (5, 3),
@@ -608,7 +618,8 @@ mod tests {
                 (5, 3),
                 (2, 1),
                 (0, 0),
-            ],
+            ]),
+            query_particle_brush(&mut app).positions
         );
     }
 
@@ -632,16 +643,19 @@ mod tests {
         app.update();
 
         trigger_particle_button_click_event(&mut app, Particle::Salt);
-        assert_particle_brush_particle(&mut app, Particle::Salt);
+        assert_eq!(Particle::Salt, query_particle_brush(&mut app).particle);
 
         trigger_particle_button_click_event(&mut app, Particle::Sand);
-        assert_particle_brush_particle(&mut app, Particle::Sand);
+        assert_eq!(Particle::Sand, query_particle_brush(&mut app).particle);
 
         trigger_particle_button_click_event(&mut app, Particle::new_water());
-        assert_particle_brush_particle(&mut app, Particle::new_water());
+        assert_eq!(
+            Particle::new_water(),
+            query_particle_brush(&mut app).particle
+        );
 
         trigger_particle_button_click_event(&mut app, Particle::Rock);
-        assert_particle_brush_particle(&mut app, Particle::Rock);
+        assert_eq!(Particle::Rock, query_particle_brush(&mut app).particle);
     }
 
     fn trigger_pressed_event(app: &mut App, position: Vec3) {
@@ -763,34 +777,13 @@ mod tests {
         }
     }
 
-    fn assert_particle_brush_positions(app: &mut App, positions: &[(usize, usize)]) {
-        let mut s = app.world_mut().query::<&ParticleBrush>();
-        if let Ok(s) = s.single(app.world()) {
-            assert_eq!(
-                positions
-                    .iter()
-                    .map(|x| *x)
-                    .collect::<VecDeque<(usize, usize)>>(),
-                s.positions
-            );
-        } else {
-            panic!("ParticleBrush not found");
-        }
-    }
-
-    fn assert_particle_brush_spawning(app: &mut App, expected: bool) {
-        let mut s = app.world_mut().query::<&ParticleBrush>();
-        if let Ok(s) = s.single(app.world()) {
-            assert_eq!(expected, s.spawning);
-        } else {
-            panic!("ParticleBrush not found");
-        }
-    }
-
-    fn assert_particle_brush_particle(app: &mut App, particle: Particle) {
-        let mut s = app.world_mut().query::<&ParticleBrush>();
-        if let Ok(s) = s.single(app.world()) {
-            assert_eq!(particle, s.particle);
+    fn query_particle_brush(app: &mut App) -> &ParticleBrush {
+        if let Ok(s) = app
+            .world_mut()
+            .query::<&ParticleBrush>()
+            .single(app.world())
+        {
+            s
         } else {
             panic!("ParticleBrush not found");
         }
