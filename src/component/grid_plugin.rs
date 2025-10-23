@@ -537,10 +537,10 @@ mod tests {
         app.update();
 
         trigger_pressed_event(&mut app, vec3(0., 0., 0.));
-        assert_particle_brush_spositions(&mut app, &[(150, 100)]);
+        assert_particle_brush_positions(&mut app, &[(150, 100)]);
 
         trigger_pressed_event(&mut app, vec3(0.5, 0.5, 0.));
-        assert_particle_brush_spositions(&mut app, &[(300, 200)]);
+        assert_particle_brush_positions(&mut app, &[(300, 200)]);
     }
 
     #[test]
@@ -563,10 +563,10 @@ mod tests {
         app.update();
 
         trigger_move_event(&mut app, vec3(-0.5, -0.5, 0.));
-        assert_particle_brush_spositions(&mut app, &[(0, 0)]);
+        assert_particle_brush_positions(&mut app, &[(0, 0)]);
 
         trigger_move_event(&mut app, vec3(-0.4, -0.4, 0.));
-        assert_particle_brush_spositions(
+        assert_particle_brush_positions(
             &mut app,
             &[
                 (0, 0),
@@ -584,7 +584,7 @@ mod tests {
         );
 
         trigger_move_event(&mut app, vec3(-0.5, -0.5, 0.));
-        assert_particle_brush_spositions(
+        assert_particle_brush_positions(
             &mut app,
             &[
                 (0, 0),
@@ -763,7 +763,7 @@ mod tests {
         }
     }
 
-    fn assert_particle_brush_spositions(app: &mut App, positions: &[(usize, usize)]) {
+    fn assert_particle_brush_positions(app: &mut App, positions: &[(usize, usize)]) {
         let mut s = app.world_mut().query::<&ParticleBrush>();
         if let Ok(s) = s.single(app.world()) {
             assert_eq!(
