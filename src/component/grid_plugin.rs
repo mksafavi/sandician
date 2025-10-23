@@ -152,12 +152,12 @@ fn spawn_brush_system(mut particle_brush: Query<&mut ParticleBrush>, mut grid: Q
     if let Ok(mut g) = grid.single_mut() {
         if let Ok(mut pb) = particle_brush.single_mut() {
             if pb.spawning {
-                let position = if pb.positions.len() == 1 {
-                    pb.positions.front().cloned()
-                } else {
-                    pb.positions.pop_front()
-                };
-                if let Some(position) = position {
+                while pb.positions.len() != 1 {
+                    if let Some(position) = pb.positions.pop_front() {
+                        g.spawn_brush(position, pb.size, &pb.particle)
+                    }
+                }
+                if let Some(&position) = pb.positions.front() {
                     g.spawn_brush(position, pb.size, &pb.particle)
                 }
             }
@@ -389,7 +389,7 @@ mod tests {
         let mut s = app.world_mut().query::<&mut ParticleBrush>();
         if let Ok(mut s) = s.single_mut(app.world_mut()) {
             s.spawning = true;
-            s.positions = vec![(1, 1), (0, 1)].into();
+            s.positions = VecDeque::from([(0, 0), (1, 1), (0, 1)]);
         } else {
             panic!("ParticleBrush not found");
         }
@@ -399,31 +399,7 @@ mod tests {
         if let Ok(g) = grid.single(app.world()) {
             assert_eq!(
                 &vec![
-                    Cell::new(None, 0),
-                    Cell::new(None, 0),
-                    Cell::new(None, 0),
-                    Cell::new(Some(Particle::Sand), 0)
-                ],
-                g.get_cells()
-            );
-        } else {
-            panic!("grid not found");
-        }
-
-        let mut s = app.world_mut().query::<&mut ParticleBrush>();
-        if let Ok(s) = s.single(app.world_mut()) {
-            assert_eq!(VecDeque::from([(0, 1)]), s.positions);
-        } else {
-            panic!("ParticleBrush not found");
-        }
-
-        app.update();
-
-        let mut grid = app.world_mut().query::<&Grid>();
-        if let Ok(g) = grid.single(app.world()) {
-            assert_eq!(
-                &vec![
-                    Cell::new(None, 0),
+                    Cell::new(Some(Particle::Sand), 0),
                     Cell::new(None, 0),
                     Cell::new(Some(Particle::Sand), 0),
                     Cell::new(Some(Particle::Sand), 0)
