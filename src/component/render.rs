@@ -1,14 +1,18 @@
 use bevy::{
     app::{App, Plugin, Startup},
     camera::Camera2d,
-    core_pipeline::core_2d::graph::{Core2d, Node2d},
+    core_pipeline::{
+        core_2d::graph::{Core2d, Node2d},
+        tonemapping::DebandDither,
+    },
     ecs::{system::Commands, world::Mut},
+    post_process::bloom::Bloom,
     render::{RenderApp, render_graph::RenderGraph},
     ui_render::graph::NodeUi,
 };
 
 fn setup_camera(mut commands: Commands) {
-    commands.spawn(Camera2d);
+    commands.spawn((Camera2d, Bloom::ANAMORPHIC, DebandDither::Enabled));
 }
 
 pub fn move_ui_pass_to_before_postprocessing_end_node(app: &mut App) {
