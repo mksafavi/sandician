@@ -198,6 +198,7 @@ fn init_inputs_system(mut commands: Commands, image_node_query: Query<Entity, Wi
                     if let Ok(mut pb) = particle_brush.single_mut() {
                         pb.start_spawning();
                         if let Some(p) = m.hit.position {
+                            pb.positions = VecDeque::new();
                             pb.move_brush(p, (config.width, config.height));
                         }
                     }
@@ -525,7 +526,7 @@ mod tests {
     }
 
     #[test]
-    fn test_particle_brush_pressed_event_sets_brush_position() {
+    fn test_particle_brush_pressed_event_sets_brush_position_and_clears_the_positions() {
         let mut app = App::new();
         app.init_resource::<Assets<Image>>();
         app.add_plugins(InputPlugin);
@@ -546,6 +547,9 @@ mod tests {
 
         trigger_pressed_event(&mut app, vec3(0., 0., 0.));
         assert_particle_brush_spositions(&mut app, &[(150, 100)]);
+
+        trigger_pressed_event(&mut app, vec3(0.5, 0.5, 0.));
+        assert_particle_brush_spositions(&mut app, &[(300, 200)]);
     }
 
     #[test]
