@@ -507,16 +507,16 @@ mod tests {
         app.update();
 
         trigger_pressed_event(&mut app, Vec3::ZERO);
-        assert_eq!(true, query_particle_brush(&mut app).spawning);
+        assert!(query_particle_brush(&mut app).spawning);
 
         trigger_released_event(&mut app);
-        assert_eq!(false, query_particle_brush(&mut app).spawning);
+        assert!(!query_particle_brush(&mut app).spawning);
 
         trigger_pressed_event(&mut app, Vec3::ZERO);
-        assert_eq!(true, query_particle_brush(&mut app).spawning);
+        assert!(query_particle_brush(&mut app).spawning);
 
         trigger_out_event(&mut app);
-        assert_eq!(false, query_particle_brush(&mut app).spawning);
+        assert!(!query_particle_brush(&mut app).spawning);
     }
 
     #[test]
