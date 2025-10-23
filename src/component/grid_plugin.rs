@@ -44,6 +44,7 @@ pub struct ParticleBrush {
     pub positions: VecDeque<(usize, usize)>,
     pub particle: Particle,
     pub size: usize,
+    last_position: Option<Vec3>,
 }
 
 impl Default for ParticleBrush {
@@ -59,6 +60,7 @@ impl ParticleBrush {
             positions: VecDeque::new(),
             particle: Particle::Sand,
             size: 1,
+            last_position: None,
         }
     }
 
@@ -70,11 +72,24 @@ impl ParticleBrush {
         self.spawning = false;
     }
 
-    fn move_brush(&mut self, position: Vec3, grid_size: (usize, usize)) {
+    fn set_position(&mut self, position: Vec3, grid_size: (usize, usize)) {
         self.positions.push_back((
             ((position.x + 0.5) * grid_size.0 as f32) as usize,
             ((position.y + 0.5) * grid_size.1 as f32) as usize,
         ));
+    }
+
+    fn set_position_linear(&mut self, position: Vec3, grid_size: (usize, usize)) {
+        if let Some(last_position) = self.last_position {
+            let steps = 10;
+            for s in 1..=steps {
+                let n = last_position.lerp(position, s as f32 / steps as f32);
+                self.set_position(n, grid_size);
+            }
+        } else {
+            self.set_position(position, grid_size);
+        }
+        self.last_position = Some(position);
     }
 }
 
@@ -199,7 +214,7 @@ fn init_inputs_system(mut commands: Commands, image_node_query: Query<Entity, Wi
                         pb.start_spawning();
                         if let Some(p) = m.hit.position {
                             pb.positions = VecDeque::new();
-                            pb.move_brush(p, (config.width, config.height));
+                            pb.set_position(p, (config.width, config.height));
                         }
                     }
                 },
@@ -224,7 +239,7 @@ fn init_inputs_system(mut commands: Commands, image_node_query: Query<Entity, Wi
                  config: Res<ConfigResource>| {
                     if let Ok(mut pb) = particle_brush.single_mut() {
                         if let Some(p) = m.hit.position {
-                            pb.move_brush(p, (config.width, config.height));
+                            pb.set_position_linear(p, (config.width, config.height));
                         }
                     }
                 },
@@ -550,8 +565,51 @@ mod tests {
         trigger_move_event(&mut app, vec3(-0.5, -0.5, 0.));
         assert_particle_brush_spositions(&mut app, &[(0, 0)]);
 
-        trigger_move_event(&mut app, vec3(0.5, 0.5, 0.));
-        assert_particle_brush_spositions(&mut app, &[(0, 0), (300, 200)]);
+        trigger_move_event(&mut app, vec3(-0.4, -0.4, 0.));
+        assert_particle_brush_spositions(
+            &mut app,
+            &[
+                (0, 0),
+                (3, 2),
+                (5, 3),
+                (9, 6),
+                (11, 7),
+                (15, 10),
+                (18, 12),
+                (20, 13),
+                (23, 15),
+                (27, 18),
+                (29, 19),
+            ],
+        );
+
+        trigger_move_event(&mut app, vec3(-0.5, -0.5, 0.));
+        assert_particle_brush_spositions(
+            &mut app,
+            &[
+                (0, 0),
+                (3, 2),
+                (5, 3),
+                (9, 6),
+                (11, 7),
+                (15, 10),
+                (18, 12),
+                (20, 13),
+                (23, 15),
+                (27, 18),
+                (29, 19),
+                (27, 18),
+                (23, 15),
+                (20, 13),
+                (18, 12),
+                (15, 10),
+                (11, 7),
+                (9, 6),
+                (5, 3),
+                (2, 1),
+                (0, 0),
+            ],
+        );
     }
 
     #[test]
