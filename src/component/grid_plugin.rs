@@ -58,7 +58,7 @@ impl ParticleBrush {
         Self {
             spawning: false,
             positions: VecDeque::new(),
-            particle: Particle::Sand,
+            particle: Particle::new_sand(),
             size: 1,
             last_position: None,
         }
@@ -262,8 +262,8 @@ fn brush_node() -> impl Bundle {
         },
         BackgroundColor(Color::BLACK),
         children![
-            radio(Particle::Sand),
-            radio(Particle::Salt),
+            radio(Particle::new_sand()),
+            radio(Particle::new_salt()),
             radio(Particle::new_water()),
             radio(Particle::Rock),
         ],
@@ -357,7 +357,7 @@ mod tests {
         let mut grid = app.world_mut().query::<&mut Grid>();
         if let Ok(mut g) = grid.single_mut(app.world_mut()) {
             g.spawn_particle(0, 1, Particle::new_water());
-            g.spawn_particle(1, 1, Particle::Sand);
+            g.spawn_particle(1, 1, Particle::new_sand());
         } else {
             panic!("grid not found");
         }
@@ -373,7 +373,10 @@ mod tests {
                 Particle::new_water().color(),
                 image.get_color_at(0, 1).unwrap()
             );
-            assert_color_srgb_eq!(Particle::Sand.color(), image.get_color_at(1, 1).unwrap());
+            assert_color_srgb_eq!(
+                Particle::new_sand().color(),
+                image.get_color_at(1, 1).unwrap()
+            );
         } else {
             panic!("image not found");
         }
@@ -417,10 +420,10 @@ mod tests {
         if let Ok(g) = grid.single(app.world()) {
             assert_eq!(
                 &vec![
-                    Cell::new(Some(Particle::Sand), 0),
+                    Cell::new(Some(Particle::new_sand()), 0),
                     Cell::new(None, 0),
-                    Cell::new(Some(Particle::Sand), 0),
-                    Cell::new(Some(Particle::Sand), 0)
+                    Cell::new(Some(Particle::new_sand()), 0),
+                    Cell::new(Some(Particle::new_sand()), 0)
                 ],
                 g.get_cells()
             );
@@ -475,9 +478,9 @@ mod tests {
         if let Ok(g) = grid.single(app.world()) {
             assert_eq!(
                 &vec![
-                    Cell::new(Some(Particle::Sand), 0),
-                    Cell::new(Some(Particle::Sand), 0),
-                    Cell::new(Some(Particle::Sand), 0),
+                    Cell::new(Some(Particle::new_sand()), 0),
+                    Cell::new(Some(Particle::new_sand()), 0),
+                    Cell::new(Some(Particle::new_sand()), 0),
                     Cell::new(None, 0),
                 ],
                 g.get_cells()
@@ -691,11 +694,17 @@ mod tests {
 
         app.update();
 
-        trigger_particle_button_click_event(&mut app, Particle::Salt);
-        assert_eq!(Particle::Salt, query_particle_brush(&mut app).particle);
+        trigger_particle_button_click_event(&mut app, Particle::new_salt());
+        assert_eq!(
+            Particle::new_salt(),
+            query_particle_brush(&mut app).particle
+        );
 
-        trigger_particle_button_click_event(&mut app, Particle::Sand);
-        assert_eq!(Particle::Sand, query_particle_brush(&mut app).particle);
+        trigger_particle_button_click_event(&mut app, Particle::new_sand());
+        assert_eq!(
+            Particle::new_sand(),
+            query_particle_brush(&mut app).particle
+        );
 
         trigger_particle_button_click_event(&mut app, Particle::new_water());
         assert_eq!(

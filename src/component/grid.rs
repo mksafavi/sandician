@@ -275,27 +275,27 @@ mod tests {
     #[test]
     fn test_grid_spawn_particle_to_grid() {
         let mut g = Grid::new(2, 3);
-        g.spawn_particle(0, 0, Particle::Sand);
+        g.spawn_particle(0, 0, Particle::new_sand());
 
         g.spawn_particle(1, 1, Particle::new_water());
 
-        assert_eq!(Some(Particle::Sand), g.cells[0].particle);
+        assert_eq!(Some(Particle::new_sand()), g.cells[0].particle);
         assert_eq!(Some(Particle::new_water()), g.cells[3].particle);
     }
 
     #[test]
     fn test_grid_spawn_particle_to_non_empty_location_silently_fails() {
         let mut g = Grid::new(2, 3);
-        g.spawn_particle(0, 0, Particle::Sand);
+        g.spawn_particle(0, 0, Particle::new_sand());
 
         g.spawn_particle(0, 0, Particle::new_water());
 
-        assert_eq!(Some(Particle::Sand), g.cells[0].particle);
+        assert_eq!(Some(Particle::new_sand()), g.cells[0].particle);
     }
     #[test]
     fn test_grid_spawn_particle_out_of_grid_bound_silently_fails() {
         let mut g = Grid::new(2, 3);
-        g.spawn_particle(0, 3, Particle::Sand);
+        g.spawn_particle(0, 3, Particle::new_sand());
         g.spawn_particle(2, 0, Particle::new_water());
 
         assert_eq!(Cell::new(None, 0), g.cells[0]);
@@ -314,14 +314,14 @@ mod tests {
          * ---
          */
         let mut g = Grid::new(3, 3);
-        g.spawn_brush((1, 1), 1, &Particle::Sand);
+        g.spawn_brush((1, 1), 1, &Particle::new_sand());
         assert_eq!(
             vec![
                 Cell::new(None, 0),
                 Cell::new(None, 0),
                 Cell::new(None, 0),
                 Cell::new(None, 0),
-                Cell::new(Some(Particle::Sand), 0),
+                Cell::new(Some(Particle::new_sand()), 0),
                 Cell::new(None, 0),
                 Cell::new(None, 0),
                 Cell::new(None, 0),
@@ -339,17 +339,17 @@ mod tests {
          * -s-
          */
         let mut g = Grid::new(3, 3);
-        g.spawn_brush((1, 1), 2, &Particle::Sand);
+        g.spawn_brush((1, 1), 2, &Particle::new_sand());
         assert_eq!(
             vec![
                 Cell::new(None, 0),
-                Cell::new(Some(Particle::Sand), 0),
+                Cell::new(Some(Particle::new_sand()), 0),
                 Cell::new(None, 0),
-                Cell::new(Some(Particle::Sand), 0),
-                Cell::new(Some(Particle::Sand), 0),
-                Cell::new(Some(Particle::Sand), 0),
+                Cell::new(Some(Particle::new_sand()), 0),
+                Cell::new(Some(Particle::new_sand()), 0),
+                Cell::new(Some(Particle::new_sand()), 0),
                 Cell::new(None, 0),
-                Cell::new(Some(Particle::Sand), 0),
+                Cell::new(Some(Particle::new_sand()), 0),
                 Cell::new(None, 0),
             ],
             g.cells
@@ -366,32 +366,32 @@ mod tests {
          * --s--
          */
         let mut g = Grid::new(5, 5);
-        g.spawn_brush((2, 2), 4, &Particle::Sand);
+        g.spawn_brush((2, 2), 4, &Particle::new_sand());
         assert_eq!(
             vec![
                 Cell::new(None, 0),
                 Cell::new(None, 0),
-                Cell::new(Some(Particle::Sand), 0),
+                Cell::new(Some(Particle::new_sand()), 0),
                 Cell::new(None, 0),
                 Cell::new(None, 0),
                 Cell::new(None, 0),
-                Cell::new(Some(Particle::Sand), 0),
-                Cell::new(Some(Particle::Sand), 0),
-                Cell::new(Some(Particle::Sand), 0),
+                Cell::new(Some(Particle::new_sand()), 0),
+                Cell::new(Some(Particle::new_sand()), 0),
+                Cell::new(Some(Particle::new_sand()), 0),
                 Cell::new(None, 0),
-                Cell::new(Some(Particle::Sand), 0),
-                Cell::new(Some(Particle::Sand), 0),
-                Cell::new(Some(Particle::Sand), 0),
-                Cell::new(Some(Particle::Sand), 0),
-                Cell::new(Some(Particle::Sand), 0),
+                Cell::new(Some(Particle::new_sand()), 0),
+                Cell::new(Some(Particle::new_sand()), 0),
+                Cell::new(Some(Particle::new_sand()), 0),
+                Cell::new(Some(Particle::new_sand()), 0),
+                Cell::new(Some(Particle::new_sand()), 0),
                 Cell::new(None, 0),
-                Cell::new(Some(Particle::Sand), 0),
-                Cell::new(Some(Particle::Sand), 0),
-                Cell::new(Some(Particle::Sand), 0),
+                Cell::new(Some(Particle::new_sand()), 0),
+                Cell::new(Some(Particle::new_sand()), 0),
+                Cell::new(Some(Particle::new_sand()), 0),
                 Cell::new(None, 0),
                 Cell::new(None, 0),
                 Cell::new(None, 0),
-                Cell::new(Some(Particle::Sand), 0),
+                Cell::new(Some(Particle::new_sand()), 0),
                 Cell::new(None, 0),
                 Cell::new(None, 0),
             ],
@@ -409,10 +409,10 @@ mod tests {
         assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(0, 1).unwrap());
         assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(1, 1).unwrap());
 
-        g.spawn_particle(0, 0, Particle::Sand);
+        g.spawn_particle(0, 0, Particle::new_sand());
         g.draw_grid(&mut image);
         assert_color_srgb_eq!(
-            Particle::Sand.color(),
+            Particle::new_sand().color(),
             image.get_color_at(0, 0).unwrap(),
             0.1
         );
@@ -435,7 +435,7 @@ mod tests {
     #[test]
     fn test_draw_grid_only_redraw_changed_cells() {
         let mut g = Grid::new(2, 2);
-        g.spawn_particle(0, 0, Particle::Sand);
+        g.spawn_particle(0, 0, Particle::new_sand());
 
         /*
          * draw_cycle: 0
@@ -446,7 +446,10 @@ mod tests {
         let mut image = Grid::create_output_frame(2, 2);
         g.draw_grid(&mut image);
 
-        assert_color_srgb_eq!(Particle::Sand.color(), image.get_color_at(0, 0).unwrap());
+        assert_color_srgb_eq!(
+            Particle::new_sand().color(),
+            image.get_color_at(0, 0).unwrap()
+        );
         assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(1, 0).unwrap());
         assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(0, 1).unwrap());
         assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(1, 1).unwrap());
@@ -463,7 +466,10 @@ mod tests {
 
         assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(0, 0).unwrap());
         assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(1, 0).unwrap());
-        assert_color_srgb_eq!(Particle::Sand.color(), image.get_color_at(0, 1).unwrap());
+        assert_color_srgb_eq!(
+            Particle::new_sand().color(),
+            image.get_color_at(0, 1).unwrap()
+        );
         assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(1, 1).unwrap());
 
         g.update_grid();
@@ -478,7 +484,10 @@ mod tests {
 
         assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(0, 0).unwrap());
         assert_color_srgb_eq!(Color::Hsva(Hsva::BLACK), image.get_color_at(1, 0).unwrap());
-        assert_color_srgb_eq!(Particle::Sand.color(), image.get_color_at(0, 1).unwrap());
+        assert_color_srgb_eq!(
+            Particle::new_sand().color(),
+            image.get_color_at(0, 1).unwrap()
+        );
         assert_color_srgb_eq!(Color::Hsva(Hsva::BLACK), image.get_color_at(1, 1).unwrap());
 
         g.update_grid();
@@ -499,12 +508,18 @@ mod tests {
 
     #[test]
     fn test_get_particle_color() {
-        assert_color_srgb_eq!(Color::hsva(43.20, 0.34, 0.76, 1.00), Particle::Sand.color());
+        assert_color_srgb_eq!(
+            Color::hsva(43.20, 0.34, 0.76, 1.00),
+            Particle::new_sand().color()
+        );
         assert_color_srgb_eq!(
             Color::hsva(201.60, 1.00, 0.80, 1.00),
             Particle::new_water().color()
         );
-        assert_color_srgb_eq!(Color::hsva(0.00, 0.00, 1.00, 1.00), Particle::Salt.color());
+        assert_color_srgb_eq!(
+            Color::hsva(0.00, 0.00, 1.00, 1.00),
+            Particle::new_salt().color()
+        );
         assert_color_srgb_eq!(Color::hsva(28.0, 0.25, 0.30, 1.00), Particle::Rock.color());
     }
 
@@ -513,12 +528,12 @@ mod tests {
         for s in 1..=3 {
             assert_color_srgb_eq!(
                 Color::hsva(201.60, 1.00, 0.80, 1.00),
-                Particle::Water { solute: s }.color()
+                Particle::Water { weight:0, solute: s }.color()
             );
         }
         assert_color_srgb_eq!(
             Color::hsva(201.60, 0.60, 0.80, 1.00),
-            Particle::Water { solute: 0 }.color()
+            Particle::Water { weight:0, solute: 0 }.color()
         );
     }
 }

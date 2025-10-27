@@ -23,9 +23,9 @@ mod tests {
          */
         let mut g = Grid::new(2, 2);
 
-        g.spawn_particle(0, 0, Particle::Salt);
+        g.spawn_particle(0, 0, Particle::new_salt());
 
-        assert_eq!(Cell::new(Some(Particle::Salt), 0), *g.get_cell(0));
+        assert_eq!(Cell::new(Some(Particle::new_salt()), 0), *g.get_cell(0));
         assert_eq!(Cell::new(None, 0), *g.get_cell(1));
         assert_eq!(Cell::new(None, 0), *g.get_cell(2));
         assert_eq!(Cell::new(None, 0), *g.get_cell(3));
@@ -34,7 +34,7 @@ mod tests {
 
         assert_eq!(Cell::new(None, 1), *g.get_cell(0));
         assert_eq!(Cell::new(None, 0), *g.get_cell(1));
-        assert_eq!(Cell::new(Some(Particle::Salt), 1), *g.get_cell(2));
+        assert_eq!(Cell::new(Some(Particle::new_salt()), 1), *g.get_cell(2));
         assert_eq!(Cell::new(None, 0), *g.get_cell(3));
     }
 
@@ -47,15 +47,15 @@ mod tests {
          */
         let mut g = Grid::new(2, 2);
 
-        g.spawn_particle(0, 0, Particle::Salt);
-        g.spawn_particle(0, 1, Particle::Salt);
+        g.spawn_particle(0, 0, Particle::new_salt());
+        g.spawn_particle(0, 1, Particle::new_salt());
 
         g.update_grid();
 
         assert_eq!(Cell::new(None, 1), *g.get_cell(0));
         assert_eq!(Cell::new(None, 0), *g.get_cell(1));
-        assert_eq!(Cell::new(Some(Particle::Salt), 0), *g.get_cell(2));
-        assert_eq!(Cell::new(Some(Particle::Salt), 1), *g.get_cell(3));
+        assert_eq!(Cell::new(Some(Particle::new_salt()), 0), *g.get_cell(2));
+        assert_eq!(Cell::new(Some(Particle::new_salt()), 1), *g.get_cell(3));
     }
 
     #[test]
@@ -67,15 +67,15 @@ mod tests {
          */
         let mut g = Grid::new(2, 2);
 
-        g.spawn_particle(1, 0, Particle::Salt);
-        g.spawn_particle(1, 1, Particle::Salt);
+        g.spawn_particle(1, 0, Particle::new_salt());
+        g.spawn_particle(1, 1, Particle::new_salt());
 
         g.update_grid();
 
         assert_eq!(Cell::new(None, 0), *g.get_cell(0));
         assert_eq!(Cell::new(None, 1), *g.get_cell(1));
-        assert_eq!(Cell::new(Some(Particle::Salt), 1), *g.get_cell(2));
-        assert_eq!(Cell::new(Some(Particle::Salt), 0), *g.get_cell(3));
+        assert_eq!(Cell::new(Some(Particle::new_salt()), 1), *g.get_cell(2));
+        assert_eq!(Cell::new(Some(Particle::new_salt()), 0), *g.get_cell(3));
     }
 
     #[test]
@@ -87,16 +87,16 @@ mod tests {
          */
         let mut g = Grid::new_with_rand(3, 2, Some(|| ParticleHorizontalDirection::Left), None);
 
-        g.spawn_particle(1, 0, Particle::Salt);
-        g.spawn_particle(1, 1, Particle::Salt);
+        g.spawn_particle(1, 0, Particle::new_salt());
+        g.spawn_particle(1, 1, Particle::new_salt());
 
         g.update_grid();
 
         assert_eq!(Cell::new(None, 0), *g.get_cell(0));
         assert_eq!(Cell::new(None, 1), *g.get_cell(1));
         assert_eq!(Cell::new(None, 0), *g.get_cell(2));
-        assert_eq!(Cell::new(Some(Particle::Salt), 1), *g.get_cell(3));
-        assert_eq!(Cell::new(Some(Particle::Salt), 0), *g.get_cell(4));
+        assert_eq!(Cell::new(Some(Particle::new_salt()), 1), *g.get_cell(3));
+        assert_eq!(Cell::new(Some(Particle::new_salt()), 0), *g.get_cell(4));
         assert_eq!(Cell::new(None, 0), *g.get_cell(5));
     }
 
@@ -109,9 +109,9 @@ mod tests {
          */
         let mut g = Grid::new_with_rand(3, 2, Some(|| ParticleHorizontalDirection::Right), None);
 
-        g.spawn_particle(1, 0, Particle::Salt);
+        g.spawn_particle(1, 0, Particle::new_salt());
 
-        g.spawn_particle(1, 1, Particle::Salt);
+        g.spawn_particle(1, 1, Particle::new_salt());
 
         g.update_grid();
 
@@ -119,7 +119,7 @@ mod tests {
         assert_eq!(Cell::new(None, 1), *g.get_cell(1));
         assert_eq!(Cell::new(None, 0), *g.get_cell(2));
         assert_eq!(Cell::new(None, 0), *g.get_cell(3));
-        assert_eq!(Cell::new(Some(Particle::Salt), 0), *g.get_cell(4));
-        assert_eq!(Cell::new(Some(Particle::Salt), 1), *g.get_cell(5));
+        assert_eq!(Cell::new(Some(Particle::new_salt()), 0), *g.get_cell(4));
+        assert_eq!(Cell::new(Some(Particle::new_salt()), 1), *g.get_cell(5));
     }
 }
