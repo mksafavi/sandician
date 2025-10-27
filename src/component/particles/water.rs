@@ -199,24 +199,27 @@ pub fn update_water<T: GridAccess>(grid: &mut T, solute: u8, position: (usize, u
         return;
     }
 
-    let index = match (
-        index_left,
-        index_bottom_left,
-        index_bottom,
-        index_bottom_right,
-        index_right,
-    ) {
-        (None, None, None, None, None) => None,
-        (_, _, Some(i), _, _) => Some(i),
-        (_, None, None, Some(i), _) => Some(i),
-        (_, Some(i), None, None, _) => Some(i),
-        (_, Some(l), None, Some(r), _) => match grid.water_direction() {
+    let index = match (index_bottom_left, index_bottom, index_bottom_right) {
+        (None, None, None) => None,
+        (_, Some(i), _) => Some(i),
+        (None, None, Some(i)) => Some(i),
+        (Some(i), None, None) => Some(i),
+        (Some(l), None, Some(r)) => match grid.water_direction() {
             ParticleHorizontalDirection::Left => Some(l),
             ParticleHorizontalDirection::Right => Some(r),
         },
-        (None, None, None, None, Some(i)) => Some(i),
-        (Some(i), None, None, None, None) => Some(i),
-        (Some(l), None, None, None, Some(r)) => match grid.water_direction() {
+    };
+
+    if let Some(index) = index {
+        grid.swap_particles(grid.to_index(position), index);
+        return;
+    }
+
+    let index = match (index_left, index_right) {
+        (None, None) => None,
+        (None, Some(i)) => Some(i),
+        (Some(i), None) => Some(i),
+        (Some(l), Some(r)) => match grid.water_direction() {
             ParticleHorizontalDirection::Left => Some(l),
             ParticleHorizontalDirection::Right => Some(r),
         },
