@@ -183,6 +183,59 @@ pub fn update_water<T: GridAccess>(grid: &mut T, solute: u8, position: (usize, u
         Err(_) => None,
     };
 
+    if sink_in_water(grid, position) {
+        return;
+    }
+
+    if particle::gravity(grid, position) {
+        return;
+    }
+
+    if slide_water(grid, position) {
+        return;
+    }
+}
+
+fn sink_in_water<T: GridAccess>(grid: &mut T, position: (usize, usize)) -> bool {
+    let index_top_left = match grid.get_neighbor_index(position, (-1, -1)) {
+        Ok(i) => {
+            let c = grid.get_cell(i);
+            match c.particle {
+                Some(Particle::Salt | Particle::Sand) => match grid.is_simulated(c) {
+                    true => None,
+                    false => Some(i),
+                },
+                _ => None,
+            }
+        }
+        Err(_) => None,
+    };
+    let index_top = match grid.get_neighbor_index(position, (0, -1)) {
+        Ok(i) => {
+            let c = grid.get_cell(i);
+            match c.particle {
+                Some(Particle::Salt | Particle::Sand) => match grid.is_simulated(c) {
+                    true => None,
+                    false => Some(i),
+                },
+                _ => None,
+            }
+        }
+        Err(_) => None,
+    };
+    let index_top_right = match grid.get_neighbor_index(position, (1, -1)) {
+        Ok(i) => {
+            let c = grid.get_cell(i);
+            match c.particle {
+                Some(Particle::Salt | Particle::Sand) => match grid.is_simulated(c) {
+                    true => None,
+                    false => Some(i),
+                },
+                _ => None,
+            }
+        }
+        Err(_) => None,
+    };
     let top_index = match (index_top_left, index_top, index_top_right) {
         (None, None, None) => None,
         (_, Some(i), _) => Some(i),
@@ -196,15 +249,9 @@ pub fn update_water<T: GridAccess>(grid: &mut T, solute: u8, position: (usize, u
 
     if let Some(index) = top_index {
         grid.swap_particles(grid.to_index(position), index);
-        return;
-    }
-
-    if particle::gravity(grid, position) {
-        return;
-    }
-
-    if slide_water(grid, position) {
-        return;
+        true
+    } else {
+        false
     }
 }
 
