@@ -203,10 +203,33 @@ pub fn update_water<T: GridAccess>(grid: &mut T, solute: u8, position: (usize, u
         return;
     }
 
-    if let Some(index) = index {
-        grid.swap_particles(grid.to_index(position), index);
+    if slide_water(grid, position) {
         return;
     }
+}
+
+fn slide_water<T: GridAccess>(grid: &mut T, position: (usize, usize)) -> bool {
+    let index_left = match grid.get_neighbor_index(position, (-1, 0)) {
+        Ok(i) => {
+            let c = grid.get_cell(i);
+            match &c.particle {
+                Some(_) => None,
+                None => Some(i),
+            }
+        }
+        Err(_) => None,
+    };
+
+    let index_right = match grid.get_neighbor_index(position, (1, 0)) {
+        Ok(i) => {
+            let c = grid.get_cell(i);
+            match &c.particle {
+                Some(_) => None,
+                None => Some(i),
+            }
+        }
+        Err(_) => None,
+    };
 
     let index = match (index_left, index_right) {
         (None, None) => None,
@@ -220,6 +243,9 @@ pub fn update_water<T: GridAccess>(grid: &mut T, solute: u8, position: (usize, u
 
     if let Some(index) = index {
         grid.swap_particles(grid.to_index(position), index);
+        true
+    } else {
+        false
     }
 }
 
