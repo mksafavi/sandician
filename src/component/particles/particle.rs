@@ -53,9 +53,10 @@ impl fmt::Display for Particle {
     }
 }
 
-pub fn gravity<T: GridAccess>(grid: &mut T, position: (usize, usize)) {
+pub fn gravity<T: GridAccess>(grid: &mut T, position: (usize, usize)) -> bool {
     if let Some(index) = grid.is_empty(position, (0, 1)) {
-        return grid.swap_particles(grid.to_index(position), index);
+        grid.swap_particles(grid.to_index(position), index);
+        return true;
     }
 
     if let Some(index) = match (
@@ -70,7 +71,10 @@ pub fn gravity<T: GridAccess>(grid: &mut T, position: (usize, usize)) {
             ParticleHorizontalDirection::Right => Some(r),
         },
     } {
-        grid.swap_particles(grid.to_index(position), index)
+        grid.swap_particles(grid.to_index(position), index);
+        true
+    } else {
+        false
     }
 }
 

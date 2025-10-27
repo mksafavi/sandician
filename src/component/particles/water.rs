@@ -1,4 +1,4 @@
-use super::particle::Particle;
+use super::particle::{self, Particle};
 use crate::component::grid::{GridAccess, ParticleHorizontalDirection};
 
 pub fn update_water<T: GridAccess>(grid: &mut T, solute: u8, position: (usize, usize)) {
@@ -199,16 +199,9 @@ pub fn update_water<T: GridAccess>(grid: &mut T, solute: u8, position: (usize, u
         return;
     }
 
-    let index = match (index_bottom_left, index_bottom, index_bottom_right) {
-        (None, None, None) => None,
-        (_, Some(i), _) => Some(i),
-        (None, None, Some(i)) => Some(i),
-        (Some(i), None, None) => Some(i),
-        (Some(l), None, Some(r)) => match grid.water_direction() {
-            ParticleHorizontalDirection::Left => Some(l),
-            ParticleHorizontalDirection::Right => Some(r),
-        },
-    };
+    if particle::gravity(grid, position) {
+        return;
+    }
 
     if let Some(index) = index {
         grid.swap_particles(grid.to_index(position), index);
