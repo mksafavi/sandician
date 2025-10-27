@@ -80,7 +80,7 @@ fn sink_in_water<T: GridAccess>(grid: &mut T, position: (usize, usize)) -> bool 
         (None, None) => None,
         (None, Some(i)) => Some(i),
         (Some(i), None) => Some(i),
-        (Some(l), Some(r)) => match grid.water_direction() {
+        (Some(l), Some(r)) => match grid.particle_direction() {
             ParticleHorizontalDirection::Left => Some(l),
             ParticleHorizontalDirection::Right => Some(r),
         },
@@ -121,7 +121,7 @@ fn slide_water<T: GridAccess>(grid: &mut T, position: (usize, usize)) -> bool {
         (None, None) => None,
         (None, Some(i)) => Some(i),
         (Some(i), None) => Some(i),
-        (Some(l), Some(r)) => match grid.water_direction() {
+        (Some(l), Some(r)) => match grid.particle_direction() {
             ParticleHorizontalDirection::Left => Some(l),
             ParticleHorizontalDirection::Right => Some(r),
         },

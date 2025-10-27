@@ -66,7 +66,7 @@ pub fn gravity<T: GridAccess>(grid: &mut T, position: (usize, usize)) -> bool {
         (None, None) => None,
         (None, Some(r)) => Some(r),
         (Some(l), None) => Some(l),
-        (Some(l), Some(r)) => match grid.water_direction() {
+        (Some(l), Some(r)) => match grid.particle_direction() {
             ParticleHorizontalDirection::Left => Some(l),
             ParticleHorizontalDirection::Right => Some(r),
         },

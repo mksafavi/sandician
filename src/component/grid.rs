@@ -45,14 +45,14 @@ pub struct Grid {
     cells: Vec<Cell>,
     width: usize,
     height: usize,
-    water_direction: fn() -> ParticleHorizontalDirection,
+    particle_direction: fn() -> ParticleHorizontalDirection,
     row_update_direction: fn() -> RowUpdateDirection,
     cycle: u32,
     draw_cycle: u32,
 }
 
 pub trait GridAccess {
-    fn water_direction(&self) -> ParticleHorizontalDirection;
+    fn particle_direction(&self) -> ParticleHorizontalDirection;
     fn get_neighbor_index(
         &self,
         position: (usize, usize),
@@ -100,8 +100,8 @@ impl GridAccess for Grid {
         }
     }
 
-    fn water_direction(&self) -> ParticleHorizontalDirection {
-        (self.water_direction)()
+    fn particle_direction(&self) -> ParticleHorizontalDirection {
+        (self.particle_direction)()
     }
 
     fn get_cells(&self) -> &Vec<Cell> {
@@ -157,7 +157,7 @@ impl Grid {
             cells: (0..width * height).map(|_| Cell::new(None, 0)).collect(),
             width,
             height,
-            water_direction: random_water_direction,
+            particle_direction: random_water_direction,
             row_update_direction: random_row_update_direction,
             cycle: 0,
             draw_cycle: 0,
@@ -240,11 +240,11 @@ impl Grid {
     pub fn new_with_rand(
         width: usize,
         height: usize,
-        water_direction: Option<fn() -> ParticleHorizontalDirection>,
+        particle_direction: Option<fn() -> ParticleHorizontalDirection>,
         row_update_direction: Option<fn() -> RowUpdateDirection>,
     ) -> Self {
         let mut g = Self::new(width, height);
-        g.water_direction = match water_direction {
+        g.particle_direction = match particle_direction {
             Some(f) => f,
             None => || ParticleHorizontalDirection::Right,
         };
