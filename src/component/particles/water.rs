@@ -100,7 +100,16 @@ fn slide_water<T: GridAccess>(grid: &mut T, position: (usize, usize)) -> bool {
             let c = grid.get_cell(i);
             match &c.particle {
                 Some(_) => None,
-                None => Some(i),
+                None => match grid.get_neighbor_index(position, (-2, 0)) {
+                    Ok(ii) => {
+                        let c = grid.get_cell(ii);
+                        match &c.particle {
+                            Some(_) => Some(i),
+                            None => Some(ii),
+                        }
+                    }
+                    Err(_) => Some(i),
+                },
             }
         }
         Err(_) => None,
@@ -111,7 +120,16 @@ fn slide_water<T: GridAccess>(grid: &mut T, position: (usize, usize)) -> bool {
             let c = grid.get_cell(i);
             match &c.particle {
                 Some(_) => None,
-                None => Some(i),
+                None => match grid.get_neighbor_index(position, (2, 0)) {
+                    Ok(ii) => {
+                        let c = grid.get_cell(ii);
+                        match &c.particle {
+                            Some(_) => Some(i),
+                            None => Some(ii),
+                        }
+                    }
+                    Err(_) => Some(i),
+                },
             }
         }
         Err(_) => None,
@@ -244,6 +262,56 @@ mod tests {
         assert_eq!(Cell::new(Some(Particle::new_water()), 1), *g.get_cell(3));
         assert_eq!(Cell::new(None, 1), *g.get_cell(4));
         assert_eq!(Cell::new(None, 0), *g.get_cell(5));
+    }
+
+    #[test]
+    fn test_water_can_slide_two_cells_to_right() {
+        /*
+         * --- -> ---
+         * w--    --w
+         */
+        let mut g = Grid::new_with_rand(3, 2, Some(|| ParticleHorizontalDirection::Right), None);
+
+        g.spawn_particle(0, 1, Particle::new_water());
+
+        g.update_grid();
+
+        assert_eq!(
+            vec![
+                Cell::new(None, 0),
+                Cell::new(None, 0),
+                Cell::new(None, 0),
+                Cell::new(None, 1),
+                Cell::new(None, 0),
+                Cell::new(Some(Particle::new_water()), 1),
+            ],
+            *g.get_cells()
+        );
+    }
+
+    #[test]
+    fn test_water_can_slide_two_cells_to_left() {
+        /*
+         * --- -> ---
+         * --w    w--
+         */
+        let mut g = Grid::new_with_rand(3, 2, Some(|| ParticleHorizontalDirection::Left), None);
+
+        g.spawn_particle(2, 1, Particle::new_water());
+
+        g.update_grid();
+
+        assert_eq!(
+            vec![
+                Cell::new(None, 0),
+                Cell::new(None, 0),
+                Cell::new(None, 0),
+                Cell::new(Some(Particle::new_water()), 1),
+                Cell::new(None, 0),
+                Cell::new(None, 1),
+            ],
+            *g.get_cells()
+        );
     }
 
     #[test]
