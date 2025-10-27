@@ -39,20 +39,17 @@ fn dissolve_salt<T: GridAccess>(grid: &mut T, solute: u8, position: (usize, usiz
 }
 
 fn sink_in_water<T: GridAccess>(grid: &mut T, position: (usize, usize)) -> bool {
-    let index_top_left = match grid.get_neighbor_index(position, (-1, -1)) {
-        Ok(i) => {
-            let c = grid.get_cell(i);
-            match c.particle {
-                Some(Particle::Salt | Particle::Sand) => match grid.is_simulated(c) {
-                    true => None,
-                    false => Some(i),
-                },
-                _ => None,
+    if let Ok(i) = grid.get_neighbor_index(position, (0, -1)) {
+        let c = grid.get_cell(i);
+        if let Some(Particle::Salt | Particle::Sand) = c.particle {
+            if !grid.is_simulated(c) {
+                grid.swap_particles(grid.to_index(position), i);
+                return true;
             }
         }
-        Err(_) => None,
     };
-    let index_top = match grid.get_neighbor_index(position, (0, -1)) {
+
+    let index_top_left = match grid.get_neighbor_index(position, (-1, -1)) {
         Ok(i) => {
             let c = grid.get_cell(i);
             match c.particle {
@@ -78,18 +75,18 @@ fn sink_in_water<T: GridAccess>(grid: &mut T, position: (usize, usize)) -> bool 
         }
         Err(_) => None,
     };
-    let top_index = match (index_top_left, index_top, index_top_right) {
-        (None, None, None) => None,
-        (_, Some(i), _) => Some(i),
-        (None, None, Some(i)) => Some(i),
-        (Some(i), None, None) => Some(i),
-        (Some(l), None, Some(r)) => match grid.water_direction() {
+
+    let index = match (index_top_left, index_top_right) {
+        (None, None) => None,
+        (None, Some(i)) => Some(i),
+        (Some(i), None) => Some(i),
+        (Some(l), Some(r)) => match grid.water_direction() {
             ParticleHorizontalDirection::Left => Some(l),
             ParticleHorizontalDirection::Right => Some(r),
         },
     };
 
-    if let Some(index) = top_index {
+    if let Some(index) = index {
         grid.swap_particles(grid.to_index(position), index);
         true
     } else {
