@@ -1,30 +1,15 @@
-use crate::component::grid::{GridAccess, ParticleHorizontalDirection};
+use crate::component::grid::GridAccess;
+
+use super::particle;
 
 pub fn update_sand<T: GridAccess>(grid: &mut T, position: (usize, usize)) {
-    if let Some(index) = grid.is_empty(position, (0, 1)) {
-        return grid.swap_particles(grid.to_index(position), index);
-    }
-
-    if let Some(index) = match (
-        grid.is_empty(position, (-1, 1)),
-        grid.is_empty(position, (1, 1)),
-    ) {
-        (None, None) => None,
-        (None, Some(r)) => Some(r),
-        (Some(l), None) => Some(l),
-        (Some(l), Some(r)) => match grid.water_direction() {
-            ParticleHorizontalDirection::Left => Some(l),
-            ParticleHorizontalDirection::Right => Some(r),
-        },
-    } {
-        grid.swap_particles(grid.to_index(position), index)
-    }
+    particle::gravity(grid, position);
 }
 
 #[cfg(test)]
 mod tests {
     use crate::component::{
-        grid::{Cell, Grid},
+        grid::{Cell, Grid, ParticleHorizontalDirection},
         particles::particle::Particle,
     };
 

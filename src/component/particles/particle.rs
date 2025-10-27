@@ -2,7 +2,7 @@ use core::fmt;
 
 use bevy::prelude::Color;
 
-use crate::component::grid::GridAccess;
+use crate::component::grid::{GridAccess, ParticleHorizontalDirection};
 
 use super::{rock::update_rock, salt::update_salt, sand::update_sand, water::update_water};
 
@@ -50,6 +50,27 @@ impl fmt::Display for Particle {
             Particle::Rock => "rock",
         };
         write!(f, "{s}")
+    }
+}
+
+pub fn gravity<T: GridAccess>(grid: &mut T, position: (usize, usize)) {
+    if let Some(index) = grid.is_empty(position, (0, 1)) {
+        return grid.swap_particles(grid.to_index(position), index);
+    }
+
+    if let Some(index) = match (
+        grid.is_empty(position, (-1, 1)),
+        grid.is_empty(position, (1, 1)),
+    ) {
+        (None, None) => None,
+        (None, Some(r)) => Some(r),
+        (Some(l), None) => Some(l),
+        (Some(l), Some(r)) => match grid.water_direction() {
+            ParticleHorizontalDirection::Left => Some(l),
+            ParticleHorizontalDirection::Right => Some(r),
+        },
+    } {
+        grid.swap_particles(grid.to_index(position), index)
     }
 }
 
