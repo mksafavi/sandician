@@ -14,9 +14,7 @@ pub fn update_water<T: GridAccess>(grid: &mut T, attr: &WaterAttributes, positio
         return;
     }
 
-    if slide_water(grid, position) {
-        return;
-    }
+    slide_water(grid, position);
 }
 
 fn dissolve_salt<T: GridAccess>(grid: &mut T, solute: u8, position: (usize, usize)) -> bool {
