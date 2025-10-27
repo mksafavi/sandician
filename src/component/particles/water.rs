@@ -1,8 +1,8 @@
-use super::particle::{self, Particle};
+use super::particle::{self, Particle, WaterAttributes};
 use crate::component::grid::{GridAccess, ParticleHorizontalDirection};
 
-pub fn update_water<T: GridAccess>(grid: &mut T, solute: u8, position: (usize, usize)) {
-    if dissolve_salt(grid, solute, position) {
+pub fn update_water<T: GridAccess>(grid: &mut T, attr: &WaterAttributes, position: (usize, usize)) {
+    if dissolve_salt(grid, attr.solute, position) {
         return;
     }
 
@@ -23,13 +23,14 @@ fn dissolve_salt<T: GridAccess>(grid: &mut T, solute: u8, position: (usize, usiz
     for y in -1..=1 {
         for x in -1..=1 {
             if let Ok(i) = grid.get_neighbor_index(position, (x, y)) {
-                if let Some(Particle::Salt { .. }) = grid.get_cell(i).particle {
+                if let Some(Particle::Salt(..)) = grid.get_cell(i).particle {
                     if 0 < solute {
                         let index = grid.to_index(position);
-                        grid.get_cell_mut(index).particle = Some(Particle::Water {
-                            weight: 0,
-                            solute: solute - 1,
-                        });
+                        grid.get_cell_mut(index).particle =
+                            Some(Particle::Water(WaterAttributes {
+                                weight: 0,
+                                solute: solute - 1,
+                            }));
                         grid.dissolve_particles(index, i);
                         return true;
                     }
@@ -43,7 +44,7 @@ fn dissolve_salt<T: GridAccess>(grid: &mut T, solute: u8, position: (usize, usiz
 fn sink_in_water<T: GridAccess>(grid: &mut T, position: (usize, usize)) -> bool {
     if let Ok(i) = grid.get_neighbor_index(position, (0, -1)) {
         let c = grid.get_cell(i);
-        if let Some(Particle::Salt { .. } | Particle::Sand { .. }) = c.particle {
+        if let Some(Particle::Salt(..) | Particle::Sand(..)) = c.particle {
             if !grid.is_simulated(c) {
                 grid.swap_particles(grid.to_index(position), i);
                 return true;
@@ -55,7 +56,7 @@ fn sink_in_water<T: GridAccess>(grid: &mut T, position: (usize, usize)) -> bool 
         Ok(i) => {
             let c = grid.get_cell(i);
             match c.particle {
-                Some(Particle::Salt { .. } | Particle::Sand { .. }) => match grid.is_simulated(c) {
+                Some(Particle::Salt(..) | Particle::Sand(..)) => match grid.is_simulated(c) {
                     true => None,
                     false => Some(i),
                 },
@@ -68,7 +69,7 @@ fn sink_in_water<T: GridAccess>(grid: &mut T, position: (usize, usize)) -> bool 
         Ok(i) => {
             let c = grid.get_cell(i);
             match c.particle {
-                Some(Particle::Salt { .. } | Particle::Sand { .. }) => match grid.is_simulated(c) {
+                Some(Particle::Salt(..) | Particle::Sand(..)) => match grid.is_simulated(c) {
                     true => None,
                     false => Some(i),
                 },
@@ -249,8 +250,8 @@ mod tests {
     }
 
     #[test]
-    fn test_update_grid_water_falls_to_bottom_right_when_bottom_cell_and_bottom_left_are_full_and_bottom_right_is_empty(
-    ) {
+    fn test_update_grid_water_falls_to_bottom_right_when_bottom_cell_and_bottom_left_are_full_and_bottom_right_is_empty()
+     {
         /*
          * w- -> --
          * s-    sw
@@ -269,8 +270,8 @@ mod tests {
     }
 
     #[test]
-    fn test_update_grid_water_falls_bottom_left_when_bottom_cell_and_bottom_right_are_full_and_bottom_left_is_empty(
-    ) {
+    fn test_update_grid_water_falls_bottom_left_when_bottom_cell_and_bottom_right_are_full_and_bottom_left_is_empty()
+     {
         /*
          * -w -> --
          * -s    ws
@@ -289,8 +290,8 @@ mod tests {
     }
 
     #[test]
-    fn test_update_grid_water_falls_bottom_left_or_bottom_right_when_bottom_cell_is_full_and_both_bottom_right_and_bottom_left_are_empty_forced_left(
-    ) {
+    fn test_update_grid_water_falls_bottom_left_or_bottom_right_when_bottom_cell_is_full_and_both_bottom_right_and_bottom_left_are_empty_forced_left()
+     {
         /*
          * -w- -> ---
          * -s-    ws-
@@ -311,8 +312,8 @@ mod tests {
     }
 
     #[test]
-    fn test_update_grid_water_falls_bottom_left_or_bottom_right_when_bottom_cell_is_full_and_both_bottom_right_and_bottom_left_are_empty_forced_right(
-    ) {
+    fn test_update_grid_water_falls_bottom_left_or_bottom_right_when_bottom_cell_is_full_and_both_bottom_right_and_bottom_left_are_empty_forced_right()
+     {
         /*
          * -w- -> ---
          * -s-    -sw
@@ -561,10 +562,10 @@ mod tests {
             vec![
                 Cell::new(Some(Particle::new_sand()), 0),
                 Cell::new(
-                    Some(Particle::Water {
+                    Some(Particle::Water(WaterAttributes {
                         weight: 0,
                         solute: 2
-                    }),
+                    })),
                     1
                 ),
                 Cell::new(None, 1),
@@ -593,10 +594,10 @@ mod tests {
                 g.update_grid();
 
                 assert_eq!(
-                    Some(Particle::Water {
+                    Some(Particle::Water(WaterAttributes {
                         weight: 0,
                         solute: 2
-                    }),
+                    })),
                     g.get_cell(4).particle
                 );
 
@@ -632,10 +633,10 @@ mod tests {
                 Cell::new(Some(Particle::new_salt()), 0),
                 Cell::new(Some(Particle::new_salt()), 0),
                 Cell::new(
-                    Some(Particle::Water {
+                    Some(Particle::Water(WaterAttributes {
                         weight: 0,
                         solute: 3
-                    }),
+                    })),
                     0
                 ),
                 Cell::new(Some(Particle::new_salt()), 0),
@@ -655,10 +656,10 @@ mod tests {
                 Cell::new(Some(Particle::new_salt()), 0),
                 Cell::new(Some(Particle::new_salt()), 0),
                 Cell::new(
-                    Some(Particle::Water {
+                    Some(Particle::Water(WaterAttributes {
                         weight: 0,
                         solute: 2
-                    }),
+                    })),
                     1
                 ),
                 Cell::new(Some(Particle::new_salt()), 0),
@@ -678,10 +679,10 @@ mod tests {
                 Cell::new(Some(Particle::new_salt()), 0),
                 Cell::new(Some(Particle::new_salt()), 0),
                 Cell::new(
-                    Some(Particle::Water {
+                    Some(Particle::Water(WaterAttributes {
                         weight: 0,
                         solute: 1
-                    }),
+                    })),
                     2
                 ),
                 Cell::new(Some(Particle::new_salt()), 0),
@@ -701,10 +702,10 @@ mod tests {
                 Cell::new(None, 3),
                 Cell::new(Some(Particle::new_salt()), 0),
                 Cell::new(
-                    Some(Particle::Water {
+                    Some(Particle::Water(WaterAttributes {
                         weight: 0,
                         solute: 0
-                    }),
+                    })),
                     3
                 ),
                 Cell::new(Some(Particle::new_salt()), 0),
@@ -724,10 +725,10 @@ mod tests {
                     Cell::new(None, 3),
                     Cell::new(Some(Particle::new_salt()), 0),
                     Cell::new(
-                        Some(Particle::Water {
+                        Some(Particle::Water(WaterAttributes {
                             weight: 0,
                             solute: 0
-                        }),
+                        })),
                         3
                     ),
                     Cell::new(Some(Particle::new_salt()), 0),
@@ -757,10 +758,10 @@ mod tests {
                 Cell::new(Some(Particle::new_salt()), 0),
                 Cell::new(Some(Particle::new_salt()), 0),
                 Cell::new(
-                    Some(Particle::Water {
+                    Some(Particle::Water(WaterAttributes {
                         weight: 0,
                         solute: 3
-                    }),
+                    })),
                     0
                 ),
             ],
@@ -776,10 +777,10 @@ mod tests {
                 Cell::new(Some(Particle::new_salt()), 1),
                 Cell::new(Some(Particle::new_salt()), 1),
                 Cell::new(
-                    Some(Particle::Water {
+                    Some(Particle::Water(WaterAttributes {
                         weight: 0,
                         solute: 2
-                    }),
+                    })),
                     1
                 ),
             ],
@@ -795,10 +796,10 @@ mod tests {
                 Cell::new(Some(Particle::new_salt()), 2),
                 Cell::new(Some(Particle::new_salt()), 2),
                 Cell::new(
-                    Some(Particle::Water {
+                    Some(Particle::Water(WaterAttributes {
                         weight: 0,
                         solute: 1
-                    }),
+                    })),
                     2
                 ),
             ],
@@ -814,10 +815,10 @@ mod tests {
                 Cell::new(None, 3),
                 Cell::new(Some(Particle::new_salt()), 3),
                 Cell::new(
-                    Some(Particle::Water {
+                    Some(Particle::Water(WaterAttributes {
                         weight: 0,
                         solute: 0
-                    }),
+                    })),
                     3
                 ),
             ],
@@ -832,10 +833,10 @@ mod tests {
                 Cell::new(None, 2),
                 Cell::new(None, 3),
                 Cell::new(
-                    Some(Particle::Water {
+                    Some(Particle::Water(WaterAttributes {
                         weight: 0,
                         solute: 0
-                    }),
+                    })),
                     4
                 ),
                 Cell::new(Some(Particle::new_salt()), 4),
@@ -858,10 +859,10 @@ mod tests {
         g.spawn_particle(
             1,
             1,
-            Particle::Water {
+            Particle::Water(WaterAttributes {
                 weight: 0,
                 solute: 0,
-            },
+            }),
         );
         g.spawn_particle(2, 1, Particle::new_salt());
 
@@ -871,10 +872,10 @@ mod tests {
             vec![
                 Cell::new(None, 0),
                 Cell::new(
-                    Some(Particle::Water {
+                    Some(Particle::Water(WaterAttributes {
                         weight: 0,
                         solute: 0
-                    }),
+                    })),
                     1
                 ),
                 Cell::new(None, 0),
@@ -898,10 +899,10 @@ mod tests {
         g.spawn_particle(
             0,
             1,
-            Particle::Water {
+            Particle::Water(WaterAttributes {
                 weight: 0,
                 solute: 0,
-            },
+            }),
         );
         g.spawn_particle(1, 1, Particle::new_salt());
         g.spawn_particle(2, 1, Particle::new_salt());
@@ -912,10 +913,10 @@ mod tests {
             vec![
                 Cell::new(None, 0),
                 Cell::new(
-                    Some(Particle::Water {
+                    Some(Particle::Water(WaterAttributes {
                         weight: 0,
                         solute: 0
-                    }),
+                    })),
                     1
                 ),
                 Cell::new(None, 0),
@@ -941,10 +942,10 @@ mod tests {
         g.spawn_particle(
             2,
             1,
-            Particle::Water {
+            Particle::Water(WaterAttributes {
                 weight: 0,
                 solute: 0,
-            },
+            }),
         );
 
         g.update_grid();
@@ -953,10 +954,10 @@ mod tests {
             vec![
                 Cell::new(None, 0),
                 Cell::new(
-                    Some(Particle::Water {
+                    Some(Particle::Water(WaterAttributes {
                         weight: 0,
                         solute: 0
-                    }),
+                    })),
                     1
                 ),
                 Cell::new(None, 0),
@@ -982,10 +983,10 @@ mod tests {
         g.spawn_particle(
             0,
             2,
-            Particle::Water {
+            Particle::Water(WaterAttributes {
                 weight: 0,
                 solute: 0,
-            },
+            }),
         );
 
         assert_eq!(
@@ -993,10 +994,10 @@ mod tests {
                 Cell::new(Some(Particle::new_salt()), 0),
                 Cell::new(Some(Particle::new_salt()), 0),
                 Cell::new(
-                    Some(Particle::Water {
+                    Some(Particle::Water(WaterAttributes {
                         weight: 0,
                         solute: 0
-                    }),
+                    })),
                     0
                 ),
             ],
@@ -1009,10 +1010,10 @@ mod tests {
             vec![
                 Cell::new(Some(Particle::new_salt()), 0),
                 Cell::new(
-                    Some(Particle::Water {
+                    Some(Particle::Water(WaterAttributes {
                         weight: 0,
                         solute: 0
-                    }),
+                    })),
                     1
                 ),
                 Cell::new(Some(Particle::new_salt()), 1),
@@ -1025,10 +1026,10 @@ mod tests {
         assert_eq!(
             vec![
                 Cell::new(
-                    Some(Particle::Water {
+                    Some(Particle::Water(WaterAttributes {
                         weight: 0,
                         solute: 0
-                    }),
+                    })),
                     2
                 ),
                 Cell::new(Some(Particle::new_salt()), 2),

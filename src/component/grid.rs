@@ -262,7 +262,7 @@ mod tests {
     use bevy::color::{Gray, Hsva};
 
     use super::*;
-    use crate::component::macros::assert_color_srgb_eq;
+    use crate::component::{macros::assert_color_srgb_eq, particles::particle::WaterAttributes};
 
     #[test]
     fn test_create_grid() {
@@ -528,12 +528,20 @@ mod tests {
         for s in 1..=3 {
             assert_color_srgb_eq!(
                 Color::hsva(201.60, 1.00, 0.80, 1.00),
-                Particle::Water { weight:0, solute: s }.color()
+                Particle::Water(WaterAttributes {
+                    weight: 0,
+                    solute: s
+                })
+                .color()
             );
         }
         assert_color_srgb_eq!(
             Color::hsva(201.60, 0.60, 0.80, 1.00),
-            Particle::Water { weight:0, solute: 0 }.color()
+            Particle::Water(WaterAttributes {
+                weight: 0,
+                solute: 0
+            })
+            .color()
         );
     }
 }

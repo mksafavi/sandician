@@ -7,58 +7,74 @@ use crate::component::grid::{GridAccess, ParticleHorizontalDirection};
 use super::{rock::update_rock, salt::update_salt, sand::update_sand, water::update_water};
 
 #[derive(Clone, PartialEq, Debug)]
+pub struct SandAttributes {
+    pub weight: u8,
+}
+
+#[derive(Clone, PartialEq, Debug)]
+pub struct SaltAttributes {
+    pub weight: u8,
+}
+
+#[derive(Clone, PartialEq, Debug)]
+pub struct WaterAttributes {
+    pub weight: u8,
+    pub solute: u8,
+}
+
+#[derive(Clone, PartialEq, Debug)]
 pub enum Particle {
-    Sand { weight: u8 },
-    Water { weight: u8, solute: u8 },
-    Salt { weight: u8 },
+    Sand(SandAttributes),
+    Water(WaterAttributes),
+    Salt(SaltAttributes),
     Rock,
 }
 
 impl Particle {
     pub fn update<T: GridAccess>(&self, grid: &mut T, (x, y): (usize, usize)) {
         match self {
-            Particle::Sand { ..} => update_sand(grid, (x, y)),
-            Particle::Water { solute, .. } => update_water(grid, *solute, (x, y)),
-            Particle::Salt { ..} => update_salt(grid, (x, y)),
+            Particle::Sand(..) => update_sand(grid, (x, y)),
+            Particle::Water(attr) => update_water(grid, attr, (x, y)),
+            Particle::Salt(..) => update_salt(grid, (x, y)),
             Particle::Rock => update_rock(grid, (x, y)),
         };
     }
 
     pub fn color(&self) -> Color {
         match self {
-            Particle::Sand { .. } => Color::hsva(43.20, 0.34, 0.76, 1.00),
-            Particle::Water { solute, .. } => match solute {
+            Particle::Sand(..) => Color::hsva(43.20, 0.34, 0.76, 1.00),
+            Particle::Water(attr) => match attr.solute {
                 0 => Color::hsva(201.60, 0.60, 0.80, 1.00),
                 _ => Color::hsva(201.60, 1.00, 0.80, 1.00),
             },
-            Particle::Salt { .. } => Color::hsva(0.00, 0.00, 1.00, 1.00),
+            Particle::Salt(..) => Color::hsva(0.00, 0.00, 1.00, 1.00),
             Particle::Rock => Color::hsva(28.0, 0.25, 0.30, 1.00),
         }
     }
 
     pub fn new_sand() -> Particle {
-        Particle::Sand { weight: 0 }
+        Particle::Sand(SandAttributes { weight: 0 })
     }
 
     pub fn new_salt() -> Particle {
-        Particle::Salt { weight: 0 }
+        Particle::Salt(SaltAttributes { weight: 0 })
     }
 
     pub fn new_water() -> Particle {
-        Particle::Water {
+        Particle::Water(WaterAttributes {
             weight: 0,
             solute: 3,
-        }
+        })
     }
 }
 
 impl fmt::Display for Particle {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let s = match self {
-            Particle::Sand { .. } => "sand",
-            Particle::Water { .. } => "water",
-            Particle::Salt { .. } => "salt",
-            Particle::Rock { .. } => "rock",
+            Particle::Sand(..) => "sand",
+            Particle::Water(..) => "water",
+            Particle::Salt(..) => "salt",
+            Particle::Rock => "rock",
         };
         write!(f, "{s}")
     }
