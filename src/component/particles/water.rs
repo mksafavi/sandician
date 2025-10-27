@@ -2,186 +2,9 @@ use super::particle::{self, Particle};
 use crate::component::grid::{GridAccess, ParticleHorizontalDirection};
 
 pub fn update_water<T: GridAccess>(grid: &mut T, solute: u8, position: (usize, usize)) {
-    let index_top_left = match grid.get_neighbor_index(position, (-1, -1)) {
-        Ok(i) => {
-            let c = grid.get_cell(i);
-            match c.particle {
-                Some(Particle::Salt) => {
-                    if 0 < solute {
-                        let index = grid.to_index(position);
-                        grid.get_cell_mut(index).particle =
-                            Some(Particle::Water { solute: solute - 1 });
-                        grid.dissolve_particles(index, i);
-                        return;
-                    }
-                    match grid.is_simulated(c) {
-                        true => None,
-                        false => Some(i),
-                    }
-                }
-                Some(Particle::Sand) => match grid.is_simulated(c) {
-                    true => None,
-                    false => Some(i),
-                },
-                _ => None,
-            }
-        }
-        Err(_) => None,
-    };
-
-    let index_top = match grid.get_neighbor_index(position, (0, -1)) {
-        Ok(i) => {
-            let c = grid.get_cell(i);
-            match c.particle {
-                Some(Particle::Salt) => {
-                    if 0 < solute {
-                        let index = grid.to_index(position);
-                        grid.get_cell_mut(index).particle =
-                            Some(Particle::Water { solute: solute - 1 });
-                        grid.dissolve_particles(index, i);
-                        return;
-                    }
-                    match grid.is_simulated(c) {
-                        true => None,
-                        false => Some(i),
-                    }
-                }
-                Some(Particle::Sand) => match grid.is_simulated(c) {
-                    true => None,
-                    false => Some(i),
-                },
-                _ => None,
-            }
-        }
-        Err(_) => None,
-    };
-
-    let index_top_right = match grid.get_neighbor_index(position, (1, -1)) {
-        Ok(i) => {
-            let c = grid.get_cell(i);
-            match c.particle {
-                Some(Particle::Salt) => {
-                    if 0 < solute {
-                        let index = grid.to_index(position);
-                        grid.get_cell_mut(index).particle =
-                            Some(Particle::Water { solute: solute - 1 });
-                        grid.dissolve_particles(index, i);
-                        return;
-                    }
-                    match grid.is_simulated(c) {
-                        true => None,
-                        false => Some(i),
-                    }
-                }
-                Some(Particle::Sand) => match grid.is_simulated(c) {
-                    true => None,
-                    false => Some(i),
-                },
-                _ => None,
-            }
-        }
-        Err(_) => None,
-    };
-
-    let index_left = match grid.get_neighbor_index(position, (-1, 0)) {
-        Ok(i) => {
-            let c = grid.get_cell(i);
-            match &c.particle {
-                Some(p) => {
-                    if 0 < solute && *p == Particle::Salt {
-                        let index = grid.to_index(position);
-                        grid.get_cell_mut(index).particle =
-                            Some(Particle::Water { solute: solute - 1 });
-                        grid.dissolve_particles(index, i);
-                        return;
-                    }
-                    None
-                }
-                None => Some(i),
-            }
-        }
-        Err(_) => None,
-    };
-
-    let index_right = match grid.get_neighbor_index(position, (1, 0)) {
-        Ok(i) => {
-            let c = grid.get_cell(i);
-            match &c.particle {
-                Some(p) => {
-                    if 0 < solute && *p == Particle::Salt {
-                        let index = grid.to_index(position);
-                        grid.get_cell_mut(index).particle =
-                            Some(Particle::Water { solute: solute - 1 });
-                        grid.dissolve_particles(index, i);
-                        return;
-                    }
-                    None
-                }
-                None => Some(i),
-            }
-        }
-        Err(_) => None,
-    };
-
-    let index_bottom_left = match grid.get_neighbor_index(position, (-1, 1)) {
-        Ok(i) => {
-            let c = grid.get_cell(i);
-            match &c.particle {
-                Some(p) => {
-                    if 0 < solute && *p == Particle::Salt {
-                        let index = grid.to_index(position);
-                        grid.get_cell_mut(index).particle =
-                            Some(Particle::Water { solute: solute - 1 });
-                        grid.dissolve_particles(index, i);
-                        return;
-                    }
-                    None
-                }
-                None => Some(i),
-            }
-        }
-        Err(_) => None,
-    };
-
-    let index_bottom = match grid.get_neighbor_index(position, (0, 1)) {
-        Ok(i) => {
-            let c = grid.get_cell(i);
-            match &c.particle {
-                Some(p) => {
-                    if 0 < solute && *p == Particle::Salt {
-                        let index = grid.to_index(position);
-                        grid.get_cell_mut(index).particle =
-                            Some(Particle::Water { solute: solute - 1 });
-                        grid.dissolve_particles(index, i);
-                        return;
-                    }
-                    None
-                }
-                None => Some(i),
-            }
-        }
-        Err(_) => None,
-    };
-
-    let index_bottom_right = match grid.get_neighbor_index(position, (1, 1)) {
-        Ok(i) => {
-            let c = grid.get_cell(i);
-            match &c.particle {
-                Some(p) => {
-                    if 0 < solute && *p == Particle::Salt {
-                        let index = grid.to_index(position);
-                        grid.get_cell_mut(index).particle =
-                            Some(Particle::Water { solute: solute - 1 });
-                        grid.dissolve_particles(index, i);
-                        return;
-                    }
-                    None
-                }
-                None => Some(i),
-            }
-        }
-        Err(_) => None,
-    };
+    if dissolve_salt(grid, solute, position) {
+        return;
+    }
 
     if sink_in_water(grid, position) {
         return;
@@ -194,6 +17,25 @@ pub fn update_water<T: GridAccess>(grid: &mut T, solute: u8, position: (usize, u
     if slide_water(grid, position) {
         return;
     }
+}
+
+fn dissolve_salt<T: GridAccess>(grid: &mut T, solute: u8, position: (usize, usize)) -> bool {
+    for y in -1..=1 {
+        for x in -1..=1 {
+            if let Ok(i) = grid.get_neighbor_index(position, (x, y)) {
+                if let Some(Particle::Salt) = grid.get_cell(i).particle {
+                    if 0 < solute {
+                        let index = grid.to_index(position);
+                        grid.get_cell_mut(index).particle =
+                            Some(Particle::Water { solute: solute - 1 });
+                        grid.dissolve_particles(index, i);
+                        return true;
+                    }
+                }
+            };
+        }
+    }
+    false
 }
 
 fn sink_in_water<T: GridAccess>(grid: &mut T, position: (usize, usize)) -> bool {
