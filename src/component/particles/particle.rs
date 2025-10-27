@@ -66,6 +66,10 @@ impl Particle {
             solute: 3,
         })
     }
+
+    pub fn new_water_with_solute(solute: u8) -> Particle {
+        Particle::Water(WaterAttributes { weight: 0, solute })
+    }
 }
 
 impl fmt::Display for Particle {
