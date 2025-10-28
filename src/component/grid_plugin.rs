@@ -356,8 +356,8 @@ mod tests {
 
         let mut grid = app.world_mut().query::<&mut Grid>();
         if let Ok(mut g) = grid.single_mut(app.world_mut()) {
-            g.spawn_particle(0, 1, Particle::new_water());
-            g.spawn_particle(1, 1, Particle::new_sand());
+            g.spawn_particle((0, 1), Particle::new_water());
+            g.spawn_particle((1, 1), Particle::new_sand());
         } else {
             panic!("grid not found");
         }

@@ -168,7 +168,7 @@ mod tests {
          * -    -    w
          */
         let mut g = Grid::new(1, 3);
-        g.spawn_particle(0, 0, Particle::new_water());
+        g.spawn_particle((0, 0), Particle::new_water());
 
         g.update_grid();
         assert_eq!(Cell::new(None, 1), *g.get_cell(0));
@@ -188,8 +188,8 @@ mod tests {
          * sw-    s-w
          */
         let mut g = Grid::new(3, 2);
-        g.spawn_particle(0, 1, Particle::new_sand());
-        g.spawn_particle(1, 1, Particle::new_water());
+        g.spawn_particle((0, 1), Particle::new_sand());
+        g.spawn_particle((1, 1), Particle::new_water());
 
         g.update_grid();
 
@@ -208,8 +208,8 @@ mod tests {
          * -ws    w-s
          */
         let mut g = Grid::new(3, 2);
-        g.spawn_particle(1, 1, Particle::new_water());
-        g.spawn_particle(2, 1, Particle::new_sand());
+        g.spawn_particle((1, 1), Particle::new_water());
+        g.spawn_particle((2, 1), Particle::new_sand());
 
         g.update_grid();
 
@@ -230,7 +230,7 @@ mod tests {
          */
         let mut g = Grid::new_with_rand(3, 2, Some(|| ParticleHorizontalDirection::Right), None);
 
-        g.spawn_particle(1, 1, Particle::new_water());
+        g.spawn_particle((1, 1), Particle::new_water());
 
         g.update_grid();
 
@@ -250,7 +250,7 @@ mod tests {
          */
         let mut g = Grid::new_with_rand(3, 2, Some(|| ParticleHorizontalDirection::Left), None);
 
-        g.spawn_particle(1, 1, Particle::new_water());
+        g.spawn_particle((1, 1), Particle::new_water());
 
         g.update_grid();
 
@@ -270,7 +270,7 @@ mod tests {
          */
         let mut g = Grid::new_with_rand(3, 2, Some(|| ParticleHorizontalDirection::Right), None);
 
-        g.spawn_particle(0, 1, Particle::new_water());
+        g.spawn_particle((0, 1), Particle::new_water());
 
         g.update_grid();
 
@@ -295,7 +295,7 @@ mod tests {
          */
         let mut g = Grid::new_with_rand(3, 2, Some(|| ParticleHorizontalDirection::Left), None);
 
-        g.spawn_particle(2, 1, Particle::new_water());
+        g.spawn_particle((2, 1), Particle::new_water());
 
         g.update_grid();
 
@@ -321,8 +321,8 @@ mod tests {
          */
         let mut g = Grid::new(2, 2);
 
-        g.spawn_particle(0, 0, Particle::new_water());
-        g.spawn_particle(0, 1, Particle::new_sand());
+        g.spawn_particle((0, 0), Particle::new_water());
+        g.spawn_particle((0, 1), Particle::new_sand());
 
         g.update_grid();
 
@@ -341,8 +341,8 @@ mod tests {
          */
         let mut g = Grid::new(2, 2);
 
-        g.spawn_particle(1, 0, Particle::new_water());
-        g.spawn_particle(1, 1, Particle::new_sand());
+        g.spawn_particle((1, 0), Particle::new_water());
+        g.spawn_particle((1, 1), Particle::new_sand());
 
         g.update_grid();
 
@@ -361,8 +361,8 @@ mod tests {
          */
         let mut g = Grid::new_with_rand(3, 2, Some(|| ParticleHorizontalDirection::Left), None);
 
-        g.spawn_particle(1, 0, Particle::new_water());
-        g.spawn_particle(1, 1, Particle::new_sand());
+        g.spawn_particle((1, 0), Particle::new_water());
+        g.spawn_particle((1, 1), Particle::new_sand());
 
         g.update_grid();
 
@@ -383,8 +383,8 @@ mod tests {
          */
         let mut g = Grid::new_with_rand(3, 2, Some(|| ParticleHorizontalDirection::Right), None);
 
-        g.spawn_particle(1, 0, Particle::new_water());
-        g.spawn_particle(1, 1, Particle::new_sand());
+        g.spawn_particle((1, 0), Particle::new_water());
+        g.spawn_particle((1, 1), Particle::new_sand());
 
         g.update_grid();
 
@@ -408,8 +408,8 @@ mod tests {
             Some(|| RowUpdateDirection::Forward),
         );
 
-        g.spawn_particle(1, 0, Particle::new_water());
-        g.spawn_particle(2, 0, Particle::new_water());
+        g.spawn_particle((1, 0), Particle::new_water());
+        g.spawn_particle((2, 0), Particle::new_water());
 
         g.update_grid();
 
@@ -425,8 +425,8 @@ mod tests {
             Some(|| RowUpdateDirection::Forward),
         );
 
-        g.spawn_particle(1, 0, Particle::new_water());
-        g.spawn_particle(2, 0, Particle::new_water());
+        g.spawn_particle((1, 0), Particle::new_water());
+        g.spawn_particle((2, 0), Particle::new_water());
 
         g.update_grid();
 
@@ -448,8 +448,8 @@ mod tests {
             Some(|| RowUpdateDirection::Reverse),
         );
 
-        g.spawn_particle(1, 0, Particle::new_water());
-        g.spawn_particle(2, 0, Particle::new_water());
+        g.spawn_particle((1, 0), Particle::new_water());
+        g.spawn_particle((2, 0), Particle::new_water());
 
         g.update_grid();
 
@@ -465,8 +465,8 @@ mod tests {
             Some(|| RowUpdateDirection::Reverse),
         );
 
-        g.spawn_particle(1, 0, Particle::new_water());
-        g.spawn_particle(2, 0, Particle::new_water());
+        g.spawn_particle((1, 0), Particle::new_water());
+        g.spawn_particle((2, 0), Particle::new_water());
 
         g.update_grid();
 
@@ -485,10 +485,10 @@ mod tests {
 
         let mut g = Grid::new(3, 2);
 
-        g.spawn_particle(1, 0, Particle::new_sand());
-        g.spawn_particle(0, 1, Particle::new_sand());
-        g.spawn_particle(1, 1, Particle::new_water());
-        g.spawn_particle(2, 1, Particle::new_sand());
+        g.spawn_particle((1, 0), Particle::new_sand());
+        g.spawn_particle((0, 1), Particle::new_sand());
+        g.spawn_particle((1, 1), Particle::new_water());
+        g.spawn_particle((2, 1), Particle::new_sand());
 
         g.update_grid();
 
@@ -513,10 +513,10 @@ mod tests {
          */
         let mut g = Grid::new(3, 2);
 
-        g.spawn_particle(1, 0, Particle::new_sand());
-        g.spawn_particle(0, 1, Particle::new_water());
-        g.spawn_particle(1, 1, Particle::new_sand());
-        g.spawn_particle(2, 1, Particle::new_sand());
+        g.spawn_particle((1, 0), Particle::new_sand());
+        g.spawn_particle((0, 1), Particle::new_water());
+        g.spawn_particle((1, 1), Particle::new_sand());
+        g.spawn_particle((2, 1), Particle::new_sand());
 
         g.update_grid();
 
@@ -541,10 +541,10 @@ mod tests {
          */
         let mut g = Grid::new(3, 2);
 
-        g.spawn_particle(1, 0, Particle::new_sand());
-        g.spawn_particle(0, 1, Particle::new_sand());
-        g.spawn_particle(1, 1, Particle::new_sand());
-        g.spawn_particle(2, 1, Particle::new_water());
+        g.spawn_particle((1, 0), Particle::new_sand());
+        g.spawn_particle((0, 1), Particle::new_sand());
+        g.spawn_particle((1, 1), Particle::new_sand());
+        g.spawn_particle((2, 1), Particle::new_water());
 
         g.update_grid();
 
@@ -570,9 +570,9 @@ mod tests {
          */
         let mut g = Grid::new_with_rand(1, 3, Some(|| ParticleHorizontalDirection::Right), None);
 
-        g.spawn_particle(0, 0, Particle::new_sand());
-        g.spawn_particle(0, 1, Particle::new_sand());
-        g.spawn_particle(0, 2, Particle::new_water());
+        g.spawn_particle((0, 0), Particle::new_sand());
+        g.spawn_particle((0, 1), Particle::new_sand());
+        g.spawn_particle((0, 2), Particle::new_water());
 
         assert_eq!(
             vec![
@@ -615,9 +615,9 @@ mod tests {
          */
 
         let mut g = Grid::new(1, 3);
-        g.spawn_particle(0, 0, Particle::new_sand());
-        g.spawn_particle(0, 1, Particle::new_water());
-        g.spawn_particle(0, 2, Particle::new_salt());
+        g.spawn_particle((0, 0), Particle::new_sand());
+        g.spawn_particle((0, 1), Particle::new_water());
+        g.spawn_particle((0, 2), Particle::new_salt());
 
         g.update_grid();
 
@@ -645,8 +645,8 @@ mod tests {
                     continue;
                 }
                 let mut g = Grid::new(3, 3);
-                g.spawn_particle(1, 1, Particle::new_water());
-                g.spawn_particle(x, y, Particle::new_salt());
+                g.spawn_particle((1, 1), Particle::new_water());
+                g.spawn_particle((x, y), Particle::new_salt());
 
                 g.update_grid();
 
@@ -670,13 +670,13 @@ mod tests {
     #[test]
     fn test_update_grid_water_can_only_dissolve_three_salt_particles() {
         let mut g = Grid::new(3, 3);
-        g.spawn_particle(1, 1, Particle::new_water());
+        g.spawn_particle((1, 1), Particle::new_water());
         for y in 0..3 {
             for x in 0..3 {
                 if (x, y) == (1, 1) {
                     continue;
                 }
-                g.spawn_particle(x, y, Particle::new_salt());
+                g.spawn_particle((x, y), Particle::new_salt());
             }
         }
 
@@ -769,11 +769,11 @@ mod tests {
     fn test_update_grid_salt_sink_in_water_when_capacity_is_zero() {
         let mut g = Grid::new(1, 5);
 
-        g.spawn_particle(0, 0, Particle::new_salt());
-        g.spawn_particle(0, 1, Particle::new_salt());
-        g.spawn_particle(0, 2, Particle::new_salt());
-        g.spawn_particle(0, 3, Particle::new_salt());
-        g.spawn_particle(0, 4, Particle::new_water());
+        g.spawn_particle((0, 0), Particle::new_salt());
+        g.spawn_particle((0, 1), Particle::new_salt());
+        g.spawn_particle((0, 2), Particle::new_salt());
+        g.spawn_particle((0, 3), Particle::new_salt());
+        g.spawn_particle((0, 4), Particle::new_water());
 
         assert_eq!(
             vec![
@@ -848,10 +848,10 @@ mod tests {
 
         let mut g = Grid::new(3, 2);
 
-        g.spawn_particle(1, 0, Particle::new_salt());
-        g.spawn_particle(0, 1, Particle::new_salt());
-        g.spawn_particle(1, 1, Particle::new_water_with_solute(0));
-        g.spawn_particle(2, 1, Particle::new_salt());
+        g.spawn_particle((1, 0), Particle::new_salt());
+        g.spawn_particle((0, 1), Particle::new_salt());
+        g.spawn_particle((1, 1), Particle::new_water_with_solute(0));
+        g.spawn_particle((2, 1), Particle::new_salt());
 
         g.update_grid();
 
@@ -876,10 +876,10 @@ mod tests {
          */
         let mut g = Grid::new(3, 2);
 
-        g.spawn_particle(1, 0, Particle::new_salt());
-        g.spawn_particle(0, 1, Particle::new_water_with_solute(0));
-        g.spawn_particle(1, 1, Particle::new_salt());
-        g.spawn_particle(2, 1, Particle::new_salt());
+        g.spawn_particle((1, 0), Particle::new_salt());
+        g.spawn_particle((0, 1), Particle::new_water_with_solute(0));
+        g.spawn_particle((1, 1), Particle::new_salt());
+        g.spawn_particle((2, 1), Particle::new_salt());
 
         g.update_grid();
 
@@ -904,10 +904,10 @@ mod tests {
          */
         let mut g = Grid::new(3, 2);
 
-        g.spawn_particle(1, 0, Particle::new_salt());
-        g.spawn_particle(0, 1, Particle::new_salt());
-        g.spawn_particle(1, 1, Particle::new_salt());
-        g.spawn_particle(2, 1, Particle::new_water_with_solute(0));
+        g.spawn_particle((1, 0), Particle::new_salt());
+        g.spawn_particle((0, 1), Particle::new_salt());
+        g.spawn_particle((1, 1), Particle::new_salt());
+        g.spawn_particle((2, 1), Particle::new_water_with_solute(0));
 
         g.update_grid();
 
@@ -933,9 +933,9 @@ mod tests {
          */
         let mut g = Grid::new_with_rand(1, 3, Some(|| ParticleHorizontalDirection::Right), None);
 
-        g.spawn_particle(0, 0, Particle::new_salt());
-        g.spawn_particle(0, 1, Particle::new_salt());
-        g.spawn_particle(0, 2, Particle::new_water_with_solute(0));
+        g.spawn_particle((0, 0), Particle::new_salt());
+        g.spawn_particle((0, 1), Particle::new_salt());
+        g.spawn_particle((0, 2), Particle::new_water_with_solute(0));
 
         assert_eq!(
             vec![

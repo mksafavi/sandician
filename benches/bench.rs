@@ -4,17 +4,17 @@ use sandsim::component::{grid::Grid, particles::particle::Particle};
 fn fill_grid_mixed(g: &mut Grid, (x, y): (usize, usize)) {
     for y in 0..y / 3 {
         for x in 0..x {
-            g.spawn_particle(x, y, Particle::new_sand());
+            g.spawn_particle((x, y), Particle::new_sand());
         }
     }
     for y in y / 3..y {
         for x in 0..x {
-            g.spawn_particle(x, y, Particle::new_water());
+            g.spawn_particle((x, y), Particle::new_water());
         }
     }
     for y in 2 * y / 3..y {
         for x in 0..x {
-            g.spawn_particle(x, y, Particle::new_salt());
+            g.spawn_particle((x, y), Particle::new_salt());
         }
     }
 }
@@ -26,7 +26,7 @@ fn criterion_benchmark(c: &mut Criterion) {
         let mut g = Grid::new(x, y);
         for y in 0..y {
             for x in 0..x {
-                g.spawn_particle(x, y, Particle::new_sand());
+                g.spawn_particle((x, y), Particle::new_sand());
             }
         }
         b.iter(|| {
@@ -38,7 +38,7 @@ fn criterion_benchmark(c: &mut Criterion) {
         let mut g = Grid::new(x, y);
         for y in 0..y {
             for x in 0..x {
-                g.spawn_particle(x, y, Particle::new_water());
+                g.spawn_particle((x, y), Particle::new_water());
             }
         }
         b.iter(|| {
@@ -50,7 +50,7 @@ fn criterion_benchmark(c: &mut Criterion) {
         let mut g = Grid::new(x, y);
         for y in 0..y {
             for x in 0..x {
-                g.spawn_particle(x, y, Particle::new_salt());
+                g.spawn_particle((x, y), Particle::new_salt());
             }
         }
         b.iter(|| {
@@ -71,7 +71,7 @@ fn criterion_benchmark(c: &mut Criterion) {
         let mut image = Grid::create_output_frame(x, y);
         for y in 0..y {
             for x in 0..x / 2 {
-                g.spawn_particle(x, y, Particle::new_sand());
+                g.spawn_particle((x, y), Particle::new_sand());
             }
         }
         b.iter(|| {

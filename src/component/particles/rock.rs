@@ -19,7 +19,7 @@ mod tests {
          */
         let mut g = Grid::new(2, 2);
 
-        g.spawn_particle(0, 0, Particle::Rock);
+        g.spawn_particle((0, 0), Particle::Rock);
 
         assert_eq!(Cell::new(Some(Particle::Rock), 0), *g.get_cell(0));
         assert_eq!(Cell::new(None, 0), *g.get_cell(1));

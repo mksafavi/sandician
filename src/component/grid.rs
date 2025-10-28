@@ -164,7 +164,7 @@ impl Grid {
         }
     }
 
-    pub fn spawn_particle(&mut self, x: usize, y: usize, particle: Particle) {
+    pub fn spawn_particle(&mut self, (x, y): (usize, usize), particle: Particle) {
         if y < self.height && x < self.width {
             let index = self.to_index((x, y));
             if self.cells[index].particle.is_none() {
@@ -228,14 +228,13 @@ impl Grid {
     }
 
     pub fn spawn_brush(&mut self, (x, y): (usize, usize), size: usize, particle: &Particle) {
-        self.spawn_particle(x, y, particle.clone());
+        self.spawn_particle((x, y), particle.clone());
         let radius = size as i32 / 2;
         for j in (-radius)..=(radius) {
             for i in (-radius)..=(radius) {
                 if (i * i) + (j * j) <= (radius * radius) {
                     self.spawn_particle(
-                        (x as i32 + i) as usize,
-                        (y as i32 + j) as usize,
+                        ((x as i32 + i) as usize, (y as i32 + j) as usize),
                         particle.clone(),
                     );
                 }
@@ -282,9 +281,9 @@ mod tests {
     #[test]
     fn test_grid_spawn_particle_to_grid() {
         let mut g = Grid::new(2, 3);
-        g.spawn_particle(0, 0, Particle::new_sand());
+        g.spawn_particle((0, 0), Particle::new_sand());
 
-        g.spawn_particle(1, 1, Particle::new_water());
+        g.spawn_particle((1, 1), Particle::new_water());
 
         assert_eq!(
             vec![
@@ -302,9 +301,9 @@ mod tests {
     #[test]
     fn test_grid_spawn_particle_to_non_empty_location_silently_fails() {
         let mut g = Grid::new(2, 3);
-        g.spawn_particle(0, 0, Particle::new_sand());
+        g.spawn_particle((0, 0), Particle::new_sand());
 
-        g.spawn_particle(0, 0, Particle::new_water());
+        g.spawn_particle((0, 0), Particle::new_water());
 
         assert_eq!(Some(Particle::new_sand()), g.cells[0].particle);
     }
@@ -312,8 +311,8 @@ mod tests {
     #[test]
     fn test_grid_spawn_particle_out_of_grid_bound_silently_fails() {
         let mut g = Grid::new(2, 3);
-        g.spawn_particle(0, 3, Particle::new_sand());
-        g.spawn_particle(2, 0, Particle::new_water());
+        g.spawn_particle((0, 3), Particle::new_sand());
+        g.spawn_particle((2, 0), Particle::new_water());
 
         assert_eq!(
             vec![
@@ -331,7 +330,7 @@ mod tests {
     #[test]
     fn test_grid_despawn_particle_empties_the_cell_particle() {
         let mut g = Grid::new(1, 1);
-        g.spawn_particle(0, 0, Particle::new_sand());
+        g.spawn_particle((0, 0), Particle::new_sand());
         assert_eq!(Cell::new(Some(Particle::new_sand()), 0), g.cells[0]);
 
         g.despawn_particle((0, 0));
@@ -341,12 +340,12 @@ mod tests {
     #[test]
     fn test_grid_despawn_particle_out_of_grid_bound_silently_fails() {
         let mut g = Grid::new(2, 3);
-        g.spawn_particle(0, 0, Particle::new_sand());
-        g.spawn_particle(1, 0, Particle::new_sand());
-        g.spawn_particle(0, 1, Particle::new_sand());
-        g.spawn_particle(1, 1, Particle::new_sand());
-        g.spawn_particle(0, 2, Particle::new_sand());
-        g.spawn_particle(1, 2, Particle::new_sand());
+        g.spawn_particle((0, 0), Particle::new_sand());
+        g.spawn_particle((1, 0), Particle::new_sand());
+        g.spawn_particle((0, 1), Particle::new_sand());
+        g.spawn_particle((1, 1), Particle::new_sand());
+        g.spawn_particle((0, 2), Particle::new_sand());
+        g.spawn_particle((1, 2), Particle::new_sand());
 
         g.despawn_particle((0, 3));
         g.despawn_particle((2, 0));
@@ -467,7 +466,7 @@ mod tests {
         assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(0, 1).unwrap());
         assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(1, 1).unwrap());
 
-        g.spawn_particle(0, 0, Particle::new_sand());
+        g.spawn_particle((0, 0), Particle::new_sand());
         g.draw_grid(&mut image);
         assert_color_srgb_eq!(
             Particle::new_sand().color(),
@@ -478,7 +477,7 @@ mod tests {
         assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(0, 1).unwrap());
         assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(1, 1).unwrap());
 
-        g.spawn_particle(1, 0, Particle::new_water());
+        g.spawn_particle((1, 0), Particle::new_water());
         g.cells[0].particle = None;
         g.draw_grid(&mut image);
         assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(0, 0).unwrap());
@@ -493,7 +492,7 @@ mod tests {
     #[test]
     fn test_draw_grid_only_redraw_changed_cells() {
         let mut g = Grid::new(2, 2);
-        g.spawn_particle(0, 0, Particle::new_sand());
+        g.spawn_particle((0, 0), Particle::new_sand());
 
         /*
          * draw_cycle: 0
