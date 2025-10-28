@@ -173,6 +173,13 @@ impl Grid {
         }
     }
 
+    pub fn despawn_particle(&mut self, (x, y): (usize, usize)) {
+        if y < self.height && x < self.width {
+            let index = self.to_index((x, y));
+            self.cells[index].particle = None;
+        }
+    }
+
     pub fn update_grid(&mut self) {
         for y in (0..self.height).rev() {
             let x_direction = (self.row_update_direction)();
@@ -301,6 +308,7 @@ mod tests {
 
         assert_eq!(Some(Particle::new_sand()), g.cells[0].particle);
     }
+
     #[test]
     fn test_grid_spawn_particle_out_of_grid_bound_silently_fails() {
         let mut g = Grid::new(2, 3);
@@ -315,6 +323,42 @@ mod tests {
                 Cell::new(None, 0),
                 Cell::new(None, 0),
                 Cell::new(None, 0),
+            ],
+            g.cells
+        );
+    }
+
+    #[test]
+    fn test_grid_despawn_particle_empties_the_cell_particle() {
+        let mut g = Grid::new(1, 1);
+        g.spawn_particle(0, 0, Particle::new_sand());
+        assert_eq!(Cell::new(Some(Particle::new_sand()), 0), g.cells[0]);
+
+        g.despawn_particle((0, 0));
+        assert_eq!(Cell::new(None, 0), g.cells[0]);
+    }
+
+    #[test]
+    fn test_grid_despawn_particle_out_of_grid_bound_silently_fails() {
+        let mut g = Grid::new(2, 3);
+        g.spawn_particle(0, 0, Particle::new_sand());
+        g.spawn_particle(1, 0, Particle::new_sand());
+        g.spawn_particle(0, 1, Particle::new_sand());
+        g.spawn_particle(1, 1, Particle::new_sand());
+        g.spawn_particle(0, 2, Particle::new_sand());
+        g.spawn_particle(1, 2, Particle::new_sand());
+
+        g.despawn_particle((0, 3));
+        g.despawn_particle((2, 0));
+
+        assert_eq!(
+            vec![
+                Cell::new(Some(Particle::new_sand()), 0),
+                Cell::new(Some(Particle::new_sand()), 0),
+                Cell::new(Some(Particle::new_sand()), 0),
+                Cell::new(Some(Particle::new_sand()), 0),
+                Cell::new(Some(Particle::new_sand()), 0),
+                Cell::new(Some(Particle::new_sand()), 0),
             ],
             g.cells
         );
