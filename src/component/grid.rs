@@ -279,8 +279,17 @@ mod tests {
 
         g.spawn_particle(1, 1, Particle::new_water());
 
-        assert_eq!(Some(Particle::new_sand()), g.cells[0].particle);
-        assert_eq!(Some(Particle::new_water()), g.cells[3].particle);
+        assert_eq!(
+            vec![
+                Cell::new(Some(Particle::new_sand()), 0),
+                Cell::new(None, 0),
+                Cell::new(None, 0),
+                Cell::new(Some(Particle::new_water()), 0),
+                Cell::new(None, 0),
+                Cell::new(None, 0),
+            ],
+            g.cells
+        );
     }
 
     #[test]
@@ -298,12 +307,17 @@ mod tests {
         g.spawn_particle(0, 3, Particle::new_sand());
         g.spawn_particle(2, 0, Particle::new_water());
 
-        assert_eq!(Cell::new(None, 0), g.cells[0]);
-        assert_eq!(Cell::new(None, 0), g.cells[1]);
-        assert_eq!(Cell::new(None, 0), g.cells[2]);
-        assert_eq!(Cell::new(None, 0), g.cells[3]);
-        assert_eq!(Cell::new(None, 0), g.cells[4]);
-        assert_eq!(Cell::new(None, 0), g.cells[5]);
+        assert_eq!(
+            vec![
+                Cell::new(None, 0),
+                Cell::new(None, 0),
+                Cell::new(None, 0),
+                Cell::new(None, 0),
+                Cell::new(None, 0),
+                Cell::new(None, 0),
+            ],
+            g.cells
+        );
     }
 
     #[test]
