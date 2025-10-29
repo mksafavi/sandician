@@ -131,20 +131,21 @@ fn init_grid_system(
     mut commands: Commands,
     config: Res<ConfigResource>,
     mut images: ResMut<Assets<Image>>,
-    asset_server: Res<AssetServer>,
+    asset_server: Option<Res<AssetServer>>,
 ) {
     commands.spawn(Grid::new(config.width, config.height));
     let handle = images.add(Grid::create_output_frame(config.width, config.height));
+    let font = match asset_server {
+        Some(a) => a.load(ASSET_FONT_PATH),
+        None => default(),
+    };
     commands.spawn((
         Node {
             display: Display::Flex,
             flex_direction: FlexDirection::Column,
             ..default()
         },
-        children![
-            brush_node(asset_server.load(ASSET_FONT_PATH)),
-            grid_node(&handle)
-        ],
+        children![brush_node(font), grid_node(&handle)],
     ));
 
     commands.insert_resource(OutputFrameHandle(handle));
