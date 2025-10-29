@@ -4,12 +4,17 @@ use bevy::image::ImagePlugin;
 use bevy::prelude::PluginGroup;
 use bevy::utils::default;
 use bevy::window::{Window, WindowPlugin, WindowResolution};
+use bevy_embedded_assets::EmbeddedAssetPlugin;
+use bevy_embedded_assets::PluginMode;
 use sandsim::component::grid_plugin::{ConfigResource, GridPlugin};
 use sandsim::component::render::RenderSimPlugin;
 
 fn main() {
     App::new()
-        .add_plugins(
+        .add_plugins((
+            EmbeddedAssetPlugin {
+                mode: PluginMode::ReplaceDefault,
+            },
             DefaultPlugins
                 .set(ImagePlugin::default_nearest())
                 .set(WindowPlugin {
@@ -20,7 +25,7 @@ fn main() {
                     }),
                     ..default()
                 }),
-        )
+        ))
         .add_plugins(GridPlugin {
             config: ConfigResource::new(300, 300, 240.),
         })
