@@ -30,7 +30,11 @@ ci-build-wasm BIN:
     wasm-bindgen --target web --no-typescript --out-dir ./target/wasm-bind ./target/wasm32-unknown-unknown/release/{{BIN}}.wasm
     wasm-opt -Oz ./target/wasm-bind/{{BIN}}_bg.wasm -o ./target/wasm-bind/{{BIN}}_bg.wasm
 
-ci-build-pages BIN : (ci-build-wasm BIN) (build-pages BIN)
+ci-build-pages BIN : (ci-build-wasm BIN)
+    rm -fr ./target/pages
+    cp -r ./pages ./target/pages
+    cp ./target/wasm-bind/* ./target/pages
+    sed --in-place 's/binary.js/{{BIN}}.js/' ./target/pages/index.html
 
 clippy:
     RUSTFLAGS='-Dwarnings' cargo clippy --release --all-targets --all-features
