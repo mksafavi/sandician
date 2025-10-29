@@ -61,7 +61,7 @@ impl ParticleBrush {
             spawning: false,
             positions: VecDeque::new(),
             particle: Particle::new_sand(),
-            size: 1,
+            size: 8,
             last_position: None,
         }
     }
@@ -417,6 +417,7 @@ mod tests {
         let mut s = app.world_mut().query::<&mut ParticleBrush>();
         if let Ok(mut s) = s.single_mut(app.world_mut()) {
             s.spawning = true;
+            s.size = 1;
             s.positions = VecDeque::from([(0, 0), (1, 1), (0, 1)]);
         } else {
             panic!("ParticleBrush not found");
