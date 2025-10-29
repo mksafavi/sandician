@@ -295,7 +295,7 @@ fn radio(particle: Particle, font: Handle<Font>) -> impl Bundle {
             Text::new(particle.to_string()),
             TextFont {
                 font_size: 16.,
-                font: font,
+                font,
                 ..default()
             }
         )],
