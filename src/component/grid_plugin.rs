@@ -2,7 +2,7 @@ use std::collections::VecDeque;
 
 use bevy::{
     app::{App, FixedUpdate, Plugin, PostStartup, Startup, Update},
-    asset::{Assets, Handle},
+    asset::{AssetServer, Assets, Handle},
     color::{Alpha, Color},
     ecs::{
         bundle::Bundle,
@@ -20,7 +20,7 @@ use bevy::{
         events::{Click, Move, Out, Pointer, Press, Release},
     },
     prelude::{SpawnRelated, Vec3},
-    text::TextFont,
+    text::{Font, TextFont},
     time::{Fixed, Time},
     ui::{
         AlignItems, BackgroundColor, BorderColor, Display, FlexDirection, FlexWrap, Node, UiRect,
@@ -31,6 +31,8 @@ use bevy::{
 };
 
 use super::{grid::Grid, particles::particle::Particle};
+
+const ASSET_FONT_PATH: &str = "fonts/Adventurer.ttf";
 
 #[derive(Resource)]
 struct OutputFrameHandle(Handle<Image>);
@@ -129,6 +131,7 @@ fn init_grid_system(
     mut commands: Commands,
     config: Res<ConfigResource>,
     mut images: ResMut<Assets<Image>>,
+    asset_server: Res<AssetServer>,
 ) {
     commands.spawn(Grid::new(config.width, config.height));
     let handle = images.add(Grid::create_output_frame(config.width, config.height));
@@ -138,7 +141,10 @@ fn init_grid_system(
             flex_direction: FlexDirection::Column,
             ..default()
         },
-        children![brush_node(), grid_node(&handle)],
+        children![
+            brush_node(asset_server.load(ASSET_FONT_PATH)),
+            grid_node(&handle)
+        ],
     ));
 
     commands.insert_resource(OutputFrameHandle(handle));
@@ -250,7 +256,7 @@ fn init_inputs_system(mut commands: Commands, image_node_query: Query<Entity, Wi
     }
 }
 
-fn brush_node() -> impl Bundle {
+fn brush_node(font: Handle<Font>) -> impl Bundle {
     (
         Node {
             display: Display::Flex,
@@ -262,15 +268,15 @@ fn brush_node() -> impl Bundle {
         },
         BackgroundColor(Color::BLACK),
         children![
-            radio(Particle::new_sand()),
-            radio(Particle::new_salt()),
-            radio(Particle::new_water()),
-            radio(Particle::Rock),
+            radio(Particle::new_sand(), font.clone()),
+            radio(Particle::new_salt(), font.clone()),
+            radio(Particle::new_water(), font.clone()),
+            radio(Particle::Rock, font.clone()),
         ],
     )
 }
 
-fn radio(particle: Particle) -> impl Bundle {
+fn radio(particle: Particle, font: Handle<Font>) -> impl Bundle {
     (
         Node {
             height: px(26),
@@ -287,7 +293,8 @@ fn radio(particle: Particle) -> impl Bundle {
         children![(
             Text::new(particle.to_string()),
             TextFont {
-                font_size: 12.,
+                font_size: 16.,
+                font: font,
                 ..default()
             }
         )],
