@@ -257,7 +257,7 @@ fn brush_node() -> impl Bundle {
             flex_direction: FlexDirection::Row,
             align_items: AlignItems::Stretch,
             flex_wrap: FlexWrap::Wrap,
-            column_gap: px(4),
+            column_gap: px(0),
             ..default()
         },
         BackgroundColor(Color::BLACK),
