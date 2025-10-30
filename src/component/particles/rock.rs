@@ -15,16 +15,16 @@ mod tests {
 
         g.spawn_particle((0, 0), Particle::Rock);
 
-        assert_eq!(Cell::new(Some(Particle::Rock), 0), *g.get_cell(0));
-        assert_eq!(Cell::new(None, 0), *g.get_cell(1));
-        assert_eq!(Cell::new(None, 0), *g.get_cell(2));
-        assert_eq!(Cell::new(None, 0), *g.get_cell(3));
+        assert_eq!(Cell::new(Particle::Rock), *g.get_cell(0));
+        assert_eq!(Cell::empty(), *g.get_cell(1));
+        assert_eq!(Cell::empty(), *g.get_cell(2));
+        assert_eq!(Cell::empty(), *g.get_cell(3));
 
         g.update_grid();
 
-        assert_eq!(Cell::new(Some(Particle::Rock), 0), *g.get_cell(0));
-        assert_eq!(Cell::new(None, 0), *g.get_cell(1));
-        assert_eq!(Cell::new(None, 0), *g.get_cell(2));
-        assert_eq!(Cell::new(None, 0), *g.get_cell(3));
+        assert_eq!(Cell::new(Particle::Rock), *g.get_cell(0));
+        assert_eq!(Cell::empty(), *g.get_cell(1));
+        assert_eq!(Cell::empty(), *g.get_cell(2));
+        assert_eq!(Cell::empty(), *g.get_cell(3));
     }
 }

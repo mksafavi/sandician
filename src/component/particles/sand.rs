@@ -43,23 +43,20 @@ mod tests {
         let mut g = Grid::new(2, 2);
         g.spawn_particle((0, 0), Particle::from(Sand::new()));
 
-        assert_eq!(
-            (Cell::new(Some(Particle::from(Sand::new())), 0)),
-            *g.get_cell(0)
-        );
-        assert_eq!(Cell::new(None, 0), *g.get_cell(1));
-        assert_eq!(Cell::new(None, 0), *g.get_cell(2));
-        assert_eq!(Cell::new(None, 0), *g.get_cell(3));
+        assert_eq!(Cell::new(Particle::from(Sand::new())), *g.get_cell(0));
+        assert_eq!(Cell::empty(), *g.get_cell(1));
+        assert_eq!(Cell::empty(), *g.get_cell(2));
+        assert_eq!(Cell::empty(), *g.get_cell(3));
 
         g.update_grid();
 
-        assert_eq!(Cell::new(None, 1), *g.get_cell(0));
-        assert_eq!(Cell::new(None, 0), *g.get_cell(1));
+        assert_eq!(Cell::empty().with_cycle(1), *g.get_cell(0));
+        assert_eq!(Cell::empty(), *g.get_cell(1));
         assert_eq!(
-            (Cell::new(Some(Particle::from(Sand::new())), 1)),
+            Cell::new(Particle::from(Sand::new())).with_cycle(1),
             *g.get_cell(2)
         );
-        assert_eq!(Cell::new(None, 0), *g.get_cell(3));
+        assert_eq!(Cell::empty(), *g.get_cell(3));
     }
 
     #[test]
@@ -76,14 +73,11 @@ mod tests {
 
         g.update_grid();
 
-        assert_eq!(Cell::new(None, 1), *g.get_cell(0));
-        assert_eq!(Cell::new(None, 0), *g.get_cell(1));
+        assert_eq!(Cell::empty().with_cycle(1), *g.get_cell(0));
+        assert_eq!(Cell::empty(), *g.get_cell(1));
+        assert_eq!(Cell::new(Particle::from(Sand::new())), *g.get_cell(2));
         assert_eq!(
-            (Cell::new(Some(Particle::from(Sand::new())), 0)),
-            *g.get_cell(2)
-        );
-        assert_eq!(
-            (Cell::new(Some(Particle::from(Sand::new())), 1)),
+            Cell::new(Particle::from(Sand::new())).with_cycle(1),
             *g.get_cell(3)
         );
     }
@@ -102,16 +96,13 @@ mod tests {
 
         g.update_grid();
 
-        assert_eq!(Cell::new(None, 0), *g.get_cell(0));
-        assert_eq!(Cell::new(None, 1), *g.get_cell(1));
+        assert_eq!(Cell::empty(), *g.get_cell(0));
+        assert_eq!(Cell::empty().with_cycle(1), *g.get_cell(1));
         assert_eq!(
-            (Cell::new(Some(Particle::from(Sand::new())), 1)),
+            Cell::new(Particle::from(Sand::new())).with_cycle(1),
             *g.get_cell(2)
         );
-        assert_eq!(
-            (Cell::new(Some(Particle::from(Sand::new())), 0)),
-            *g.get_cell(3)
-        );
+        assert_eq!(Cell::new(Particle::from(Sand::new())), *g.get_cell(3));
     }
 
     #[test]
@@ -128,18 +119,15 @@ mod tests {
 
         g.update_grid();
 
-        assert_eq!(Cell::new(None, 0), *g.get_cell(0));
-        assert_eq!(Cell::new(None, 1), *g.get_cell(1));
-        assert_eq!(Cell::new(None, 0), *g.get_cell(2));
+        assert_eq!(Cell::empty(), *g.get_cell(0));
+        assert_eq!(Cell::empty().with_cycle(1), *g.get_cell(1));
+        assert_eq!(Cell::empty(), *g.get_cell(2));
         assert_eq!(
-            (Cell::new(Some(Particle::from(Sand::new())), 1)),
+            Cell::new(Particle::from(Sand::new())).with_cycle(1),
             *g.get_cell(3)
         );
-        assert_eq!(
-            (Cell::new(Some(Particle::from(Sand::new())), 0)),
-            *g.get_cell(4)
-        );
-        assert_eq!(Cell::new(None, 0), *g.get_cell(5));
+        assert_eq!(Cell::new(Particle::from(Sand::new())), *g.get_cell(4));
+        assert_eq!(Cell::empty(), *g.get_cell(5));
     }
 
     #[test]
@@ -156,16 +144,13 @@ mod tests {
 
         g.update_grid();
 
-        assert_eq!(Cell::new(None, 0), *g.get_cell(0));
-        assert_eq!(Cell::new(None, 1), *g.get_cell(1));
-        assert_eq!(Cell::new(None, 0), *g.get_cell(2));
-        assert_eq!(Cell::new(None, 0), *g.get_cell(3));
+        assert_eq!(Cell::empty(), *g.get_cell(0));
+        assert_eq!(Cell::empty().with_cycle(1), *g.get_cell(1));
+        assert_eq!(Cell::empty(), *g.get_cell(2));
+        assert_eq!(Cell::empty(), *g.get_cell(3));
+        assert_eq!(Cell::new(Particle::from(Sand::new())), *g.get_cell(4));
         assert_eq!(
-            (Cell::new(Some(Particle::from(Sand::new())), 0)),
-            *g.get_cell(4)
-        );
-        assert_eq!(
-            (Cell::new(Some(Particle::from(Sand::new())), 1)),
+            Cell::new(Particle::from(Sand::new())).with_cycle(1),
             *g.get_cell(5)
         );
     }

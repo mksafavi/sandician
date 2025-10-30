@@ -35,8 +35,23 @@ pub struct Cell {
 }
 
 impl Cell {
-    pub fn new(particle: Option<Particle>, cycle: u32) -> Self {
-        Self { particle, cycle }
+    pub fn new(particle: Particle) -> Self {
+        Self {
+            particle: Some(particle),
+            cycle: 0,
+        }
+    }
+
+    pub fn empty() -> Self {
+        Self {
+            particle: None,
+            cycle: 0,
+        }
+    }
+
+    pub fn with_cycle(mut self, cycle: u32) -> Self {
+        self.cycle = cycle;
+        self
     }
 }
 
@@ -154,7 +169,7 @@ impl Grid {
             }
         }
         Self {
-            cells: (0..width * height).map(|_| Cell::new(None, 0)).collect(),
+            cells: (0..width * height).map(|_| Cell::empty()).collect(),
             width,
             height,
             particle_direction: random_water_direction,
@@ -168,7 +183,7 @@ impl Grid {
         if y < self.height && x < self.width {
             let index = self.to_index((x, y));
             if self.cells[index].particle.is_none() {
-                self.cells[index] = Cell::new(Some(particle), self.cycle);
+                self.cells[index] = Cell::new(particle).with_cycle(self.cycle);
             }
         }
     }
@@ -290,12 +305,12 @@ mod tests {
 
         assert_eq!(
             vec![
-                Cell::new(Some(Particle::from(Sand::new())), 0),
-                Cell::new(None, 0),
-                Cell::new(None, 0),
-                Cell::new(Some(Particle::from(Water::new())), 0),
-                Cell::new(None, 0),
-                Cell::new(None, 0),
+                Cell::new(Particle::from(Sand::new())),
+                Cell::empty(),
+                Cell::empty(),
+                Cell::new(Particle::from(Water::new())),
+                Cell::empty(),
+                Cell::empty(),
             ],
             g.cells
         );
@@ -319,12 +334,12 @@ mod tests {
 
         assert_eq!(
             vec![
-                Cell::new(None, 0),
-                Cell::new(None, 0),
-                Cell::new(None, 0),
-                Cell::new(None, 0),
-                Cell::new(None, 0),
-                Cell::new(None, 0),
+                Cell::empty(),
+                Cell::empty(),
+                Cell::empty(),
+                Cell::empty(),
+                Cell::empty(),
+                Cell::empty(),
             ],
             g.cells
         );
@@ -334,10 +349,10 @@ mod tests {
     fn test_grid_despawn_particle_empties_the_cell_particle() {
         let mut g = Grid::new(1, 1);
         g.spawn_particle((0, 0), Particle::from(Sand::new()));
-        assert_eq!(Cell::new(Some(Particle::from(Sand::new())), 0), g.cells[0]);
+        assert_eq!(Cell::new(Particle::from(Sand::new())), g.cells[0]);
 
         g.despawn_particle((0, 0));
-        assert_eq!(Cell::new(None, 0), g.cells[0]);
+        assert_eq!(Cell::empty(), g.cells[0]);
     }
 
     #[test]
@@ -355,12 +370,12 @@ mod tests {
 
         assert_eq!(
             vec![
-                Cell::new(Some(Particle::from(Sand::new())), 0),
-                Cell::new(Some(Particle::from(Sand::new())), 0),
-                Cell::new(Some(Particle::from(Sand::new())), 0),
-                Cell::new(Some(Particle::from(Sand::new())), 0),
-                Cell::new(Some(Particle::from(Sand::new())), 0),
-                Cell::new(Some(Particle::from(Sand::new())), 0),
+                Cell::new(Particle::from(Sand::new())),
+                Cell::new(Particle::from(Sand::new())),
+                Cell::new(Particle::from(Sand::new())),
+                Cell::new(Particle::from(Sand::new())),
+                Cell::new(Particle::from(Sand::new())),
+                Cell::new(Particle::from(Sand::new())),
             ],
             g.cells
         );
@@ -377,15 +392,15 @@ mod tests {
         g.spawn_brush((1, 1), 1, &Particle::from(Sand::new()));
         assert_eq!(
             vec![
-                Cell::new(None, 0),
-                Cell::new(None, 0),
-                Cell::new(None, 0),
-                Cell::new(None, 0),
-                Cell::new(Some(Particle::from(Sand::new())), 0),
-                Cell::new(None, 0),
-                Cell::new(None, 0),
-                Cell::new(None, 0),
-                Cell::new(None, 0),
+                Cell::empty(),
+                Cell::empty(),
+                Cell::empty(),
+                Cell::empty(),
+                Cell::new(Particle::from(Sand::new())),
+                Cell::empty(),
+                Cell::empty(),
+                Cell::empty(),
+                Cell::empty(),
             ],
             g.cells
         );
@@ -402,15 +417,15 @@ mod tests {
         g.spawn_brush((1, 1), 2, &Particle::from(Sand::new()));
         assert_eq!(
             vec![
-                Cell::new(None, 0),
-                Cell::new(Some(Particle::from(Sand::new())), 0),
-                Cell::new(None, 0),
-                Cell::new(Some(Particle::from(Sand::new())), 0),
-                Cell::new(Some(Particle::from(Sand::new())), 0),
-                Cell::new(Some(Particle::from(Sand::new())), 0),
-                Cell::new(None, 0),
-                Cell::new(Some(Particle::from(Sand::new())), 0),
-                Cell::new(None, 0),
+                Cell::empty(),
+                Cell::new(Particle::from(Sand::new())),
+                Cell::empty(),
+                Cell::new(Particle::from(Sand::new())),
+                Cell::new(Particle::from(Sand::new())),
+                Cell::new(Particle::from(Sand::new())),
+                Cell::empty(),
+                Cell::new(Particle::from(Sand::new())),
+                Cell::empty(),
             ],
             g.cells
         );
@@ -429,31 +444,31 @@ mod tests {
         g.spawn_brush((2, 2), 4, &Particle::from(Sand::new()));
         assert_eq!(
             vec![
-                Cell::new(None, 0),
-                Cell::new(None, 0),
-                Cell::new(Some(Particle::from(Sand::new())), 0),
-                Cell::new(None, 0),
-                Cell::new(None, 0),
-                Cell::new(None, 0),
-                Cell::new(Some(Particle::from(Sand::new())), 0),
-                Cell::new(Some(Particle::from(Sand::new())), 0),
-                Cell::new(Some(Particle::from(Sand::new())), 0),
-                Cell::new(None, 0),
-                Cell::new(Some(Particle::from(Sand::new())), 0),
-                Cell::new(Some(Particle::from(Sand::new())), 0),
-                Cell::new(Some(Particle::from(Sand::new())), 0),
-                Cell::new(Some(Particle::from(Sand::new())), 0),
-                Cell::new(Some(Particle::from(Sand::new())), 0),
-                Cell::new(None, 0),
-                Cell::new(Some(Particle::from(Sand::new())), 0),
-                Cell::new(Some(Particle::from(Sand::new())), 0),
-                Cell::new(Some(Particle::from(Sand::new())), 0),
-                Cell::new(None, 0),
-                Cell::new(None, 0),
-                Cell::new(None, 0),
-                Cell::new(Some(Particle::from(Sand::new())), 0),
-                Cell::new(None, 0),
-                Cell::new(None, 0),
+                Cell::empty(),
+                Cell::empty(),
+                Cell::new(Particle::from(Sand::new())),
+                Cell::empty(),
+                Cell::empty(),
+                Cell::empty(),
+                Cell::new(Particle::from(Sand::new())),
+                Cell::new(Particle::from(Sand::new())),
+                Cell::new(Particle::from(Sand::new())),
+                Cell::empty(),
+                Cell::new(Particle::from(Sand::new())),
+                Cell::new(Particle::from(Sand::new())),
+                Cell::new(Particle::from(Sand::new())),
+                Cell::new(Particle::from(Sand::new())),
+                Cell::new(Particle::from(Sand::new())),
+                Cell::empty(),
+                Cell::new(Particle::from(Sand::new())),
+                Cell::new(Particle::from(Sand::new())),
+                Cell::new(Particle::from(Sand::new())),
+                Cell::empty(),
+                Cell::empty(),
+                Cell::empty(),
+                Cell::new(Particle::from(Sand::new())),
+                Cell::empty(),
+                Cell::empty(),
             ],
             g.cells
         );

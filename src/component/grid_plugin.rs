@@ -407,12 +407,7 @@ mod tests {
         let mut grid = app.world_mut().query::<&Grid>();
         if let Ok(g) = grid.single(app.world()) {
             assert_eq!(
-                &vec![
-                    Cell::new(None, 0),
-                    Cell::new(None, 0),
-                    Cell::new(None, 0),
-                    Cell::new(None, 0),
-                ],
+                &vec![Cell::empty(), Cell::empty(), Cell::empty(), Cell::empty(),],
                 g.get_cells()
             );
         } else {
@@ -433,10 +428,10 @@ mod tests {
         if let Ok(g) = grid.single(app.world()) {
             assert_eq!(
                 &vec![
-                    Cell::new(Some(Particle::from(Sand::new())), 0),
-                    Cell::new(None, 0),
-                    Cell::new(Some(Particle::from(Sand::new())), 0),
-                    Cell::new(Some(Particle::from(Sand::new())), 0)
+                    Cell::new(Particle::from(Sand::new())),
+                    Cell::empty(),
+                    Cell::new(Particle::from(Sand::new())),
+                    Cell::new(Particle::from(Sand::new()))
                 ],
                 g.get_cells()
             );
@@ -465,12 +460,7 @@ mod tests {
         let mut grid = app.world_mut().query::<&Grid>();
         if let Ok(g) = grid.single(app.world()) {
             assert_eq!(
-                &vec![
-                    Cell::new(None, 0),
-                    Cell::new(None, 0),
-                    Cell::new(None, 0),
-                    Cell::new(None, 0),
-                ],
+                &vec![Cell::empty(), Cell::empty(), Cell::empty(), Cell::empty(),],
                 g.get_cells()
             );
         } else {
@@ -491,10 +481,10 @@ mod tests {
         if let Ok(g) = grid.single(app.world()) {
             assert_eq!(
                 &vec![
-                    Cell::new(Some(Particle::from(Sand::new())), 0),
-                    Cell::new(Some(Particle::from(Sand::new())), 0),
-                    Cell::new(Some(Particle::from(Sand::new())), 0),
-                    Cell::new(None, 0),
+                    Cell::new(Particle::from(Sand::new())),
+                    Cell::new(Particle::from(Sand::new())),
+                    Cell::new(Particle::from(Sand::new())),
+                    Cell::empty(),
                 ],
                 g.get_cells()
             );

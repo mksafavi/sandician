@@ -200,18 +200,18 @@ mod tests {
         g.spawn_particle((0, 0), Particle::from(Water::new()));
 
         g.update_grid();
-        assert_eq!(Cell::new(None, 1), *g.get_cell(0));
+        assert_eq!(Cell::empty().with_cycle(1), *g.get_cell(0));
         assert_eq!(
-            Cell::new(Some(Particle::from(Water::new())), 1),
+            Cell::new(Particle::from(Water::new())).with_cycle(1),
             *g.get_cell(1)
         );
-        assert_eq!(Cell::new(None, 0), *g.get_cell(2));
+        assert_eq!(Cell::empty(), *g.get_cell(2));
 
         g.update_grid();
-        assert_eq!(Cell::new(None, 1), *g.get_cell(0));
-        assert_eq!(Cell::new(None, 2), *g.get_cell(1));
+        assert_eq!(Cell::empty().with_cycle(1), *g.get_cell(0));
+        assert_eq!(Cell::empty().with_cycle(2), *g.get_cell(1));
         assert_eq!(
-            Cell::new(Some(Particle::from(Water::new())), 2),
+            Cell::new(Particle::from(Water::new())).with_cycle(2),
             *g.get_cell(2)
         );
     }
@@ -228,16 +228,13 @@ mod tests {
 
         g.update_grid();
 
-        assert_eq!(Cell::new(None, 0), *g.get_cell(0));
-        assert_eq!(Cell::new(None, 0), *g.get_cell(1));
-        assert_eq!(Cell::new(None, 0), *g.get_cell(2));
+        assert_eq!(Cell::empty(), *g.get_cell(0));
+        assert_eq!(Cell::empty(), *g.get_cell(1));
+        assert_eq!(Cell::empty(), *g.get_cell(2));
+        assert_eq!(Cell::new(Particle::from(Sand::new())), *g.get_cell(3));
+        assert_eq!(Cell::empty().with_cycle(1), *g.get_cell(4));
         assert_eq!(
-            Cell::new(Some(Particle::from(Sand::new())), 0),
-            *g.get_cell(3)
-        );
-        assert_eq!(Cell::new(None, 1), *g.get_cell(4));
-        assert_eq!(
-            Cell::new(Some(Particle::from(Water::new())), 1),
+            Cell::new(Particle::from(Water::new())).with_cycle(1),
             *g.get_cell(5)
         );
     }
@@ -254,18 +251,15 @@ mod tests {
 
         g.update_grid();
 
-        assert_eq!(Cell::new(None, 0), *g.get_cell(0));
-        assert_eq!(Cell::new(None, 0), *g.get_cell(1));
-        assert_eq!(Cell::new(None, 0), *g.get_cell(2));
+        assert_eq!(Cell::empty(), *g.get_cell(0));
+        assert_eq!(Cell::empty(), *g.get_cell(1));
+        assert_eq!(Cell::empty(), *g.get_cell(2));
         assert_eq!(
-            Cell::new(Some(Particle::from(Water::new())), 1),
+            Cell::new(Particle::from(Water::new())).with_cycle(1),
             *g.get_cell(3)
         );
-        assert_eq!(Cell::new(None, 1), *g.get_cell(4));
-        assert_eq!(
-            Cell::new(Some(Particle::from(Sand::new())), 0),
-            *g.get_cell(5)
-        );
+        assert_eq!(Cell::empty().with_cycle(1), *g.get_cell(4));
+        assert_eq!(Cell::new(Particle::from(Sand::new())), *g.get_cell(5));
     }
 
     #[test]
@@ -281,13 +275,13 @@ mod tests {
 
         g.update_grid();
 
-        assert_eq!(Cell::new(None, 0), *g.get_cell(0));
-        assert_eq!(Cell::new(None, 0), *g.get_cell(1));
-        assert_eq!(Cell::new(None, 0), *g.get_cell(2));
-        assert_eq!(Cell::new(None, 0), *g.get_cell(3));
-        assert_eq!(Cell::new(None, 1), *g.get_cell(4));
+        assert_eq!(Cell::empty(), *g.get_cell(0));
+        assert_eq!(Cell::empty(), *g.get_cell(1));
+        assert_eq!(Cell::empty(), *g.get_cell(2));
+        assert_eq!(Cell::empty(), *g.get_cell(3));
+        assert_eq!(Cell::empty().with_cycle(1), *g.get_cell(4));
         assert_eq!(
-            Cell::new(Some(Particle::from(Water::new())), 1),
+            Cell::new(Particle::from(Water::new())).with_cycle(1),
             *g.get_cell(5)
         );
     }
@@ -304,15 +298,15 @@ mod tests {
 
         g.update_grid();
 
-        assert_eq!(Cell::new(None, 0), *g.get_cell(0));
-        assert_eq!(Cell::new(None, 0), *g.get_cell(1));
-        assert_eq!(Cell::new(None, 0), *g.get_cell(2));
+        assert_eq!(Cell::empty(), *g.get_cell(0));
+        assert_eq!(Cell::empty(), *g.get_cell(1));
+        assert_eq!(Cell::empty(), *g.get_cell(2));
         assert_eq!(
-            Cell::new(Some(Particle::from(Water::new())), 1),
+            Cell::new(Particle::from(Water::new())).with_cycle(1),
             *g.get_cell(3)
         );
-        assert_eq!(Cell::new(None, 1), *g.get_cell(4));
-        assert_eq!(Cell::new(None, 0), *g.get_cell(5));
+        assert_eq!(Cell::empty().with_cycle(1), *g.get_cell(4));
+        assert_eq!(Cell::empty(), *g.get_cell(5));
     }
 
     #[test]
@@ -329,12 +323,12 @@ mod tests {
 
         assert_eq!(
             vec![
-                Cell::new(None, 0),
-                Cell::new(None, 0),
-                Cell::new(None, 0),
-                Cell::new(None, 1),
-                Cell::new(None, 0),
-                Cell::new(Some(Particle::from(Water::new())), 1),
+                Cell::empty(),
+                Cell::empty(),
+                Cell::empty(),
+                Cell::empty().with_cycle(1),
+                Cell::empty(),
+                Cell::new(Particle::from(Water::new())).with_cycle(1),
             ],
             *g.get_cells()
         );
@@ -354,12 +348,12 @@ mod tests {
 
         assert_eq!(
             vec![
-                Cell::new(None, 0),
-                Cell::new(None, 0),
-                Cell::new(None, 0),
-                Cell::new(Some(Particle::from(Water::new())), 1),
-                Cell::new(None, 0),
-                Cell::new(None, 1),
+                Cell::empty(),
+                Cell::empty(),
+                Cell::empty(),
+                Cell::new(Particle::from(Water::new())).with_cycle(1),
+                Cell::empty(),
+                Cell::empty().with_cycle(1),
             ],
             *g.get_cells()
         );
@@ -379,14 +373,11 @@ mod tests {
 
         g.update_grid();
 
-        assert_eq!(Cell::new(None, 1), *g.get_cell(0));
-        assert_eq!(Cell::new(None, 0), *g.get_cell(1));
+        assert_eq!(Cell::empty().with_cycle(1), *g.get_cell(0));
+        assert_eq!(Cell::empty(), *g.get_cell(1));
+        assert_eq!(Cell::new(Particle::from(Sand::new())), *g.get_cell(2));
         assert_eq!(
-            Cell::new(Some(Particle::from(Sand::new())), 0),
-            *g.get_cell(2)
-        );
-        assert_eq!(
-            Cell::new(Some(Particle::from(Water::new())), 1),
+            Cell::new(Particle::from(Water::new())).with_cycle(1),
             *g.get_cell(3)
         );
     }
@@ -405,16 +396,13 @@ mod tests {
 
         g.update_grid();
 
-        assert_eq!(Cell::new(None, 0), *g.get_cell(0));
-        assert_eq!(Cell::new(None, 1), *g.get_cell(1));
+        assert_eq!(Cell::empty(), *g.get_cell(0));
+        assert_eq!(Cell::empty().with_cycle(1), *g.get_cell(1));
         assert_eq!(
-            Cell::new(Some(Particle::from(Water::new())), 1),
+            Cell::new(Particle::from(Water::new())).with_cycle(1),
             *g.get_cell(2)
         );
-        assert_eq!(
-            Cell::new(Some(Particle::from(Sand::new())), 0),
-            *g.get_cell(3)
-        );
+        assert_eq!(Cell::new(Particle::from(Sand::new())), *g.get_cell(3));
     }
 
     #[test]
@@ -431,18 +419,15 @@ mod tests {
 
         g.update_grid();
 
-        assert_eq!(Cell::new(None, 0), *g.get_cell(0));
-        assert_eq!(Cell::new(None, 1), *g.get_cell(1));
-        assert_eq!(Cell::new(None, 0), *g.get_cell(2));
+        assert_eq!(Cell::empty(), *g.get_cell(0));
+        assert_eq!(Cell::empty().with_cycle(1), *g.get_cell(1));
+        assert_eq!(Cell::empty(), *g.get_cell(2));
         assert_eq!(
-            Cell::new(Some(Particle::from(Water::new())), 1),
+            Cell::new(Particle::from(Water::new())).with_cycle(1),
             *g.get_cell(3)
         );
-        assert_eq!(
-            Cell::new(Some(Particle::from(Sand::new())), 0),
-            *g.get_cell(4)
-        );
-        assert_eq!(Cell::new(None, 0), *g.get_cell(5));
+        assert_eq!(Cell::new(Particle::from(Sand::new())), *g.get_cell(4));
+        assert_eq!(Cell::empty(), *g.get_cell(5));
     }
 
     #[test]
@@ -459,16 +444,13 @@ mod tests {
 
         g.update_grid();
 
-        assert_eq!(Cell::new(None, 0), *g.get_cell(0));
-        assert_eq!(Cell::new(None, 1), *g.get_cell(1));
-        assert_eq!(Cell::new(None, 0), *g.get_cell(2));
-        assert_eq!(Cell::new(None, 0), *g.get_cell(3));
+        assert_eq!(Cell::empty(), *g.get_cell(0));
+        assert_eq!(Cell::empty().with_cycle(1), *g.get_cell(1));
+        assert_eq!(Cell::empty(), *g.get_cell(2));
+        assert_eq!(Cell::empty(), *g.get_cell(3));
+        assert_eq!(Cell::new(Particle::from(Sand::new())), *g.get_cell(4));
         assert_eq!(
-            Cell::new(Some(Particle::from(Sand::new())), 0),
-            *g.get_cell(4)
-        );
-        assert_eq!(
-            Cell::new(Some(Particle::from(Water::new())), 1),
+            Cell::new(Particle::from(Water::new())).with_cycle(1),
             *g.get_cell(5)
         );
     }
@@ -491,15 +473,15 @@ mod tests {
         g.update_grid();
 
         assert_eq!(
-            Cell::new(Some(Particle::from(Water::new())), 1),
+            Cell::new(Particle::from(Water::new())).with_cycle(1),
             *g.get_cell(0)
         );
         assert_eq!(
-            Cell::new(Some(Particle::from(Water::new())), 1),
+            Cell::new(Particle::from(Water::new())).with_cycle(1),
             *g.get_cell(1)
         );
-        assert_eq!(Cell::new(None, 1), *g.get_cell(2));
-        assert_eq!(Cell::new(None, 0), *g.get_cell(3));
+        assert_eq!(Cell::empty().with_cycle(1), *g.get_cell(2));
+        assert_eq!(Cell::empty(), *g.get_cell(3));
 
         let mut g = Grid::new_with_rand(
             4,
@@ -514,13 +496,13 @@ mod tests {
         g.update_grid();
 
         assert_eq!(
-            Cell::new(Some(Particle::from(Water::new())), 1),
+            Cell::new(Particle::from(Water::new())).with_cycle(1),
             *g.get_cell(0)
         );
-        assert_eq!(Cell::new(None, 1), *g.get_cell(1));
-        assert_eq!(Cell::new(None, 1), *g.get_cell(2));
+        assert_eq!(Cell::empty().with_cycle(1), *g.get_cell(1));
+        assert_eq!(Cell::empty().with_cycle(1), *g.get_cell(2));
         assert_eq!(
-            Cell::new(Some(Particle::from(Water::new())), 1),
+            Cell::new(Particle::from(Water::new())).with_cycle(1),
             *g.get_cell(3)
         );
     }
@@ -542,14 +524,14 @@ mod tests {
 
         g.update_grid();
 
-        assert_eq!(Cell::new(None, 0), *g.get_cell(0));
-        assert_eq!(Cell::new(None, 1), *g.get_cell(1));
+        assert_eq!(Cell::empty(), *g.get_cell(0));
+        assert_eq!(Cell::empty().with_cycle(1), *g.get_cell(1));
         assert_eq!(
-            Cell::new(Some(Particle::from(Water::new())), 1),
+            Cell::new(Particle::from(Water::new())).with_cycle(1),
             *g.get_cell(2)
         );
         assert_eq!(
-            Cell::new(Some(Particle::from(Water::new())), 1),
+            Cell::new(Particle::from(Water::new())).with_cycle(1),
             *g.get_cell(3)
         );
 
@@ -566,13 +548,13 @@ mod tests {
         g.update_grid();
 
         assert_eq!(
-            Cell::new(Some(Particle::from(Water::new())), 1),
+            Cell::new(Particle::from(Water::new())).with_cycle(1),
             *g.get_cell(0)
         );
-        assert_eq!(Cell::new(None, 1), *g.get_cell(1));
-        assert_eq!(Cell::new(None, 1), *g.get_cell(2));
+        assert_eq!(Cell::empty().with_cycle(1), *g.get_cell(1));
+        assert_eq!(Cell::empty().with_cycle(1), *g.get_cell(2));
         assert_eq!(
-            Cell::new(Some(Particle::from(Water::new())), 1),
+            Cell::new(Particle::from(Water::new())).with_cycle(1),
             *g.get_cell(3)
         );
     }
@@ -595,12 +577,12 @@ mod tests {
 
         assert_eq!(
             vec![
-                Cell::new(None, 0),
-                Cell::new(Some(Particle::from(Water::new())), 1),
-                Cell::new(None, 0),
-                Cell::new(Some(Particle::from(Sand::new())), 0),
-                Cell::new(Some(Particle::from(Sand::new())), 1),
-                Cell::new(Some(Particle::from(Sand::new())), 0),
+                Cell::empty(),
+                Cell::new(Particle::from(Water::new())).with_cycle(1),
+                Cell::empty(),
+                Cell::new(Particle::from(Sand::new())),
+                Cell::new(Particle::from(Sand::new())).with_cycle(1),
+                Cell::new(Particle::from(Sand::new())),
             ],
             *g.get_cells()
         );
@@ -623,12 +605,12 @@ mod tests {
 
         assert_eq!(
             vec![
-                Cell::new(None, 0),
-                Cell::new(Some(Particle::from(Water::new())), 1),
-                Cell::new(None, 0),
-                Cell::new(Some(Particle::from(Sand::new())), 1),
-                Cell::new(Some(Particle::from(Sand::new())), 0),
-                Cell::new(Some(Particle::from(Sand::new())), 0),
+                Cell::empty(),
+                Cell::new(Particle::from(Water::new())).with_cycle(1),
+                Cell::empty(),
+                Cell::new(Particle::from(Sand::new())).with_cycle(1),
+                Cell::new(Particle::from(Sand::new())),
+                Cell::new(Particle::from(Sand::new())),
             ],
             *g.get_cells()
         );
@@ -651,12 +633,12 @@ mod tests {
 
         assert_eq!(
             vec![
-                Cell::new(None, 0),
-                Cell::new(Some(Particle::from(Water::new())), 1),
-                Cell::new(None, 0),
-                Cell::new(Some(Particle::from(Sand::new())), 0),
-                Cell::new(Some(Particle::from(Sand::new())), 0),
-                Cell::new(Some(Particle::from(Sand::new())), 1),
+                Cell::empty(),
+                Cell::new(Particle::from(Water::new())).with_cycle(1),
+                Cell::empty(),
+                Cell::new(Particle::from(Sand::new())),
+                Cell::new(Particle::from(Sand::new())),
+                Cell::new(Particle::from(Sand::new())).with_cycle(1),
             ],
             *g.get_cells()
         );
@@ -677,9 +659,9 @@ mod tests {
 
         assert_eq!(
             vec![
-                Cell::new(Some(Particle::from(Sand::new())), 0),
-                Cell::new(Some(Particle::from(Sand::new())), 0),
-                Cell::new(Some(Particle::from(Water::new())), 0),
+                Cell::new(Particle::from(Sand::new())),
+                Cell::new(Particle::from(Sand::new())),
+                Cell::new(Particle::from(Water::new())),
             ],
             *g.get_cells()
         );
@@ -688,9 +670,9 @@ mod tests {
 
         assert_eq!(
             vec![
-                Cell::new(Some(Particle::from(Sand::new())), 0),
-                Cell::new(Some(Particle::from(Water::new())), 1),
-                Cell::new(Some(Particle::from(Sand::new())), 1),
+                Cell::new(Particle::from(Sand::new())),
+                Cell::new(Particle::from(Water::new())).with_cycle(1),
+                Cell::new(Particle::from(Sand::new())).with_cycle(1),
             ],
             *g.get_cells()
         );
@@ -699,9 +681,9 @@ mod tests {
 
         assert_eq!(
             vec![
-                Cell::new(Some(Particle::from(Water::new())), 2),
-                Cell::new(Some(Particle::from(Sand::new())), 2),
-                Cell::new(Some(Particle::from(Sand::new())), 1),
+                Cell::new(Particle::from(Water::new())).with_cycle(2),
+                Cell::new(Particle::from(Sand::new())).with_cycle(2),
+                Cell::new(Particle::from(Sand::new())).with_cycle(1),
             ],
             *g.get_cells()
         );
@@ -724,9 +706,9 @@ mod tests {
 
         assert_eq!(
             vec![
-                Cell::new(Some(Particle::from(Sand::new())), 0),
-                Cell::new(Some(Particle::from(Water::new_with_solute(2))), 1),
-                Cell::new(None, 1),
+                Cell::new(Particle::from(Sand::new())),
+                Cell::new(Particle::from(Water::new_with_solute(2))).with_cycle(1),
+                Cell::empty().with_cycle(1),
             ],
             *g.get_cells()
         );
@@ -783,15 +765,15 @@ mod tests {
 
         assert_eq!(
             vec![
-                Cell::new(Some(Particle::from(Salt::new())), 0),
-                Cell::new(Some(Particle::from(Salt::new())), 0),
-                Cell::new(Some(Particle::from(Salt::new())), 0),
-                Cell::new(Some(Particle::from(Salt::new())), 0),
-                Cell::new(Some(Particle::from(Water::new_with_solute(3))), 0),
-                Cell::new(Some(Particle::from(Salt::new())), 0),
-                Cell::new(Some(Particle::from(Salt::new())), 0),
-                Cell::new(Some(Particle::from(Salt::new())), 0),
-                Cell::new(Some(Particle::from(Salt::new())), 0),
+                Cell::new(Particle::from(Salt::new())),
+                Cell::new(Particle::from(Salt::new())),
+                Cell::new(Particle::from(Salt::new())),
+                Cell::new(Particle::from(Salt::new())),
+                Cell::new(Particle::from(Water::new_with_solute(3))),
+                Cell::new(Particle::from(Salt::new())),
+                Cell::new(Particle::from(Salt::new())),
+                Cell::new(Particle::from(Salt::new())),
+                Cell::new(Particle::from(Salt::new())),
             ],
             *g.get_cells()
         );
@@ -800,15 +782,15 @@ mod tests {
 
         assert_eq!(
             vec![
-                Cell::new(None, 1),
-                Cell::new(Some(Particle::from(Salt::new())), 0),
-                Cell::new(Some(Particle::from(Salt::new())), 0),
-                Cell::new(Some(Particle::from(Salt::new())), 0),
-                Cell::new(Some(Particle::from(Water::new_with_solute(2))), 1),
-                Cell::new(Some(Particle::from(Salt::new())), 0),
-                Cell::new(Some(Particle::from(Salt::new())), 0),
-                Cell::new(Some(Particle::from(Salt::new())), 0),
-                Cell::new(Some(Particle::from(Salt::new())), 0),
+                Cell::empty().with_cycle(1),
+                Cell::new(Particle::from(Salt::new())),
+                Cell::new(Particle::from(Salt::new())),
+                Cell::new(Particle::from(Salt::new())),
+                Cell::new(Particle::from(Water::new_with_solute(2))).with_cycle(1),
+                Cell::new(Particle::from(Salt::new())),
+                Cell::new(Particle::from(Salt::new())),
+                Cell::new(Particle::from(Salt::new())),
+                Cell::new(Particle::from(Salt::new())),
             ],
             *g.get_cells()
         );
@@ -817,15 +799,15 @@ mod tests {
 
         assert_eq!(
             vec![
-                Cell::new(None, 1),
-                Cell::new(None, 2),
-                Cell::new(Some(Particle::from(Salt::new())), 0),
-                Cell::new(Some(Particle::from(Salt::new())), 0),
-                Cell::new(Some(Particle::from(Water::new_with_solute(1))), 2),
-                Cell::new(Some(Particle::from(Salt::new())), 0),
-                Cell::new(Some(Particle::from(Salt::new())), 0),
-                Cell::new(Some(Particle::from(Salt::new())), 0),
-                Cell::new(Some(Particle::from(Salt::new())), 0),
+                Cell::empty().with_cycle(1),
+                Cell::empty().with_cycle(2),
+                Cell::new(Particle::from(Salt::new())),
+                Cell::new(Particle::from(Salt::new())),
+                Cell::new(Particle::from(Water::new_with_solute(1))).with_cycle(2),
+                Cell::new(Particle::from(Salt::new())),
+                Cell::new(Particle::from(Salt::new())),
+                Cell::new(Particle::from(Salt::new())),
+                Cell::new(Particle::from(Salt::new())),
             ],
             *g.get_cells()
         );
@@ -834,15 +816,15 @@ mod tests {
 
         assert_eq!(
             vec![
-                Cell::new(None, 1),
-                Cell::new(None, 2),
-                Cell::new(None, 3),
-                Cell::new(Some(Particle::from(Salt::new())), 0),
-                Cell::new(Some(Particle::from(Water::new_with_solute(0))), 3),
-                Cell::new(Some(Particle::from(Salt::new())), 0),
-                Cell::new(Some(Particle::from(Salt::new())), 0),
-                Cell::new(Some(Particle::from(Salt::new())), 0),
-                Cell::new(Some(Particle::from(Salt::new())), 0),
+                Cell::empty().with_cycle(1),
+                Cell::empty().with_cycle(2),
+                Cell::empty().with_cycle(3),
+                Cell::new(Particle::from(Salt::new())),
+                Cell::new(Particle::from(Water::new_with_solute(0))).with_cycle(3),
+                Cell::new(Particle::from(Salt::new())),
+                Cell::new(Particle::from(Salt::new())),
+                Cell::new(Particle::from(Salt::new())),
+                Cell::new(Particle::from(Salt::new())),
             ],
             *g.get_cells()
         );
@@ -851,15 +833,15 @@ mod tests {
             g.update_grid();
             assert_eq!(
                 vec![
-                    Cell::new(None, 1),
-                    Cell::new(None, 2),
-                    Cell::new(None, 3),
-                    Cell::new(Some(Particle::from(Salt::new())), 0),
-                    Cell::new(Some(Particle::from(Water::new_with_solute(0))), 3),
-                    Cell::new(Some(Particle::from(Salt::new())), 0),
-                    Cell::new(Some(Particle::from(Salt::new())), 0),
-                    Cell::new(Some(Particle::from(Salt::new())), 0),
-                    Cell::new(Some(Particle::from(Salt::new())), 0),
+                    Cell::empty().with_cycle(1),
+                    Cell::empty().with_cycle(2),
+                    Cell::empty().with_cycle(3),
+                    Cell::new(Particle::from(Salt::new())),
+                    Cell::new(Particle::from(Water::new_with_solute(0))).with_cycle(3),
+                    Cell::new(Particle::from(Salt::new())),
+                    Cell::new(Particle::from(Salt::new())),
+                    Cell::new(Particle::from(Salt::new())),
+                    Cell::new(Particle::from(Salt::new())),
                 ],
                 *g.get_cells()
             );
@@ -878,11 +860,11 @@ mod tests {
 
         assert_eq!(
             vec![
-                Cell::new(Some(Particle::from(Salt::new())), 0),
-                Cell::new(Some(Particle::from(Salt::new())), 0),
-                Cell::new(Some(Particle::from(Salt::new())), 0),
-                Cell::new(Some(Particle::from(Salt::new())), 0),
-                Cell::new(Some(Particle::from(Water::new_with_solute(3))), 0),
+                Cell::new(Particle::from(Salt::new())),
+                Cell::new(Particle::from(Salt::new())),
+                Cell::new(Particle::from(Salt::new())),
+                Cell::new(Particle::from(Salt::new())),
+                Cell::new(Particle::from(Water::new_with_solute(3))),
             ],
             *g.get_cells()
         );
@@ -891,11 +873,11 @@ mod tests {
 
         assert_eq!(
             vec![
-                Cell::new(None, 1),
-                Cell::new(Some(Particle::from(Salt::new())), 1),
-                Cell::new(Some(Particle::from(Salt::new())), 1),
-                Cell::new(Some(Particle::from(Salt::new())), 1),
-                Cell::new(Some(Particle::from(Water::new_with_solute(2))), 1),
+                Cell::empty().with_cycle(1),
+                Cell::new(Particle::from(Salt::new())).with_cycle(1),
+                Cell::new(Particle::from(Salt::new())).with_cycle(1),
+                Cell::new(Particle::from(Salt::new())).with_cycle(1),
+                Cell::new(Particle::from(Water::new_with_solute(2))).with_cycle(1),
             ],
             *g.get_cells()
         );
@@ -904,11 +886,11 @@ mod tests {
 
         assert_eq!(
             vec![
-                Cell::new(None, 1),
-                Cell::new(None, 2),
-                Cell::new(Some(Particle::from(Salt::new())), 2),
-                Cell::new(Some(Particle::from(Salt::new())), 2),
-                Cell::new(Some(Particle::from(Water::new_with_solute(1))), 2),
+                Cell::empty().with_cycle(1),
+                Cell::empty().with_cycle(2),
+                Cell::new(Particle::from(Salt::new())).with_cycle(2),
+                Cell::new(Particle::from(Salt::new())).with_cycle(2),
+                Cell::new(Particle::from(Water::new_with_solute(1))).with_cycle(2),
             ],
             *g.get_cells()
         );
@@ -917,11 +899,11 @@ mod tests {
 
         assert_eq!(
             vec![
-                Cell::new(None, 1),
-                Cell::new(None, 2),
-                Cell::new(None, 3),
-                Cell::new(Some(Particle::from(Salt::new())), 3),
-                Cell::new(Some(Particle::from(Water::new_with_solute(0))), 3),
+                Cell::empty().with_cycle(1),
+                Cell::empty().with_cycle(2),
+                Cell::empty().with_cycle(3),
+                Cell::new(Particle::from(Salt::new())).with_cycle(3),
+                Cell::new(Particle::from(Water::new_with_solute(0))).with_cycle(3),
             ],
             *g.get_cells()
         );
@@ -930,11 +912,11 @@ mod tests {
 
         assert_eq!(
             vec![
-                Cell::new(None, 1),
-                Cell::new(None, 2),
-                Cell::new(None, 3),
-                Cell::new(Some(Particle::from(Water::new_with_solute(0))), 4),
-                Cell::new(Some(Particle::from(Salt::new())), 4),
+                Cell::empty().with_cycle(1),
+                Cell::empty().with_cycle(2),
+                Cell::empty().with_cycle(3),
+                Cell::new(Particle::from(Water::new_with_solute(0))).with_cycle(4),
+                Cell::new(Particle::from(Salt::new())).with_cycle(4),
             ],
             *g.get_cells()
         );
@@ -958,12 +940,12 @@ mod tests {
 
         assert_eq!(
             vec![
-                Cell::new(None, 0),
-                Cell::new(Some(Particle::from(Water::new_with_solute(0))), 1),
-                Cell::new(None, 0),
-                Cell::new(Some(Particle::from(Salt::new())), 0),
-                Cell::new(Some(Particle::from(Salt::new())), 1),
-                Cell::new(Some(Particle::from(Salt::new())), 0),
+                Cell::empty(),
+                Cell::new(Particle::from(Water::new_with_solute(0))).with_cycle(1),
+                Cell::empty(),
+                Cell::new(Particle::from(Salt::new())),
+                Cell::new(Particle::from(Salt::new())).with_cycle(1),
+                Cell::new(Particle::from(Salt::new())),
             ],
             *g.get_cells()
         );
@@ -986,12 +968,12 @@ mod tests {
 
         assert_eq!(
             vec![
-                Cell::new(None, 0),
-                Cell::new(Some(Particle::from(Water::new_with_solute(0))), 1),
-                Cell::new(None, 0),
-                Cell::new(Some(Particle::from(Salt::new())), 1),
-                Cell::new(Some(Particle::from(Salt::new())), 0),
-                Cell::new(Some(Particle::from(Salt::new())), 0),
+                Cell::empty(),
+                Cell::new(Particle::from(Water::new_with_solute(0))).with_cycle(1),
+                Cell::empty(),
+                Cell::new(Particle::from(Salt::new())).with_cycle(1),
+                Cell::new(Particle::from(Salt::new())),
+                Cell::new(Particle::from(Salt::new())),
             ],
             *g.get_cells()
         );
@@ -1014,12 +996,12 @@ mod tests {
 
         assert_eq!(
             vec![
-                Cell::new(None, 0),
-                Cell::new(Some(Particle::from(Water::new_with_solute(0))), 1),
-                Cell::new(None, 0),
-                Cell::new(Some(Particle::from(Salt::new())), 0),
-                Cell::new(Some(Particle::from(Salt::new())), 0),
-                Cell::new(Some(Particle::from(Salt::new())), 1),
+                Cell::empty(),
+                Cell::new(Particle::from(Water::new_with_solute(0))).with_cycle(1),
+                Cell::empty(),
+                Cell::new(Particle::from(Salt::new())),
+                Cell::new(Particle::from(Salt::new())),
+                Cell::new(Particle::from(Salt::new())).with_cycle(1),
             ],
             *g.get_cells()
         );
@@ -1040,9 +1022,9 @@ mod tests {
 
         assert_eq!(
             vec![
-                Cell::new(Some(Particle::from(Salt::new())), 0),
-                Cell::new(Some(Particle::from(Salt::new())), 0),
-                Cell::new(Some(Particle::from(Water::new_with_solute(0))), 0),
+                Cell::new(Particle::from(Salt::new())),
+                Cell::new(Particle::from(Salt::new())),
+                Cell::new(Particle::from(Water::new_with_solute(0))),
             ],
             *g.get_cells()
         );
@@ -1051,9 +1033,9 @@ mod tests {
 
         assert_eq!(
             vec![
-                Cell::new(Some(Particle::from(Salt::new())), 0),
-                Cell::new(Some(Particle::from(Water::new_with_solute(0))), 1),
-                Cell::new(Some(Particle::from(Salt::new())), 1),
+                Cell::new(Particle::from(Salt::new())),
+                Cell::new(Particle::from(Water::new_with_solute(0))).with_cycle(1),
+                Cell::new(Particle::from(Salt::new())).with_cycle(1),
             ],
             *g.get_cells()
         );
@@ -1062,9 +1044,9 @@ mod tests {
 
         assert_eq!(
             vec![
-                Cell::new(Some(Particle::from(Water::new_with_solute(0))), 2),
-                Cell::new(Some(Particle::from(Salt::new())), 2),
-                Cell::new(Some(Particle::from(Salt::new())), 1),
+                Cell::new(Particle::from(Water::new_with_solute(0))).with_cycle(2),
+                Cell::new(Particle::from(Salt::new())).with_cycle(2),
+                Cell::new(Particle::from(Salt::new())).with_cycle(1),
             ],
             *g.get_cells()
         );
