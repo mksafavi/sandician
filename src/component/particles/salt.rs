@@ -2,8 +2,15 @@ use crate::component::grid::GridAccess;
 
 use super::particle;
 
-pub fn update_salt<T: GridAccess>(grid: &mut T, position: (usize, usize)) {
-    particle::gravity(grid, position);
+#[derive(Clone, PartialEq, Debug)]
+pub struct Salt {
+    pub weight: u8,
+}
+
+impl particle::Updatable for Salt {
+    fn update<T: GridAccess>(&self, grid: &mut T, position: (usize, usize)) {
+        particle::gravity(grid, position);
+    }
 }
 
 #[cfg(test)]

@@ -1,20 +1,28 @@
-use super::particle::{self, Particle, WaterAttributes};
+use super::particle::{self, Particle};
 use crate::component::grid::{GridAccess, ParticleHorizontalDirection};
 
-pub fn update_water<T: GridAccess>(grid: &mut T, attr: &WaterAttributes, position: (usize, usize)) {
-    if dissolve_salt(grid, attr.solute, position) {
-        return;
-    }
+#[derive(Clone, PartialEq, Debug)]
+pub struct Water {
+    pub weight: u8,
+    pub solute: u8,
+}
 
-    if sink_in_water(grid, position) {
-        return;
-    }
+impl particle::Updatable for Water {
+    fn update<T: GridAccess>(&self, grid: &mut T, position: (usize, usize)) {
+        if dissolve_salt(grid, self.solute, position) {
+            return;
+        }
 
-    if particle::gravity(grid, position) {
-        return;
-    }
+        if sink_in_water(grid, position) {
+            return;
+        }
 
-    slide_water(grid, position);
+        if particle::gravity(grid, position) {
+            return;
+        }
+
+        slide_water(grid, position);
+    }
 }
 
 fn dissolve_salt<T: GridAccess>(grid: &mut T, solute: u8, position: (usize, usize)) -> bool {

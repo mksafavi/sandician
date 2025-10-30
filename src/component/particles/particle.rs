@@ -4,38 +4,26 @@ use bevy::prelude::Color;
 
 use crate::component::grid::{GridAccess, ParticleHorizontalDirection};
 
-use super::{salt::update_salt, sand::update_sand, water::update_water};
-
-#[derive(Clone, PartialEq, Debug)]
-pub struct SandAttributes {
-    pub weight: u8,
-}
-
-#[derive(Clone, PartialEq, Debug)]
-pub struct SaltAttributes {
-    pub weight: u8,
-}
-
-#[derive(Clone, PartialEq, Debug)]
-pub struct WaterAttributes {
-    pub weight: u8,
-    pub solute: u8,
-}
+use super::{salt::Salt, sand::Sand, water::Water};
 
 #[derive(Clone, PartialEq, Debug)]
 pub enum Particle {
-    Sand(SandAttributes),
-    Water(WaterAttributes),
-    Salt(SaltAttributes),
+    Sand(Sand),
+    Water(Water),
+    Salt(Salt),
     Rock,
 }
 
+pub trait Updatable {
+    fn update<T: GridAccess>(&self, grid: &mut T, position: (usize, usize));
+}
+
 impl Particle {
-    pub fn update<T: GridAccess>(&self, grid: &mut T, (x, y): (usize, usize)) {
+    pub fn update<T: GridAccess>(&self, grid: &mut T, position: (usize, usize)) {
         match self {
-            Particle::Sand(..) => update_sand(grid, (x, y)),
-            Particle::Water(attr) => update_water(grid, attr, (x, y)),
-            Particle::Salt(..) => update_salt(grid, (x, y)),
+            Particle::Sand(sand) => sand.update(grid, position),
+            Particle::Water(water) => water.update(grid, position),
+            Particle::Salt(salt) => salt.update(grid, position),
             Particle::Rock => (),
         };
     }
@@ -43,7 +31,7 @@ impl Particle {
     pub fn color(&self) -> Color {
         match self {
             Particle::Sand(..) => Color::hsva(43.20, 0.34, 0.76, 1.00),
-            Particle::Water(attr) => match attr.solute {
+            Particle::Water(water) => match water.solute {
                 0 => Color::hsva(201.60, 0.60, 0.80, 1.00),
                 _ => Color::hsva(201.60, 1.00, 0.80, 1.00),
             },
@@ -53,22 +41,22 @@ impl Particle {
     }
 
     pub fn new_sand() -> Particle {
-        Particle::Sand(SandAttributes { weight: 0 })
+        Particle::Sand(Sand { weight: 0 })
     }
 
     pub fn new_salt() -> Particle {
-        Particle::Salt(SaltAttributes { weight: 0 })
+        Particle::Salt(Salt { weight: 0 })
     }
 
     pub fn new_water() -> Particle {
-        Particle::Water(WaterAttributes {
+        Particle::Water(Water {
             weight: 0,
             solute: 3,
         })
     }
 
     pub fn new_water_with_solute(solute: u8) -> Particle {
-        Particle::Water(WaterAttributes { weight: 0, solute })
+        Particle::Water(Water { weight: 0, solute })
     }
 }
 
