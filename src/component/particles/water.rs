@@ -7,6 +7,25 @@ pub struct Water {
     pub solute: u8,
 }
 
+impl Default for Water {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl Water {
+    pub fn new() -> Water {
+        Water {
+            weight: 0,
+            solute: 3,
+        }
+    }
+
+    pub fn new_with_solute(solute: u8) -> Water {
+        Water { weight: 0, solute }
+    }
+}
+
 impl particle::Updatable for Water {
     fn update<T: GridAccess>(&self, grid: &mut T, position: (usize, usize)) {
         if dissolve_salt(grid, self.solute, position) {

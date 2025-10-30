@@ -7,6 +7,18 @@ pub struct Sand {
     pub weight: u8,
 }
 
+impl Default for Sand {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl Sand {
+    pub fn new() -> Sand {
+        Sand { weight: 0 }
+    }
+}
+
 impl particle::Updatable for Sand {
     fn update<T: GridAccess>(&self, grid: &mut T, position: (usize, usize)) {
         particle::gravity(grid, position);

@@ -7,6 +7,18 @@ pub struct Salt {
     pub weight: u8,
 }
 
+impl Default for Salt {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl Salt {
+    pub fn new() -> Salt {
+        Salt { weight: 0 }
+    }
+}
+
 impl particle::Updatable for Salt {
     fn update<T: GridAccess>(&self, grid: &mut T, position: (usize, usize)) {
         particle::gravity(grid, position);

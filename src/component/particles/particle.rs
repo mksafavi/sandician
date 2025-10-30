@@ -41,22 +41,19 @@ impl Particle {
     }
 
     pub fn new_sand() -> Particle {
-        Particle::Sand(Sand { weight: 0 })
+        Particle::Sand(Sand::new())
     }
 
     pub fn new_salt() -> Particle {
-        Particle::Salt(Salt { weight: 0 })
+        Particle::Salt(Salt::new())
     }
 
     pub fn new_water() -> Particle {
-        Particle::Water(Water {
-            weight: 0,
-            solute: 3,
-        })
+        Particle::Water(Water::new())
     }
 
     pub fn new_water_with_solute(solute: u8) -> Particle {
-        Particle::Water(Water { weight: 0, solute })
+        Particle::Water(Water::new_with_solute(solute))
     }
 }
 
