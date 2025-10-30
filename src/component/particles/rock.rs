@@ -1,15 +1,9 @@
-use crate::component::grid::GridAccess;
-
-pub fn update_rock<T: GridAccess>(_: &mut T, _: (usize, usize)) {}
-
 #[cfg(test)]
 mod tests {
     use crate::component::{
-        grid::{Cell, Grid},
+        grid::{Cell, Grid, GridAccess},
         particles::particle::Particle,
     };
-
-    use super::*;
 
     #[test]
     fn test_update_grid_rock_stays_in_place() {

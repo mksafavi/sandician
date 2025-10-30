@@ -4,7 +4,7 @@ use bevy::prelude::Color;
 
 use crate::component::grid::{GridAccess, ParticleHorizontalDirection};
 
-use super::{rock::update_rock, salt::update_salt, sand::update_sand, water::update_water};
+use super::{salt::update_salt, sand::update_sand, water::update_water};
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct SandAttributes {
@@ -36,7 +36,7 @@ impl Particle {
             Particle::Sand(..) => update_sand(grid, (x, y)),
             Particle::Water(attr) => update_water(grid, attr, (x, y)),
             Particle::Salt(..) => update_salt(grid, (x, y)),
-            Particle::Rock => update_rock(grid, (x, y)),
+            Particle::Rock => (),
         };
     }
 
