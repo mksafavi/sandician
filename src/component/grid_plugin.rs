@@ -30,7 +30,12 @@ use bevy::{
     utils::default,
 };
 
-use super::{grid::Grid, particles::particle::Particle};
+use crate::component::particles::{salt::Salt, water::Water};
+
+use super::{
+    grid::Grid,
+    particles::{particle::Particle, sand::Sand},
+};
 
 const ASSET_FONT_PATH: &str = "fonts/Adventurer.ttf";
 
@@ -60,7 +65,7 @@ impl ParticleBrush {
         Self {
             spawning: false,
             positions: VecDeque::new(),
-            particle: Particle::new_sand(),
+            particle: Particle::from(Sand::new()),
             size: 8,
             last_position: None,
         }
@@ -269,9 +274,9 @@ fn brush_node(font: Handle<Font>) -> impl Bundle {
         },
         BackgroundColor(Color::BLACK),
         children![
-            radio(Particle::new_sand(), font.clone()),
-            radio(Particle::new_salt(), font.clone()),
-            radio(Particle::new_water(), font.clone()),
+            radio(Particle::from(Sand::new()), font.clone()),
+            radio(Particle::from(Salt::new()), font.clone()),
+            radio(Particle::from(Water::new()), font.clone()),
             radio(Particle::Rock, font.clone()),
         ],
     )
@@ -363,8 +368,8 @@ mod tests {
 
         let mut grid = app.world_mut().query::<&mut Grid>();
         if let Ok(mut g) = grid.single_mut(app.world_mut()) {
-            g.spawn_particle((0, 1), Particle::new_water());
-            g.spawn_particle((1, 1), Particle::new_sand());
+            g.spawn_particle((0, 1), Particle::from(Water::new()));
+            g.spawn_particle((1, 1), Particle::from(Sand::new()));
         } else {
             panic!("grid not found");
         }
@@ -377,11 +382,11 @@ mod tests {
             assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(0, 0).unwrap());
             assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(1, 0).unwrap());
             assert_color_srgb_eq!(
-                Particle::new_water().color(),
+                Particle::from(Water::new()).color(),
                 image.get_color_at(0, 1).unwrap()
             );
             assert_color_srgb_eq!(
-                Particle::new_sand().color(),
+                Particle::from(Sand::new()).color(),
                 image.get_color_at(1, 1).unwrap()
             );
         } else {
@@ -428,10 +433,10 @@ mod tests {
         if let Ok(g) = grid.single(app.world()) {
             assert_eq!(
                 &vec![
-                    Cell::new(Some(Particle::new_sand()), 0),
+                    Cell::new(Some(Particle::from(Sand::new())), 0),
                     Cell::new(None, 0),
-                    Cell::new(Some(Particle::new_sand()), 0),
-                    Cell::new(Some(Particle::new_sand()), 0)
+                    Cell::new(Some(Particle::from(Sand::new())), 0),
+                    Cell::new(Some(Particle::from(Sand::new())), 0)
                 ],
                 g.get_cells()
             );
@@ -486,9 +491,9 @@ mod tests {
         if let Ok(g) = grid.single(app.world()) {
             assert_eq!(
                 &vec![
-                    Cell::new(Some(Particle::new_sand()), 0),
-                    Cell::new(Some(Particle::new_sand()), 0),
-                    Cell::new(Some(Particle::new_sand()), 0),
+                    Cell::new(Some(Particle::from(Sand::new())), 0),
+                    Cell::new(Some(Particle::from(Sand::new())), 0),
+                    Cell::new(Some(Particle::from(Sand::new())), 0),
                     Cell::new(None, 0),
                 ],
                 g.get_cells()
@@ -702,21 +707,21 @@ mod tests {
 
         app.update();
 
-        trigger_particle_button_click_event(&mut app, Particle::new_salt());
+        trigger_particle_button_click_event(&mut app, Particle::from(Salt::new()));
         assert_eq!(
-            Particle::new_salt(),
+            Particle::from(Salt::new()),
             query_particle_brush(&mut app).particle
         );
 
-        trigger_particle_button_click_event(&mut app, Particle::new_sand());
+        trigger_particle_button_click_event(&mut app, Particle::from(Sand::new()));
         assert_eq!(
-            Particle::new_sand(),
+            Particle::from(Sand::new()),
             query_particle_brush(&mut app).particle
         );
 
-        trigger_particle_button_click_event(&mut app, Particle::new_water());
+        trigger_particle_button_click_event(&mut app, Particle::from(Water::new()));
         assert_eq!(
-            Particle::new_water(),
+            Particle::from(Water::new()),
             query_particle_brush(&mut app).particle
         );
 

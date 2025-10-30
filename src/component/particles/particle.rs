@@ -18,6 +18,24 @@ pub trait Updatable {
     fn update<T: GridAccess>(&self, grid: &mut T, position: (usize, usize));
 }
 
+impl From<Sand> for Particle {
+    fn from(sand: Sand) -> Self {
+        Self::Sand(sand)
+    }
+}
+
+impl From<Salt> for Particle {
+    fn from(salt: Salt) -> Self {
+        Self::Salt(salt)
+    }
+}
+
+impl From<Water> for Particle {
+    fn from(water: Water) -> Self {
+        Self::Water(water)
+    }
+}
+
 impl Particle {
     pub fn update<T: GridAccess>(&self, grid: &mut T, position: (usize, usize)) {
         match self {
@@ -38,22 +56,6 @@ impl Particle {
             Particle::Salt(..) => Color::hsva(0.00, 0.00, 1.00, 1.00),
             Particle::Rock => Color::hsva(28.0, 0.25, 0.30, 1.00),
         }
-    }
-
-    pub fn new_sand() -> Particle {
-        Particle::Sand(Sand::new())
-    }
-
-    pub fn new_salt() -> Particle {
-        Particle::Salt(Salt::new())
-    }
-
-    pub fn new_water() -> Particle {
-        Particle::Water(Water::new())
-    }
-
-    pub fn new_water_with_solute(solute: u8) -> Particle {
-        Particle::Water(Water::new_with_solute(solute))
     }
 }
 
@@ -100,9 +102,9 @@ mod tests {
 
     #[test]
     fn test_particle_string_names() {
-        assert_eq!("sand", Particle::new_sand().to_string());
-        assert_eq!("salt", Particle::new_salt().to_string());
-        assert_eq!("water", Particle::new_water().to_string());
+        assert_eq!("sand", Particle::from(Sand::new()).to_string());
+        assert_eq!("salt", Particle::from(Salt::new()).to_string());
+        assert_eq!("water", Particle::from(Water::new()).to_string());
         assert_eq!("rock", Particle::Rock.to_string());
     }
 }
