@@ -735,15 +735,10 @@ mod tests {
 
     #[test]
     fn test_update_grid_water_can_only_dissolve_three_salt_particles() {
-        let mut g = Grid::new(3, 3);
-        g.spawn_particle((1, 1), Particle::from(Water::new()));
-        for y in 0..3 {
-            for x in 0..3 {
-                if (x, y) == (1, 1) {
-                    continue;
-                }
-                g.spawn_particle((x, y), Particle::from(Salt::new()));
-            }
+        let mut g = Grid::new(1, 9);
+        g.spawn_particle((0, 8), Particle::from(Water::new()));
+        for y in 0..8 {
+            g.spawn_particle((0, y), Particle::from(Salt::new()));
         }
 
         assert_eq!(
@@ -752,11 +747,11 @@ mod tests {
                 Cell::new(Particle::from(Salt::new())),
                 Cell::new(Particle::from(Salt::new())),
                 Cell::new(Particle::from(Salt::new())),
+                Cell::new(Particle::from(Salt::new())),
+                Cell::new(Particle::from(Salt::new())),
+                Cell::new(Particle::from(Salt::new())),
+                Cell::new(Particle::from(Salt::new())),
                 Cell::new(Particle::from(Water::new_with_solute(3))),
-                Cell::new(Particle::from(Salt::new())),
-                Cell::new(Particle::from(Salt::new())),
-                Cell::new(Particle::from(Salt::new())),
-                Cell::new(Particle::from(Salt::new())),
             ],
             *g.get_cells()
         );
@@ -766,14 +761,14 @@ mod tests {
         assert_eq!(
             vec![
                 Cell::empty().with_cycle(1),
-                Cell::new(Particle::from(Salt::new())),
-                Cell::new(Particle::from(Salt::new())),
-                Cell::new(Particle::from(Salt::new())),
+                Cell::new(Particle::from(Salt::new())).with_cycle(1),
+                Cell::new(Particle::from(Salt::new())).with_cycle(1),
+                Cell::new(Particle::from(Salt::new())).with_cycle(1),
+                Cell::new(Particle::from(Salt::new())).with_cycle(1),
+                Cell::new(Particle::from(Salt::new())).with_cycle(1),
+                Cell::new(Particle::from(Salt::new())).with_cycle(1),
+                Cell::new(Particle::from(Salt::new())).with_cycle(1),
                 Cell::new(Particle::from(Water::new_with_solute(2))).with_cycle(1),
-                Cell::new(Particle::from(Salt::new())),
-                Cell::new(Particle::from(Salt::new())),
-                Cell::new(Particle::from(Salt::new())),
-                Cell::new(Particle::from(Salt::new())),
             ],
             *g.get_cells()
         );
@@ -784,13 +779,13 @@ mod tests {
             vec![
                 Cell::empty().with_cycle(1),
                 Cell::empty().with_cycle(2),
-                Cell::new(Particle::from(Salt::new())),
-                Cell::new(Particle::from(Salt::new())),
+                Cell::new(Particle::from(Salt::new())).with_cycle(2),
+                Cell::new(Particle::from(Salt::new())).with_cycle(2),
+                Cell::new(Particle::from(Salt::new())).with_cycle(2),
+                Cell::new(Particle::from(Salt::new())).with_cycle(2),
+                Cell::new(Particle::from(Salt::new())).with_cycle(2),
+                Cell::new(Particle::from(Salt::new())).with_cycle(2),
                 Cell::new(Particle::from(Water::new_with_solute(1))).with_cycle(2),
-                Cell::new(Particle::from(Salt::new())),
-                Cell::new(Particle::from(Salt::new())),
-                Cell::new(Particle::from(Salt::new())),
-                Cell::new(Particle::from(Salt::new())),
             ],
             *g.get_cells()
         );
@@ -802,33 +797,34 @@ mod tests {
                 Cell::empty().with_cycle(1),
                 Cell::empty().with_cycle(2),
                 Cell::empty().with_cycle(3),
-                Cell::new(Particle::from(Salt::new())),
+                Cell::new(Particle::from(Salt::new())).with_cycle(3),
+                Cell::new(Particle::from(Salt::new())).with_cycle(3),
+                Cell::new(Particle::from(Salt::new())).with_cycle(3),
+                Cell::new(Particle::from(Salt::new())).with_cycle(3),
+                Cell::new(Particle::from(Salt::new())).with_cycle(3),
                 Cell::new(Particle::from(Water::new_with_solute(0))).with_cycle(3),
-                Cell::new(Particle::from(Salt::new())),
-                Cell::new(Particle::from(Salt::new())),
-                Cell::new(Particle::from(Salt::new())),
-                Cell::new(Particle::from(Salt::new())),
             ],
             *g.get_cells()
         );
 
         for _ in 0..6 {
             g.update_grid();
-            assert_eq!(
-                vec![
-                    Cell::empty().with_cycle(1),
-                    Cell::empty().with_cycle(2),
-                    Cell::empty().with_cycle(3),
-                    Cell::new(Particle::from(Salt::new())),
-                    Cell::new(Particle::from(Water::new_with_solute(0))).with_cycle(3),
-                    Cell::new(Particle::from(Salt::new())),
-                    Cell::new(Particle::from(Salt::new())),
-                    Cell::new(Particle::from(Salt::new())),
-                    Cell::new(Particle::from(Salt::new())),
-                ],
-                *g.get_cells()
-            );
         }
+
+        assert_eq!(
+            vec![
+                Cell::empty().with_cycle(1),
+                Cell::empty().with_cycle(2),
+                Cell::empty().with_cycle(3),
+                Cell::new(Particle::from(Water::new_with_solute(0))).with_cycle(8),
+                Cell::new(Particle::from(Salt::new())).with_cycle(8),
+                Cell::new(Particle::from(Salt::new())).with_cycle(7),
+                Cell::new(Particle::from(Salt::new())).with_cycle(6),
+                Cell::new(Particle::from(Salt::new())).with_cycle(5),
+                Cell::new(Particle::from(Salt::new())).with_cycle(4),
+            ],
+            *g.get_cells()
+        );
     }
 
     #[test]
