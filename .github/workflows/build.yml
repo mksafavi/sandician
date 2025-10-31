@@ -5,12 +5,13 @@ on:
   push:
 
 jobs:
-  clippy:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: DeterminateSystems/nix-installer-action@main
       - uses: rrbutani/use-nix-shell-action@v1
+      - run: cargo fmt --check
       - run: just clippy
 
   test:
