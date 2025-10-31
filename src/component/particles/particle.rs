@@ -87,47 +87,50 @@ pub fn gravity<T: GridAccess>(grid: &mut T, position: (usize, usize)) -> bool {
         None => u8::MAX,
     };
 
-    let bottom = if let Ok(index_n) = grid.get_neighbor_index(position, (0, 1)) {
-        (
-            match &grid.get_cell(index_n).particle {
-                Some(p) => {
-                    if !grid.is_simulated(grid.get_cell(index_n)) {
-                        p.weight()
-                    } else {
-                        u8::MAX
+    if let Ok(index_n) = grid.get_neighbor_index(position, (0, 1)) {
+        let cell = grid.get_cell(index_n);
+        match &cell.particle {
+            Some(p) => {
+                if !grid.is_simulated(cell) {
+                    if p.weight() < weight {
+                        grid.swap_particles(index, index_n);
+                        return true;
                     }
                 }
-                None => u8::MIN,
-            },
-            index_n,
-        )
-    } else {
-        (u8::MAX, 0)
-    };
-
-    if bottom.0 < weight {
-        grid.swap_particles(index, bottom.1);
-        return true;
+            }
+            None => {
+                grid.swap_particles(index, index_n);
+                return true;
+            }
+        };
     }
 
-    let bottom_left = if let Ok(index_n) = grid.get_neighbor_index(position, (-1, 1)) {
-        let w = match &grid.get_cell(index_n).particle {
-            Some(p) => p.weight(),
-            None => u8::MIN,
-        };
-        if w < weight { Some(index_n) } else { None }
-    } else {
-        None
+    let bottom_left = match grid.get_neighbor_index(position, (-1, 1)) {
+        Ok(index_n) => match &grid.get_cell(index_n).particle {
+            Some(p) => {
+                if p.weight() < weight {
+                    Some(index_n)
+                } else {
+                    None
+                }
+            }
+            None => Some(index_n),
+        },
+        Err(_) => None,
     };
 
-    let bottom_right = if let Ok(index_n) = grid.get_neighbor_index(position, (1, 1)) {
-        let w = match &grid.get_cell(index_n).particle {
-            Some(p) => p.weight(),
-            None => u8::MIN,
-        };
-        if w < weight { Some(index_n) } else { None }
-    } else {
-        None
+    let bottom_right = match grid.get_neighbor_index(position, (1, 1)) {
+        Ok(index_n) => match &grid.get_cell(index_n).particle {
+            Some(p) => {
+                if p.weight() < weight {
+                    Some(index_n)
+                } else {
+                    None
+                }
+            }
+            None => Some(index_n),
+        },
+        Err(_) => None,
     };
 
     if let Some(index_n) = match (bottom_left, bottom_right) {
