@@ -57,6 +57,15 @@ impl Particle {
             Particle::Rock => Color::hsva(28.0, 0.25, 0.30, 1.00),
         }
     }
+
+    fn weight(&self) -> u8 {
+        match self {
+            Particle::Sand(sand) => sand.weight,
+            Particle::Water(water) => water.weight,
+            Particle::Salt(salt) => salt.weight,
+            Particle::Rock => u8::MAX,
+        }
+    }
 }
 
 impl fmt::Display for Particle {
@@ -72,15 +81,56 @@ impl fmt::Display for Particle {
 }
 
 pub fn gravity<T: GridAccess>(grid: &mut T, position: (usize, usize)) -> bool {
-    if let Some(index) = grid.is_empty(position, (0, 1)) {
-        grid.swap_particles(grid.to_index(position), index);
+    let index = grid.to_index(position);
+    let weight = match &grid.get_cell(index).particle {
+        Some(p) => p.weight(),
+        None => u8::MAX,
+    };
+
+    let bottom = if let Ok(index_n) = grid.get_neighbor_index(position, (0, 1)) {
+        (
+            match &grid.get_cell(index_n).particle {
+                Some(p) => {
+                    if !grid.is_simulated(grid.get_cell(index_n)) {
+                        p.weight()
+                    } else {
+                        u8::MAX
+                    }
+                }
+                None => u8::MIN,
+            },
+            index_n,
+        )
+    } else {
+        (u8::MAX, 0)
+    };
+
+    if bottom.0 < weight {
+        grid.swap_particles(index, bottom.1);
         return true;
     }
 
-    if let Some(index) = match (
-        grid.is_empty(position, (-1, 1)),
-        grid.is_empty(position, (1, 1)),
-    ) {
+    let bottom_left = if let Ok(index_n) = grid.get_neighbor_index(position, (-1, 1)) {
+        let w = match &grid.get_cell(index_n).particle {
+            Some(p) => p.weight(),
+            None => u8::MIN,
+        };
+        if w < weight { Some(index_n) } else { None }
+    } else {
+        None
+    };
+
+    let bottom_right = if let Ok(index_n) = grid.get_neighbor_index(position, (1, 1)) {
+        let w = match &grid.get_cell(index_n).particle {
+            Some(p) => p.weight(),
+            None => u8::MIN,
+        };
+        if w < weight { Some(index_n) } else { None }
+    } else {
+        None
+    };
+
+    if let Some(index_n) = match (bottom_left, bottom_right) {
         (None, None) => None,
         (None, Some(r)) => Some(r),
         (Some(l), None) => Some(l),
@@ -89,8 +139,12 @@ pub fn gravity<T: GridAccess>(grid: &mut T, position: (usize, usize)) -> bool {
             ParticleHorizontalDirection::Right => Some(r),
         },
     } {
-        grid.swap_particles(grid.to_index(position), index);
-        true
+        if !grid.is_simulated(grid.get_cell(index_n)) {
+            grid.swap_particles(index, index_n);
+            true
+        } else {
+            false
+        }
     } else {
         false
     }

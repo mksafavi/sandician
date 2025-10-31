@@ -19,17 +19,13 @@ impl Water {
     }
 
     pub fn new_with_solute(solute: u8) -> Self {
-        Self { weight: 0, solute }
+        Self { weight: 1, solute }
     }
 }
 
 impl particle::Updatable for Water {
     fn update<T: GridAccess>(&self, grid: &mut T, position: (usize, usize)) {
         if dissolve_salt(grid, self.solute, position) {
-            return;
-        }
-
-        if sink_in_water(grid, position) {
             return;
         }
 
@@ -60,62 +56,6 @@ fn dissolve_salt<T: GridAccess>(grid: &mut T, solute: u8, position: (usize, usiz
         }
     }
     false
-}
-
-fn sink_in_water<T: GridAccess>(grid: &mut T, position: (usize, usize)) -> bool {
-    if let Ok(i) = grid.get_neighbor_index(position, (0, -1)) {
-        let c = grid.get_cell(i);
-        if let Some(Particle::Salt(..) | Particle::Sand(..)) = c.particle {
-            if !grid.is_simulated(c) {
-                grid.swap_particles(grid.to_index(position), i);
-                return true;
-            }
-        }
-    };
-
-    let index_top_left = match grid.get_neighbor_index(position, (-1, -1)) {
-        Ok(i) => {
-            let c = grid.get_cell(i);
-            match c.particle {
-                Some(Particle::Salt(..) | Particle::Sand(..)) => match grid.is_simulated(c) {
-                    true => None,
-                    false => Some(i),
-                },
-                _ => None,
-            }
-        }
-        Err(_) => None,
-    };
-    let index_top_right = match grid.get_neighbor_index(position, (1, -1)) {
-        Ok(i) => {
-            let c = grid.get_cell(i);
-            match c.particle {
-                Some(Particle::Salt(..) | Particle::Sand(..)) => match grid.is_simulated(c) {
-                    true => None,
-                    false => Some(i),
-                },
-                _ => None,
-            }
-        }
-        Err(_) => None,
-    };
-
-    let index = match (index_top_left, index_top_right) {
-        (None, None) => None,
-        (None, Some(i)) => Some(i),
-        (Some(i), None) => Some(i),
-        (Some(l), Some(r)) => match grid.particle_direction() {
-            ParticleHorizontalDirection::Left => Some(l),
-            ParticleHorizontalDirection::Right => Some(r),
-        },
-    };
-
-    if let Some(index) = index {
-        grid.swap_particles(grid.to_index(position), index);
-        true
-    } else {
-        false
-    }
 }
 
 fn slide_water<T: GridAccess>(grid: &mut T, position: (usize, usize)) -> bool {
@@ -681,6 +621,52 @@ mod tests {
                 Cell::new(Particle::from(Water::new())).with_cycle(2),
                 Cell::new(Particle::from(Sand::new())).with_cycle(2),
                 Cell::new(Particle::from(Sand::new())).with_cycle(1),
+            ],
+            *g.get_cells()
+        );
+    }
+
+    #[test]
+    fn test_sand_should_sink_in_water_but_water_should_not_climb_sands_wider_grid() {
+        /*
+         * sss -> sss
+         * sss -> www
+         * www    sss
+         * www    www
+         */
+        let mut g = Grid::new_with_rand(3, 4, Some(|| ParticleHorizontalDirection::Right), None);
+
+        g.spawn_particle((0, 0), Particle::from(Sand::new()));
+        g.spawn_particle((1, 0), Particle::from(Sand::new()));
+        g.spawn_particle((2, 0), Particle::from(Sand::new()));
+
+        g.spawn_particle((0, 1), Particle::from(Sand::new()));
+        g.spawn_particle((1, 1), Particle::from(Sand::new()));
+        g.spawn_particle((2, 1), Particle::from(Sand::new()));
+
+        g.spawn_particle((0, 2), Particle::from(Water::new()));
+        g.spawn_particle((1, 2), Particle::from(Water::new()));
+        g.spawn_particle((2, 2), Particle::from(Water::new()));
+
+        g.spawn_particle((0, 3), Particle::from(Water::new()));
+        g.spawn_particle((1, 3), Particle::from(Water::new()));
+        g.spawn_particle((2, 3), Particle::from(Water::new()));
+
+        g.update_grid();
+        assert_eq!(
+            vec![
+                Cell::new(Particle::from(Sand::new())),
+                Cell::new(Particle::from(Sand::new())),
+                Cell::new(Particle::from(Sand::new())),
+                Cell::new(Particle::from(Water::new())).with_cycle(1),
+                Cell::new(Particle::from(Water::new())).with_cycle(1),
+                Cell::new(Particle::from(Water::new())).with_cycle(1),
+                Cell::new(Particle::from(Sand::new())).with_cycle(1),
+                Cell::new(Particle::from(Sand::new())).with_cycle(1),
+                Cell::new(Particle::from(Sand::new())).with_cycle(1),
+                Cell::new(Particle::from(Water::new())),
+                Cell::new(Particle::from(Water::new())),
+                Cell::new(Particle::from(Water::new())),
             ],
             *g.get_cells()
         );
