@@ -139,12 +139,8 @@ pub fn gravity<T: GridAccess>(grid: &mut T, position: (usize, usize)) -> bool {
             ParticleHorizontalDirection::Right => Some(r),
         },
     } {
-        if !grid.is_simulated(grid.get_cell(index_n)) {
-            grid.swap_particles(index, index_n);
-            true
-        } else {
-            false
-        }
+        grid.swap_particles(index, index_n);
+        true
     } else {
         false
     }

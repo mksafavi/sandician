@@ -627,10 +627,10 @@ mod tests {
     }
 
     #[test]
-    fn test_sand_should_sink_in_water_but_water_should_not_climb_sands_wider_grid() {
+    fn test_allow_sand_to_sink_diagonally_even_if_the_destination_cell_is_simulated() {
         /*
-         * sss -> sss
-         * sss -> www
+         * sss -> wws
+         * sss -> wss
          * www    sss
          * www    www
          */
@@ -655,12 +655,12 @@ mod tests {
         g.update_grid();
         assert_eq!(
             vec![
-                Cell::new(Particle::from(Sand::new())),
-                Cell::new(Particle::from(Sand::new())),
-                Cell::new(Particle::from(Sand::new())),
                 Cell::new(Particle::from(Water::new())).with_cycle(1),
                 Cell::new(Particle::from(Water::new())).with_cycle(1),
+                Cell::new(Particle::from(Sand::new())),
                 Cell::new(Particle::from(Water::new())).with_cycle(1),
+                Cell::new(Particle::from(Sand::new())).with_cycle(1),
+                Cell::new(Particle::from(Sand::new())).with_cycle(1),
                 Cell::new(Particle::from(Sand::new())).with_cycle(1),
                 Cell::new(Particle::from(Sand::new())).with_cycle(1),
                 Cell::new(Particle::from(Sand::new())).with_cycle(1),
