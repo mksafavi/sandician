@@ -1,3 +1,5 @@
+use std::fmt;
+
 use bevy::{
     asset::RenderAssetUsages,
     color::{Color, ColorToPacked, palettes::css},
@@ -82,6 +84,35 @@ pub trait GridAccess {
     fn is_empty(&self, position: (usize, usize), offset: (i32, i32)) -> Option<usize>;
     fn is_simulated(&self, c: &Cell) -> bool;
     fn cycle(&self) -> u32;
+}
+
+impl fmt::Display for Cell {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match &self.particle {
+            Some(p) => match p {
+                Particle::Sand(_) => write!(f, "s"),
+                Particle::Water(_) => write!(f, "w"),
+                Particle::Salt(_) => write!(f, "S"),
+                Particle::Rock => write!(f, "r"),
+            },
+            None => write!(f, "-"),
+        }
+    }
+}
+
+impl fmt::Display for Grid {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let _ = writeln!(f, "{}", ".".repeat(self.width + 2));
+        for j in 0..self.height {
+            let _ = write!(f, ".");
+            for i in 0..self.width {
+                let c = self.get_cell(self.to_index((i, j)));
+                let _ = write!(f, "{c}");
+            }
+            let _ = writeln!(f, ".");
+        }
+        writeln!(f, "{}", ".".repeat(self.width + 2))
+    }
 }
 
 impl GridAccess for Grid {
