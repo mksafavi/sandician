@@ -14,8 +14,8 @@ impl Default for Salt {
 }
 
 impl Salt {
-    pub fn new() -> Salt {
-        Salt { weight: 0 }
+    pub fn new() -> Self {
+        Self { weight: 0 }
     }
 }
 

@@ -14,15 +14,12 @@ impl Default for Water {
 }
 
 impl Water {
-    pub fn new() -> Water {
-        Water {
-            weight: 0,
-            solute: 3,
-        }
+    pub fn new() -> Self {
+        Self::new_with_solute(3)
     }
 
-    pub fn new_with_solute(solute: u8) -> Water {
-        Water { weight: 0, solute }
+    pub fn new_with_solute(solute: u8) -> Self {
+        Self { weight: 0, solute }
     }
 }
 
