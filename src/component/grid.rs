@@ -11,8 +11,6 @@ use rand::random_range;
 
 use super::particles::particle::Particle;
 
-// TODO: remove all unwrap and expects
-
 pub enum GridError {
     OutOfBound,
 }
