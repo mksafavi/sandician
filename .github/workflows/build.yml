@@ -45,24 +45,15 @@ jobs:
       - uses: DeterminateSystems/nix-installer-action@main
       - uses: rrbutani/use-nix-shell-action@v1
       - run: just ci-build-wasm "main"
-
-  build-pages:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          lfs: 'true'
-      - uses: DeterminateSystems/nix-installer-action@main
-      - uses: rrbutani/use-nix-shell-action@v1
       - run: just ci-build-pages "main"
       - uses: actions/upload-artifact@v5
         with:
           name: pages
           path: ./target/pages
 
-  deploy:
+  deploy-pages:
     runs-on: ubuntu-latest
-    needs: build-pages
+    needs: [lint, test, build-wasm]
     steps:
       - uses: actions/download-artifact@v6
         with:
