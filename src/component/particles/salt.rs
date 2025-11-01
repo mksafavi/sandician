@@ -20,7 +20,7 @@ impl Salt {
 }
 
 impl particle::Updatable for Salt {
-    fn update<T: GridAccess>(&self, grid: &mut T, position: (usize, usize)) {
+    fn update<T: GridAccess>(&mut self, grid: &mut T, position: (usize, usize)) {
         particle::gravity(grid, position);
     }
 }

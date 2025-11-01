@@ -16,7 +16,7 @@ pub enum Particle {
 }
 
 pub trait Updatable {
-    fn update<T: GridAccess>(&self, grid: &mut T, position: (usize, usize));
+    fn update<T: GridAccess>(&mut self, grid: &mut T, position: (usize, usize));
 }
 
 impl From<Sand> for Particle {
@@ -44,7 +44,7 @@ impl From<Drain> for Particle {
 }
 
 impl Particle {
-    pub fn update<T: GridAccess>(&self, grid: &mut T, position: (usize, usize)) {
+    pub fn update<T: GridAccess>(&mut self, grid: &mut T, position: (usize, usize)) {
         match self {
             Particle::Sand(sand) => sand.update(grid, position),
             Particle::Water(water) => water.update(grid, position),
