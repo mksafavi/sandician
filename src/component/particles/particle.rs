@@ -91,11 +91,9 @@ pub fn gravity<T: GridAccess>(grid: &mut T, position: (usize, usize)) -> bool {
         let cell = grid.get_cell(index_n);
         match &cell.particle {
             Some(p) => {
-                if !grid.is_simulated(cell) {
-                    if p.weight() < weight {
-                        grid.swap_particles(index, index_n);
-                        return true;
-                    }
+                if !grid.is_simulated(cell) && p.weight() < weight {
+                    grid.swap_particles(index, index_n);
+                    return true;
                 }
             }
             None => {
