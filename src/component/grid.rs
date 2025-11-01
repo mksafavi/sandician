@@ -92,6 +92,7 @@ impl fmt::Display for Cell {
                 Particle::Water(_) => write!(f, "w"),
                 Particle::Salt(_) => write!(f, "S"),
                 Particle::Rock => write!(f, "r"),
+                Particle::Drain(..) => todo!(),
             },
             None => write!(f, "-"),
         }
@@ -314,7 +315,7 @@ mod tests {
     use super::*;
     use crate::component::{
         macros::assert_color_srgb_eq,
-        particles::{salt::Salt, sand::Sand, water::Water},
+        particles::{drain::Drain, salt::Salt, sand::Sand, water::Water},
     };
 
     #[test]
@@ -625,6 +626,11 @@ mod tests {
             Particle::from(Salt::new()).color()
         );
         assert_color_srgb_eq!(Color::hsva(28.0, 0.25, 0.30, 1.00), Particle::Rock.color());
+
+        assert_color_srgb_eq!(
+            Color::hsva(0.0, 0.0, 0.10, 1.00),
+            Particle::from(Drain::new()).color()
+        );
     }
 
     #[test]

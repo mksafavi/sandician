@@ -4,7 +4,7 @@ use bevy::prelude::Color;
 
 use crate::component::grid::{GridAccess, ParticleHorizontalDirection};
 
-use super::{salt::Salt, sand::Sand, water::Water};
+use super::{drain::Drain, salt::Salt, sand::Sand, water::Water};
 
 #[derive(Clone, PartialEq, Debug)]
 pub enum Particle {
@@ -12,6 +12,7 @@ pub enum Particle {
     Water(Water),
     Salt(Salt),
     Rock,
+    Drain(Drain),
 }
 
 pub trait Updatable {
@@ -36,6 +37,12 @@ impl From<Water> for Particle {
     }
 }
 
+impl From<Drain> for Particle {
+    fn from(drain: Drain) -> Self {
+        Self::Drain(drain)
+    }
+}
+
 impl Particle {
     pub fn update<T: GridAccess>(&self, grid: &mut T, position: (usize, usize)) {
         match self {
@@ -43,6 +50,7 @@ impl Particle {
             Particle::Water(water) => water.update(grid, position),
             Particle::Salt(salt) => salt.update(grid, position),
             Particle::Rock => (),
+            Particle::Drain(drain) => drain.update(grid, position),
         };
     }
 
@@ -55,6 +63,7 @@ impl Particle {
             },
             Particle::Salt(..) => Color::hsva(0.00, 0.00, 1.00, 1.00),
             Particle::Rock => Color::hsva(28.0, 0.25, 0.30, 1.00),
+            Particle::Drain(..) => Color::hsva(0.0, 0.0, 0.10, 1.00),
         }
     }
 
@@ -64,6 +73,7 @@ impl Particle {
             Particle::Water(water) => water.weight,
             Particle::Salt(salt) => salt.weight,
             Particle::Rock => u8::MAX,
+            Particle::Drain(..) => u8::MAX,
         }
     }
 }
@@ -75,6 +85,7 @@ impl fmt::Display for Particle {
             Particle::Water(..) => "water",
             Particle::Salt(..) => "salt",
             Particle::Rock => "rock",
+            Particle::Drain(..) => "drain",
         };
         write!(f, "{s}")
     }
@@ -157,5 +168,6 @@ mod tests {
         assert_eq!("salt", Particle::from(Salt::new()).to_string());
         assert_eq!("water", Particle::from(Water::new()).to_string());
         assert_eq!("rock", Particle::Rock.to_string());
+        assert_eq!("drain", Particle::from(Drain::new()).to_string());
     }
 }
