@@ -26,7 +26,7 @@ jobs:
       - uses: rrbutani/use-nix-shell-action@v1
       - run: just ci-test
 
-  build:
+  build-linux:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
