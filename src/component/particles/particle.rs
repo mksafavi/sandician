@@ -4,7 +4,7 @@ use bevy::prelude::Color;
 
 use crate::component::grid::{GridAccess, ParticleHorizontalDirection};
 
-use super::{drain::Drain, salt::Salt, sand::Sand, water::Water};
+use super::{drain::Drain, salt::Salt, sand::Sand, tap::Tap, water::Water};
 
 #[derive(Clone, PartialEq, Debug)]
 pub enum Particle {
@@ -13,6 +13,7 @@ pub enum Particle {
     Salt(Salt),
     Rock,
     Drain(Drain),
+    Tap(Tap),
 }
 
 pub trait Updatable {
@@ -43,6 +44,12 @@ impl From<Drain> for Particle {
     }
 }
 
+impl From<Tap> for Particle {
+    fn from(tap: Tap) -> Self {
+        Self::Tap(tap)
+    }
+}
+
 impl Particle {
     pub fn update<T: GridAccess>(&mut self, grid: &mut T, position: (usize, usize)) {
         match self {
@@ -51,6 +58,7 @@ impl Particle {
             Particle::Salt(salt) => salt.update(grid, position),
             Particle::Rock => (),
             Particle::Drain(drain) => drain.update(grid, position),
+            Particle::Tap(tap) => tap.update(grid, position),
         };
     }
 
@@ -64,6 +72,7 @@ impl Particle {
             Particle::Salt(..) => Color::hsva(0.00, 0.00, 1.00, 1.00),
             Particle::Rock => Color::hsva(28.0, 0.25, 0.30, 1.00),
             Particle::Drain(..) => Color::hsva(0.0, 0.0, 0.10, 1.00),
+            Particle::Tap(..) => Color::hsva(190.0, 0.4, 0.75, 1.00),
         }
     }
 
@@ -74,6 +83,7 @@ impl Particle {
             Particle::Salt(salt) => salt.weight,
             Particle::Rock => u8::MAX,
             Particle::Drain(..) => u8::MAX,
+            Particle::Tap(..) => u8::MAX,
         }
     }
 }
@@ -86,6 +96,7 @@ impl fmt::Display for Particle {
             Particle::Salt(..) => "salt",
             Particle::Rock => "rock",
             Particle::Drain(..) => "drain",
+            Particle::Tap(..) => "tap",
         };
         write!(f, "{s}")
     }
@@ -169,5 +180,6 @@ mod tests {
         assert_eq!("water", Particle::from(Water::new()).to_string());
         assert_eq!("rock", Particle::Rock.to_string());
         assert_eq!("drain", Particle::from(Drain::new()).to_string());
+        assert_eq!("tap", Particle::from(Tap::new()).to_string());
     }
 }
