@@ -79,7 +79,7 @@ impl Particle {
     fn weight(&self) -> u8 {
         match self {
             Particle::Sand(sand) => sand.weight,
-            Particle::Water(water) => water.weight,
+            Particle::Water(water) => water.weight + (3 - water.solvant_capacity),
             Particle::Salt(salt) => salt.weight,
             Particle::Rock => u8::MAX,
             Particle::Drain(..) => u8::MAX,

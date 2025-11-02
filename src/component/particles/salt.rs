@@ -15,7 +15,7 @@ impl Default for Salt {
 
 impl Salt {
     pub fn new() -> Self {
-        Self { weight: 2 }
+        Self { weight: 5 }
     }
 }
 

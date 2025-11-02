@@ -15,7 +15,7 @@ impl Default for Sand {
 
 impl Sand {
     pub fn new() -> Self {
-        Self { weight: 2 }
+        Self { weight: 5 }
     }
 }
 

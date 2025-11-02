@@ -1031,4 +1031,35 @@ mod tests {
             *g.get_cells()
         );
     }
+
+    #[test]
+    fn test_salt_water_is_heavier_than_water_and_sinks() {
+        /*
+         * 0 -> 3
+         * 1    2
+         * 2    1
+         * 3    0
+         */
+        let mut g = Grid::new(1, 4);
+
+        g.spawn_particle((0, 0), Particle::from(Water::with_capacity(0)));
+        g.spawn_particle((0, 1), Particle::from(Water::with_capacity(1)));
+        g.spawn_particle((0, 2), Particle::from(Water::with_capacity(2)));
+        g.spawn_particle((0, 3), Particle::from(Water::new()));
+
+        g.update_grid();
+        g.update_grid();
+        g.update_grid();
+        g.update_grid();
+
+        assert_eq!(
+            vec![
+                Cell::new(Particle::from(Water::new())).with_cycle(3),
+                Cell::new(Particle::from(Water::with_capacity(2))).with_cycle(4),
+                Cell::new(Particle::from(Water::with_capacity(1))).with_cycle(4),
+                Cell::new(Particle::from(Water::with_capacity(0))).with_cycle(3),
+            ],
+            *g.get_cells()
+        );
+    }
 }
