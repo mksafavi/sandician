@@ -32,7 +32,7 @@ use bevy::{
 
 use super::{
     grid::Grid,
-    particles::{drain::Drain, particle::Particle, salt::Salt, sand::Sand, tap::Tap, water::Water},
+    particles::{drain::Drain, particle::Particle, salt::Salt, sand::Sand, water::Water},
 };
 
 const ASSET_FONT_PATH: &str = "fonts/Adventurer.ttf";
@@ -277,7 +277,6 @@ fn brush_node(font: Handle<Font>) -> impl Bundle {
             radio(Particle::from(Water::new()), font.clone()),
             radio(Particle::Rock, font.clone()),
             radio(Particle::from(Drain::new()), font.clone()),
-            radio(Particle::from(Tap::new()), font.clone()),
         ],
     )
 }
@@ -721,12 +720,6 @@ mod tests {
         trigger_particle_button_click_event(&mut app, Particle::from(Drain::new()));
         assert_eq!(
             Particle::from(Drain::new()),
-            query_particle_brush(&mut app).particle
-        );
-
-        trigger_particle_button_click_event(&mut app, Particle::from(Tap::new()));
-        assert_eq!(
-            Particle::from(Tap::new()),
             query_particle_brush(&mut app).particle
         );
     }
