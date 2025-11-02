@@ -25,8 +25,35 @@
       transform-origin: bottom center;
       image-rendering: pixelated;
     }
+    #corner {
+      z-index: 1;
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 70px;
+      height: 70px;
+      clip-path: polygon(100% 0%, 0% 0%, 100% 100%);
+      background-color: white;
+      color: black;
+      text-decoration: none;
+      text-align: center;
+    }
+    #corner > p {
+      position: absolute;
+      left: 18px;
+      rotate: 45deg;
+    }
   </style>
   <body id="body">
+    <a
+      id="corner"
+      href="https://github.com/mksafavi/sandician"
+      aria-label="View source on GitHub"
+      title="View source on GitHub"
+      target="_blank"
+    >
+      <p>Source</p>
+    </a>
     <script type="module">
       import init from "/main.js";
       init();
