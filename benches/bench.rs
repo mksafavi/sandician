@@ -1,7 +1,7 @@
 use criterion::{Criterion, criterion_group, criterion_main};
 use sandsim::component::{
     grid::Grid,
-    particles::{particle::Particle, salt::Salt, sand::Sand, water::Water},
+    particles::{drain::Drain, particle::Particle, salt::Salt, sand::Sand, tap::Tap, water::Water},
 };
 
 fn fill_grid_mixed(g: &mut Grid, (x, y): (usize, usize)) {
@@ -54,6 +54,42 @@ fn criterion_benchmark(c: &mut Criterion) {
         for y in 0..y {
             for x in 0..x {
                 g.spawn_particle((x, y), Particle::from(Salt::new()));
+            }
+        }
+        b.iter(|| {
+            g.update_grid();
+        });
+    });
+
+    c.bench_function("update grid rock", |b| {
+        let mut g = Grid::new(x, y);
+        for y in 0..y {
+            for x in 0..x {
+                g.spawn_particle((x, y), Particle::Rock);
+            }
+        }
+        b.iter(|| {
+            g.update_grid();
+        });
+    });
+
+    c.bench_function("update grid drain", |b| {
+        let mut g = Grid::new(x, y);
+        for y in 0..y {
+            for x in 0..x {
+                g.spawn_particle((x, y), Particle::from(Drain::new()));
+            }
+        }
+        b.iter(|| {
+            g.update_grid();
+        });
+    });
+
+    c.bench_function("update grid tap", |b| {
+        let mut g = Grid::new(x, y);
+        for y in 0..y {
+            for x in 0..x {
+                g.spawn_particle((x, y), Particle::from(Tap::new()));
             }
         }
         b.iter(|| {
