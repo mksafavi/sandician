@@ -43,6 +43,9 @@
       left: 18px;
       rotate: 45deg;
     }
+    #loading {
+      color: white;
+    }
   </style>
   <body id="body">
     <a
@@ -54,9 +57,9 @@
     >
       <p>Source</p>
     </a>
+    <p id="loading">Loading...</p>
+    <canvas id="window_canvas"></canvas>
     <script type="module">
-      import init from "/main.js";
-      init();
       const resize_canvas = () => {
         let canvas = document.getElementById("window_canvas");
         let body = document.getElementById("body");
@@ -67,7 +70,9 @@
       };
       window.addEventListener("load", resize_canvas);
       window.addEventListener("resize", resize_canvas);
+      import init from "/main.js";
+      await init();
+      document.getElementById("loading").style.display = "none";
     </script>
-    <canvas id="window_canvas"></canvas>
   </body>
 </html>
