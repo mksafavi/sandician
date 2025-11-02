@@ -644,12 +644,12 @@ mod tests {
         for s in 1..=3 {
             assert_color_srgb_eq!(
                 Color::hsva(201.60, 1.00, 0.80, 1.00),
-                Particle::from(Water::new_with_solute(s)).color()
+                Particle::from(Water::with_capacity(s)).color()
             );
         }
         assert_color_srgb_eq!(
             Color::hsva(201.60, 0.60, 0.80, 1.00),
-            Particle::from(Water::new_with_solute(0)).color()
+            Particle::from(Water::with_capacity(0)).color()
         );
     }
 }
