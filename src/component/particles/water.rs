@@ -64,7 +64,16 @@ fn slide_water<T: GridAccess>(grid: &mut T, position: (usize, usize)) -> bool {
         Ok(i) => {
             let c = grid.get_cell(i);
             match &c.particle {
-                Some(_) => None,
+                Some(p) => match p {
+                    Particle::Water(water) => {
+                        if water.solvant_capacity == 0 {
+                            Some(i)
+                        } else {
+                            None
+                        }
+                    }
+                    _ => None,
+                },
                 None => match grid.get_neighbor_index(position, (-2, 0)) {
                     Ok(ii) => {
                         let c = grid.get_cell(ii);
@@ -84,7 +93,16 @@ fn slide_water<T: GridAccess>(grid: &mut T, position: (usize, usize)) -> bool {
         Ok(i) => {
             let c = grid.get_cell(i);
             match &c.particle {
-                Some(_) => None,
+                Some(p) => match p {
+                    Particle::Water(water) => {
+                        if water.solvant_capacity == 0 {
+                            Some(i)
+                        } else {
+                            None
+                        }
+                    }
+                    _ => None,
+                },
                 None => match grid.get_neighbor_index(position, (2, 0)) {
                     Ok(ii) => {
                         let c = grid.get_cell(ii);
@@ -1058,6 +1076,48 @@ mod tests {
                 Cell::new(Particle::from(Water::with_capacity(2))).with_cycle(4),
                 Cell::new(Particle::from(Water::with_capacity(1))).with_cycle(4),
                 Cell::new(Particle::from(Water::with_capacity(0))).with_cycle(3),
+            ],
+            *g.get_cells()
+        );
+    }
+
+    #[test]
+    fn test_water_can_slide_left_into_salt_water() {
+        /*
+         * Ww -> wW
+         */
+        let mut g = Grid::new_with_rand(2, 1, Some(|| ParticleHorizontalDirection::Left), None);
+
+        g.spawn_particle((0, 0), Particle::from(Water::with_capacity(0)));
+        g.spawn_particle((1, 0), Particle::from(Water::new()));
+
+        g.update_grid();
+
+        assert_eq!(
+            vec![
+                Cell::new(Particle::from(Water::new())).with_cycle(1),
+                Cell::new(Particle::from(Water::with_capacity(0))).with_cycle(1),
+            ],
+            *g.get_cells()
+        );
+    }
+
+    #[test]
+    fn test_water_can_slide_right_into_salt_water() {
+        /*
+         * wW -> Ww
+         */
+        let mut g = Grid::new_with_rand(2, 1, Some(|| ParticleHorizontalDirection::Right), None);
+
+        g.spawn_particle((0, 0), Particle::from(Water::new()));
+        g.spawn_particle((1, 0), Particle::from(Water::with_capacity(0)));
+
+        g.update_grid();
+
+        assert_eq!(
+            vec![
+                Cell::new(Particle::from(Water::with_capacity(0))).with_cycle(1),
+                Cell::new(Particle::from(Water::new())).with_cycle(1),
             ],
             *g.get_cells()
         );
