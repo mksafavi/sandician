@@ -44,10 +44,8 @@ fn dissolve_salt<T: GridAccess>(grid: &mut T, solute: u8, position: (usize, usiz
                 if let Some(Particle::Salt(..)) = grid.get_cell(i).particle {
                     if 0 < solute {
                         let index = grid.to_index(position);
-                        grid.get_cell_mut(index).particle = Some({
-                            let solute = solute - 1;
-                            Particle::from(Water::new_with_solute(solute))
-                        });
+                        grid.get_cell_mut(index).particle =
+                            Some(Particle::from(Water::new_with_solute(solute - 1)));
                         grid.dissolve_particles(index, i);
                         return true;
                     }
