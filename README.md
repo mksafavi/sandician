@@ -36,6 +36,7 @@ This should compile the project and place the binary in `./target/release`:
 ### WebAssembly (WASM) Build:
 
 ``` shell
+just build-wasm "main"
 just build-pages "main"
 ```
 
