@@ -8,6 +8,13 @@
     />
   </head>
   <style>
+    @font-face {
+      font-family: "Adventurer";
+      src: url("/assets/fonts/Adventurer.ttf");
+    }
+    p {
+      font-family: Adventurer;
+    }
     body {
       margin: 0;
       width: 100%;
@@ -30,8 +37,8 @@
       position: absolute;
       top: 0;
       right: 0;
-      width: 70px;
-      height: 70px;
+      width: 75px;
+      height: 75px;
       clip-path: polygon(100% 0%, 0% 0%, 100% 100%);
       background-color: white;
       color: black;
@@ -40,11 +47,15 @@
     }
     #corner > p {
       position: absolute;
-      left: 18px;
+      top: 4px;
+      left: 16px;
       rotate: 45deg;
+      font-size: 18px;
+      font-weight: bold;
     }
     #loading {
       color: white;
+      font-size: 36px;
     }
   </style>
   <body id="body">
