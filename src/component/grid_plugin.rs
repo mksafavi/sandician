@@ -179,11 +179,11 @@ fn spawn_brush_system(mut particle_brush: Query<&mut ParticleBrush>, mut grid: Q
             if pb.spawning {
                 while pb.positions.len() != 1 {
                     if let Some(position) = pb.positions.pop_front() {
-                        g.spawn_brush(position, pb.size, &pb.particle)
+                        g.spawn_brush(position, pb.size, Some(pb.particle.clone()));
                     }
                 }
                 if let Some(&position) = pb.positions.front() {
-                    g.spawn_brush(position, pb.size, &pb.particle)
+                    g.spawn_brush(position, pb.size, Some(pb.particle.clone()));
                 }
             }
         }
