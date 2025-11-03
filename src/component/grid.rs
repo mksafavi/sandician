@@ -222,7 +222,7 @@ impl Grid {
     pub fn despawn_particle(&mut self, (x, y): (usize, usize)) {
         if y < self.height && x < self.width {
             let index = self.to_index((x, y));
-            self.cells[index].particle = None;
+            self.cells[index] = Cell::empty().with_cycle(self.cycle);
         }
     }
 
@@ -440,6 +440,20 @@ mod tests {
             ],
             g.cells
         );
+    }
+
+    #[test]
+    fn test_grid_despawn_particle_to_grid_despawns_with_current_cycle() {
+        let mut g = Grid::new(1, 1);
+        g.spawn_particle((0, 0), Particle::from(Sand::new()));
+
+        assert_eq!(vec![Cell::new(Particle::from(Sand::new())),], g.cells);
+
+        g.update_grid();
+
+        g.despawn_particle((0, 0));
+
+        assert_eq!(vec![Cell::empty().with_cycle(1)], g.cells);
     }
 
     #[test]
