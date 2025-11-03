@@ -360,6 +360,24 @@ mod tests {
     }
 
     #[test]
+    fn test_grid_spawn_particle_to_grid_spawns_with_current_cycle() {
+        let mut g = Grid::new(1, 2);
+        g.spawn_particle((0, 0), Particle::from(Sand::new()));
+
+        g.update_grid();
+
+        g.spawn_particle((0, 0), Particle::from(Sand::new()));
+
+        assert_eq!(
+            vec![
+                Cell::new(Particle::from(Sand::new())).with_cycle(1),
+                Cell::new(Particle::from(Sand::new())).with_cycle(1),
+            ],
+            g.cells
+        );
+    }
+
+    #[test]
     fn test_grid_spawn_particle_to_non_empty_location_silently_fails() {
         let mut g = Grid::new(2, 3);
         g.spawn_particle((0, 0), Particle::from(Sand::new()));
