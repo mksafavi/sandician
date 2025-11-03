@@ -16,6 +16,7 @@ build-wasm BIN:
 build-pages BIN:
     rm -fr ./target/pages
     cp -r ./pages ./target/pages
+    cp -r assets/ ./target/pages/
     cp ./target/wasm-bind/* ./target/pages
     sed --in-place 's/binary.js/{{BIN}}.js/' ./target/pages/index.html
 
@@ -33,6 +34,7 @@ ci-build-wasm BIN:
 ci-build-pages BIN: 
     rm -fr ./target/pages
     cp -r ./pages ./target/pages
+    cp -r assets/ ./target/pages/
     cp ./target/wasm-bind/* ./target/pages
     sed --in-place 's/binary.js/{{BIN}}.js/' ./target/pages/index.html
 
