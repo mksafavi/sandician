@@ -708,6 +708,12 @@ mod tests {
 
         app.update();
 
+        assert_eq!(
+            Some(Particle::from(Sand::new())),
+            query_particle_brush(&mut app).particle,
+            "default brush is set to sand"
+        );
+
         trigger_particle_button_click_event(&mut app, Some(Particle::from(Salt::new())));
         assert_eq!(
             Some(Particle::from(Salt::new())),
