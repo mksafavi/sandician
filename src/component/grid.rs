@@ -273,19 +273,29 @@ impl Grid {
         self.draw_cycle = self.cycle;
     }
 
-    pub fn spawn_brush(&mut self, (x, y): (usize, usize), size: usize, particle: &Particle) {
-        self.spawn_particle((x, y), particle.clone());
-        let radius = size as i32 / 2;
-        for j in (-radius)..=(radius) {
-            for i in (-radius)..=(radius) {
-                if (i * i) + (j * j) <= (radius * radius) {
-                    self.spawn_particle(
-                        ((x as i32 + i) as usize, (y as i32 + j) as usize),
-                        particle.clone(),
-                    );
-                }
-            }
+    pub fn spawn_brush(&mut self, position: (usize, usize), size: usize, particle: &Particle) {
+        for position in Self::circle_brush(position, size) {
+            self.spawn_particle(position, particle.clone());
         }
+    }
+
+    pub fn despawn_brush(&mut self, position: (usize, usize), size: usize) {
+        for position in Self::circle_brush(position, size) {
+            self.despawn_particle(position);
+        }
+    }
+
+    fn circle_brush((x, y): (usize, usize), size: usize) -> impl Iterator<Item = (usize, usize)> {
+        let radius = size as i32 / 2;
+        ((-radius)..=(radius)).flat_map(move |j| {
+            ((-radius)..=(radius)).filter_map(move |i| {
+                if (i * i) + (j * j) <= (radius * radius) {
+                    Some(((x as i32 + i) as usize, (y as i32 + j) as usize))
+                } else {
+                    None
+                }
+            })
+        })
     }
 
     #[allow(dead_code)]
@@ -498,6 +508,50 @@ mod tests {
                 Cell::empty(),
                 Cell::empty(),
                 Cell::new(Particle::from(Sand::new())),
+                Cell::empty(),
+                Cell::empty(),
+            ],
+            g.cells
+        );
+    }
+
+    #[test]
+    fn test_despawn_particles_brush() {
+        /*
+         * --- -> -s- -> ---
+         * ---    sss    ---
+         * ---    -s-    ---
+         */
+        let mut g = Grid::new(3, 3);
+
+        g.spawn_brush((1, 1), 2, &Particle::from(Sand::new()));
+
+        assert_eq!(
+            vec![
+                Cell::empty(),
+                Cell::new(Particle::from(Sand::new())),
+                Cell::empty(),
+                Cell::new(Particle::from(Sand::new())),
+                Cell::new(Particle::from(Sand::new())),
+                Cell::new(Particle::from(Sand::new())),
+                Cell::empty(),
+                Cell::new(Particle::from(Sand::new())),
+                Cell::empty(),
+            ],
+            g.cells
+        );
+
+        g.despawn_brush((1, 1), 2);
+
+        assert_eq!(
+            vec![
+                Cell::empty(),
+                Cell::empty(),
+                Cell::empty(),
+                Cell::empty(),
+                Cell::empty(),
+                Cell::empty(),
+                Cell::empty(),
                 Cell::empty(),
                 Cell::empty(),
             ],
