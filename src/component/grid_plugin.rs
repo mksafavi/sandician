@@ -30,6 +30,8 @@ use bevy::{
     utils::default,
 };
 
+use crate::component::grid::BACKGROUND_COLOR;
+
 use super::{
     grid::Grid,
     particles::{drain::Drain, particle::Particle, salt::Salt, sand::Sand, water::Water},
@@ -41,13 +43,13 @@ const ASSET_FONT_PATH: &str = "fonts/Adventurer.ttf";
 struct OutputFrameHandle(Handle<Image>);
 
 #[derive(Component, Debug)]
-struct ParticleRadio(Particle);
+struct ParticleRadio(Option<Particle>);
 
 #[derive(Component)]
 pub struct ParticleBrush {
     pub spawning: bool,
     pub positions: VecDeque<(usize, usize)>,
-    pub particle: Particle,
+    pub particle: Option<Particle>,
     pub size: usize,
     last_position: Option<Vec3>,
 }
@@ -63,7 +65,7 @@ impl ParticleBrush {
         Self {
             spawning: false,
             positions: VecDeque::new(),
-            particle: Particle::from(Sand::new()),
+            particle: Some(Particle::from(Sand::new())),
             size: 8,
             last_position: None,
         }
@@ -179,11 +181,11 @@ fn spawn_brush_system(mut particle_brush: Query<&mut ParticleBrush>, mut grid: Q
             if pb.spawning {
                 while pb.positions.len() != 1 {
                     if let Some(position) = pb.positions.pop_front() {
-                        g.spawn_brush(position, pb.size, Some(pb.particle.clone()));
+                        g.spawn_brush(position, pb.size, pb.particle.clone());
                     }
                 }
                 if let Some(&position) = pb.positions.front() {
-                    g.spawn_brush(position, pb.size, Some(pb.particle.clone()));
+                    g.spawn_brush(position, pb.size, pb.particle.clone());
                 }
             }
         }
@@ -272,16 +274,26 @@ fn brush_node(font: Handle<Font>) -> impl Bundle {
         },
         BackgroundColor(Color::BLACK),
         children![
-            radio(Particle::from(Sand::new()), font.clone()),
-            radio(Particle::from(Salt::new()), font.clone()),
-            radio(Particle::from(Water::new()), font.clone()),
-            radio(Particle::Rock, font.clone()),
-            radio(Particle::from(Drain::new()), font.clone()),
+            radio(Some(Particle::from(Sand::new())), font.clone()),
+            radio(Some(Particle::from(Salt::new())), font.clone()),
+            radio(Some(Particle::from(Water::new())), font.clone()),
+            radio(Some(Particle::Rock), font.clone()),
+            radio(Some(Particle::from(Drain::new())), font.clone()),
+            radio(None, font.clone()),
         ],
     )
 }
 
-fn radio(particle: Particle, font: Handle<Font>) -> impl Bundle {
+fn radio(particle: Option<Particle>, font: Handle<Font>) -> impl Bundle {
+    let color = match particle.clone() {
+        Some(p) => p.color(),
+        None => BACKGROUND_COLOR,
+    };
+    let text = match particle.clone() {
+        Some(p) => p.to_string(),
+        None => "empty".to_string(),
+    };
+
     (
         Node {
             height: px(26),
@@ -291,12 +303,12 @@ fn radio(particle: Particle, font: Handle<Font>) -> impl Bundle {
             align_items: AlignItems::Center,
             ..default()
         },
-        BorderColor::all(particle.color()),
-        ParticleRadio(particle.clone()),
-        BackgroundColor(particle.color().with_alpha(0.3)),
+        BorderColor::all(color),
+        ParticleRadio(particle),
+        BackgroundColor(color.with_alpha(0.3)),
         Button,
         children![(
-            Text::new(particle.to_string()),
+            Text::new(text),
             TextFont {
                 font_size: 16.,
                 font,
@@ -696,32 +708,38 @@ mod tests {
 
         app.update();
 
-        trigger_particle_button_click_event(&mut app, Particle::from(Salt::new()));
+        trigger_particle_button_click_event(&mut app, Some(Particle::from(Salt::new())));
         assert_eq!(
-            Particle::from(Salt::new()),
+            Some(Particle::from(Salt::new())),
             query_particle_brush(&mut app).particle
         );
 
-        trigger_particle_button_click_event(&mut app, Particle::from(Sand::new()));
+        trigger_particle_button_click_event(&mut app, Some(Particle::from(Sand::new())));
         assert_eq!(
-            Particle::from(Sand::new()),
+            Some(Particle::from(Sand::new())),
             query_particle_brush(&mut app).particle
         );
 
-        trigger_particle_button_click_event(&mut app, Particle::from(Water::new()));
+        trigger_particle_button_click_event(&mut app, Some(Particle::from(Water::new())));
         assert_eq!(
-            Particle::from(Water::new()),
+            Some(Particle::from(Water::new())),
             query_particle_brush(&mut app).particle
         );
 
-        trigger_particle_button_click_event(&mut app, Particle::Rock);
-        assert_eq!(Particle::Rock, query_particle_brush(&mut app).particle);
-
-        trigger_particle_button_click_event(&mut app, Particle::from(Drain::new()));
+        trigger_particle_button_click_event(&mut app, Some(Particle::Rock));
         assert_eq!(
-            Particle::from(Drain::new()),
+            Some(Particle::Rock),
             query_particle_brush(&mut app).particle
         );
+
+        trigger_particle_button_click_event(&mut app, Some(Particle::from(Drain::new())));
+        assert_eq!(
+            Some(Particle::from(Drain::new())),
+            query_particle_brush(&mut app).particle
+        );
+
+        trigger_particle_button_click_event(&mut app, None);
+        assert_eq!(None, query_particle_brush(&mut app).particle);
     }
 
     fn trigger_pressed_event(app: &mut App, position: Vec3) {
@@ -855,7 +873,7 @@ mod tests {
         }
     }
 
-    fn trigger_particle_button_click_event(app: &mut App, particle: Particle) {
+    fn trigger_particle_button_click_event(app: &mut App, particle: Option<Particle>) {
         let radio_button = app
             .world_mut()
             .query::<(Entity, &ParticleRadio)>()
