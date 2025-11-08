@@ -1,16 +1,11 @@
-use crate::component::{grid::GridAccess, particles::sand::Sand};
+use crate::component::grid::GridAccess;
 
-use super::{
-    drain::Drain,
-    particle::{self, Particle},
-    salt::Salt,
-    water::Water,
-};
+use super::particle::{self, Particle};
 
 #[derive(Clone, PartialEq, Debug)]
 
 pub struct Tap {
-    particle_id: u8,
+    pub particle: Option<Box<Particle>>,
 }
 
 impl Default for Tap {
@@ -21,47 +16,32 @@ impl Default for Tap {
 
 impl Tap {
     pub fn new() -> Self {
-        Self { particle_id: 5 }
-    }
-
-    fn new_particle(&self) -> Option<Particle> {
-        match self.particle_id {
-            0 => Some(particle::Particle::from(Sand::new())),
-            1 => Some(particle::Particle::from(Water::new())),
-            2 => Some(particle::Particle::from(Salt::new())),
-            3 => Some(Particle::Rock),
-            4 => Some(particle::Particle::from(Drain::new())),
-            _ => None,
-        }
+        Self { particle: None }
     }
 }
 
 impl particle::Updatable for Tap {
     fn update<T: GridAccess>(&mut self, grid: &mut T, position: (usize, usize)) {
         for offset in [(0, -1), (-1, 0), (1, 0), (0, 1)] {
-            if self.particle_id == 5 {
+            if self.particle.is_none() {
                 if let Ok(i) = grid.get_neighbor_index(position, offset) {
                     if let Some(p) = &grid.get_cell(i).particle {
-                        self.particle_id = match p {
-                            Particle::Sand(_) => 0,
-                            Particle::Water(_) => 1,
-                            Particle::Salt(_) => 2,
-                            Particle::Rock => 3,
-                            Particle::Drain(_) => 4,
-                            Particle::Tap(_) => 5,
-                        };
+                        match p {
+                            Particle::Tap(..) => (),
+                            _ => self.particle = Some(Box::new(p.clone())),
+                        }
                     }
                 };
             }
         }
 
-        if let Some(particle) = self.new_particle() {
+        if let Some(particle) = &self.particle {
             for offset in [(0, -1), (-1, 0), (1, 0), (0, 1)] {
                 if let Ok(i) = grid.get_neighbor_index(position, offset) {
                     if grid.get_cell_mut(i).particle.is_none() {
                         let cycle = grid.cycle().wrapping_add(1);
                         let cell = grid.get_cell_mut(i);
-                        cell.particle = Some(particle.clone());
+                        cell.particle = Some(*particle.clone());
                         cell.cycle = cycle;
                         grid.get_cell_mut(grid.to_index(position)).cycle = cycle;
                     }
@@ -114,7 +94,7 @@ mod tests {
     }
 
     #[test]
-    fn test_update_grid_tap_shouldnt_emits_tap_particles() {
+    fn test_update_grid_tap_should_not_emit_tap_particles() {
         /*
          * --r -> --r
          * -tt    -tt
