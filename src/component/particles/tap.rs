@@ -22,30 +22,35 @@ impl Tap {
 
 impl particle::Updatable for Tap {
     fn update<T: GridAccess>(&mut self, grid: &mut T, position: (usize, usize)) {
-        for offset in [(0, -1), (-1, 0), (1, 0), (0, 1)] {
-            if self.particle.is_none() {
-                if let Ok(i) = grid.get_neighbor_index(position, offset) {
-                    if let Some(p) = &grid.get_cell(i).particle {
-                        match p {
-                            Particle::Tap(..) => (),
-                            _ => self.particle = Some(Box::new(p.clone())),
+
+        for y in -1..=1 {
+            for x in -1..=1 {
+                if self.particle.is_none() {
+                    if let Ok(i) = grid.get_neighbor_index(position, (x, y)) {
+                        if let Some(p) = &grid.get_cell(i).particle {
+                            match p {
+                                Particle::Tap(..) => (),
+                                _ => self.particle = Some(Box::new(p.clone())),
+                            }
                         }
-                    }
-                };
+                    };
+                }
             }
         }
 
         if let Some(particle) = &self.particle {
-            for offset in [(0, -1), (-1, 0), (1, 0), (0, 1)] {
-                if let Ok(i) = grid.get_neighbor_index(position, offset) {
-                    if grid.get_cell_mut(i).particle.is_none() {
-                        let cycle = grid.cycle().wrapping_add(1);
-                        let cell = grid.get_cell_mut(i);
-                        cell.particle = Some(*particle.clone());
-                        cell.cycle = cycle;
-                        grid.get_cell_mut(grid.to_index(position)).cycle = cycle;
-                    }
-                };
+            for y in -1..=1 {
+                for x in -1..=1 {
+                    if let Ok(i) = grid.get_neighbor_index(position, (x, y)) {
+                        if grid.get_cell_mut(i).particle.is_none() {
+                            let cycle = grid.cycle().wrapping_add(1);
+                            let cell = grid.get_cell_mut(i);
+                            cell.particle = Some(*particle.clone());
+                            cell.cycle = cycle;
+                            grid.get_cell_mut(grid.to_index(position)).cycle = cycle;
+                        }
+                    };
+                }
             }
         }
     }
@@ -96,20 +101,20 @@ mod tests {
     #[test]
     fn test_update_grid_tap_should_not_emit_tap_particles() {
         /*
-         * --r -> --r
+         * --- -> ---
          * -tt    -tt
-         * ---    --r
+         * ---    ---
          */
         let mut g = Grid::new(3, 3);
 
-        g.spawn_particle((2, 0), Particle::Rock);
         g.spawn_particle((1, 1), Particle::from(Tap::new()));
         g.spawn_particle((2, 1), Particle::from(Tap::new()));
+
         assert_eq!(
             vec![
                 Cell::empty(),
                 Cell::empty(),
-                Cell::new(Particle::Rock),
+                Cell::empty(),
                 Cell::empty(),
                 Cell::new(Particle::from(Tap::new())),
                 Cell::new(Particle::from(Tap::new())),
@@ -126,78 +131,12 @@ mod tests {
             vec![
                 Cell::empty(),
                 Cell::empty(),
-                Cell::new(Particle::Rock),
-                Cell::empty(),
-                Cell::new(Particle::from(Tap::new())),
-                Cell::new(Particle::from(Tap::new())).with_cycle(1),
-                Cell::empty(),
-                Cell::empty(),
-                Cell::new(Particle::Rock).with_cycle(1),
-            ],
-            *g.get_cells()
-        );
-    }
-
-    #[test]
-    fn test_update_grid_tap_emits_particle_up_if_touched_by_a_particle() {
-        /*
-         * -- -> r-
-         * tr    tr
-         */
-        let mut g = Grid::new(2, 2);
-
-        g.spawn_particle((0, 1), Particle::from(Tap::new()));
-        g.spawn_particle((1, 1), Particle::Rock);
-        assert_eq!(
-            vec![
                 Cell::empty(),
                 Cell::empty(),
                 Cell::new(Particle::from(Tap::new())),
-                Cell::new(Particle::Rock),
-            ],
-            *g.get_cells()
-        );
-
-        g.update_grid();
-
-        assert_eq!(
-            vec![
-                Cell::new(Particle::Rock).with_cycle(1),
-                Cell::empty(),
-                Cell::new(Particle::from(Tap::new())).with_cycle(1),
-                Cell::new(Particle::Rock),
-            ],
-            *g.get_cells()
-        );
-    }
-
-    #[test]
-    fn test_update_grid_tap_emits_particle_down_if_touched_by_a_particle() {
-        /*
-         * tr -> tr
-         * --    r-
-         */
-        let mut g = Grid::new(2, 2);
-
-        g.spawn_particle((0, 0), Particle::from(Tap::new()));
-        g.spawn_particle((1, 0), Particle::Rock);
-        assert_eq!(
-            vec![
                 Cell::new(Particle::from(Tap::new())),
-                Cell::new(Particle::Rock),
                 Cell::empty(),
                 Cell::empty(),
-            ],
-            *g.get_cells()
-        );
-
-        g.update_grid();
-
-        assert_eq!(
-            vec![
-                Cell::new(Particle::from(Tap::new())).with_cycle(1),
-                Cell::new(Particle::Rock),
-                Cell::new(Particle::Rock).with_cycle(1),
                 Cell::empty(),
             ],
             *g.get_cells()
@@ -205,75 +144,44 @@ mod tests {
     }
 
     #[test]
-    fn test_update_grid_tap_emits_particle_left_if_touched_by_a_particle() {
+    fn test_update_grid_tap_emits_particle_on_every_neighbor_if_touched_by_a_particle() {
         /*
-         * -t -> rt
-         * -r    -r
+         * --- -> rrr
+         * -tr    rtr
+         * ---    rrr
          */
-        let mut g = Grid::new(2, 2);
 
-        g.spawn_particle((1, 0), Particle::from(Tap::new()));
-        g.spawn_particle((1, 1), Particle::Rock);
-        assert_eq!(
-            vec![
-                Cell::empty(),
-                Cell::new(Particle::from(Tap::new())),
-                Cell::empty(),
-                Cell::new(Particle::Rock),
-            ],
-            *g.get_cells()
-        );
+        for y in 0..3 {
+            for x in 0..3 {
+                if (x, y) == (1, 1) {
+                    continue;
+                }
+                let mut g = Grid::new(3, 3);
 
-        g.update_grid();
+                g.spawn_particle((1, 1), Particle::from(Tap::new()));
+                g.spawn_particle((x, y), Particle::Rock);
 
-        assert_eq!(
-            vec![
-                Cell::new(Particle::Rock).with_cycle(1),
-                Cell::new(Particle::from(Tap::new())).with_cycle(1),
-                Cell::empty(),
-                Cell::new(Particle::Rock),
-            ],
-            *g.get_cells()
-        );
-    }
+                g.update_grid();
 
-    #[test]
-    fn test_update_grid_tap_emits_particle_right_if_touched_by_a_particle() {
-        /*
-         * t- -> tr
-         * r-    r-
-         */
-        let mut g = Grid::new(2, 2);
-
-        g.spawn_particle((0, 0), Particle::from(Tap::new()));
-        g.spawn_particle((0, 1), Particle::Rock);
-        assert_eq!(
-            vec![
-                Cell::new(Particle::from(Tap::new())),
-                Cell::empty(),
-                Cell::new(Particle::Rock),
-                Cell::empty(),
-            ],
-            *g.get_cells()
-        );
-
-        g.update_grid();
-
-        assert_eq!(
-            vec![
-                Cell::new(Particle::from(Tap::new())).with_cycle(1),
-                Cell::new(Particle::Rock).with_cycle(1),
-                Cell::new(Particle::Rock),
-                Cell::empty(),
-            ],
-            *g.get_cells()
-        );
+                for y in 0..3 {
+                    for x in 0..3 {
+                        if (x, y) == (1, 1) {
+                            continue;
+                        }
+                        assert_eq!(
+                            Some(Particle::Rock),
+                            g.get_cell(g.to_index((x, y))).particle
+                        );
+                    }
+                }
+            }
+        }
     }
 
     #[test]
     fn test_update_grid_tap_emits_any_particle_type_it_touches() {
         /*
-         * -- -> p-
+         * -- -> pp
          * tp    tp
          */
         for particle in [
@@ -292,7 +200,7 @@ mod tests {
             assert_eq!(
                 vec![
                     Cell::new(particle.clone()).with_cycle(1),
-                    Cell::empty(),
+                    Cell::new(particle.clone()).with_cycle(1),
                     Cell::new(Particle::from(Tap::new())).with_cycle(1),
                     Cell::new(particle),
                 ],
@@ -304,7 +212,7 @@ mod tests {
     #[test]
     fn test_update_grid_tap_emits_drain_particle() {
         /*
-         * -- -> d-
+         * -- -> dd
          * td    -d
          */
         let mut g = Grid::new_with_rand(2, 2, None, Some(|| RowUpdateDirection::Forward));
@@ -317,7 +225,7 @@ mod tests {
         assert_eq!(
             vec![
                 Cell::new(Particle::from(Drain::new())).with_cycle(1),
-                Cell::empty(),
+                Cell::new(Particle::from(Drain::new())).with_cycle(1),
                 Cell::empty().with_cycle(1),
                 Cell::new(Particle::from(Drain::new())).with_cycle(1),
             ],
