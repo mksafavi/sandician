@@ -229,4 +229,26 @@ mod tests {
             *g.get_cells()
         );
     }
+
+    #[test]
+    fn test_update_grid_tap_selects_neighbor_cell_particle() {
+        let mut g = Grid::new(1, 2);
+
+        g.spawn_particle((0, 0), Particle::from(Tap::new()));
+        g.spawn_particle((0, 1), Particle::Rock);
+
+        g.update_grid();
+
+        assert_eq!(
+            vec![
+                Cell::new(Particle::from({
+                    let mut t = Tap::new();
+                    t.particle = Some(Box::new(Particle::Rock));
+                    t
+                })),
+                Cell::new(Particle::Rock),
+            ],
+            *g.get_cells()
+        );
+    }
 }
