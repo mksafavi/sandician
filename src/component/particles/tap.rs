@@ -24,16 +24,14 @@ impl particle::Updatable for Tap {
     fn update<T: GridAccess>(&mut self, grid: &mut T, position: (usize, usize)) {
         for y in -1..=1 {
             for x in -1..=1 {
-                if self.particle.is_none() {
-                    if let Ok(i) = grid.get_neighbor_index(position, (x, y)) {
-                        if let Some(p) = &grid.get_cell(i).particle {
-                            match p {
-                                Particle::Tap(..) | Particle::Drain(..) => (),
-                                _ => self.particle = Some(Box::new(p.clone())),
-                            }
+                if let Ok(i) = grid.get_neighbor_index(position, (x, y)) {
+                    if let Some(p) = &grid.get_cell(i).particle {
+                        match p {
+                            Particle::Tap(..) | Particle::Drain(..) => (),
+                            _ => self.particle = Some(Box::new(p.clone())),
                         }
-                    };
-                }
+                    }
+                };
             }
         }
 
