@@ -34,7 +34,7 @@ use crate::component::grid::BACKGROUND_COLOR;
 
 use super::{
     grid::Grid,
-    particles::{drain::Drain, particle::Particle, salt::Salt, sand::Sand, water::Water},
+    particles::{drain::Drain, particle::Particle, salt::Salt, sand::Sand, tap::Tap, water::Water},
 };
 
 const ASSET_FONT_PATH: &str = "fonts/Adventurer.ttf";
@@ -279,6 +279,7 @@ fn brush_node(font: Handle<Font>) -> impl Bundle {
             radio(Some(Particle::from(Water::new())), font.clone()),
             radio(Some(Particle::Rock), font.clone()),
             radio(Some(Particle::from(Drain::new())), font.clone()),
+            radio(Some(Particle::from(Tap::new())), font.clone()),
             radio(None, font.clone()),
             (Node {
                 flex_grow: 100.0,
@@ -748,6 +749,12 @@ mod tests {
         trigger_particle_button_click_event(&mut app, Some(Particle::from(Drain::new())));
         assert_eq!(
             Some(Particle::from(Drain::new())),
+            query_particle_brush(&mut app).particle
+        );
+
+        trigger_particle_button_click_event(&mut app, Some(Particle::from(Tap::new())));
+        assert_eq!(
+            Some(Particle::from(Tap::new())),
             query_particle_brush(&mut app).particle
         );
 
