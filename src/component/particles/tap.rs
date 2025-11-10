@@ -22,14 +22,13 @@ impl Tap {
 
 impl particle::Updatable for Tap {
     fn update<T: GridAccess>(&mut self, grid: &mut T, position: (usize, usize)) {
-
         for y in -1..=1 {
             for x in -1..=1 {
                 if self.particle.is_none() {
                     if let Ok(i) = grid.get_neighbor_index(position, (x, y)) {
                         if let Some(p) = &grid.get_cell(i).particle {
                             match p {
-                                Particle::Tap(..) => (),
+                                Particle::Tap(..) | Particle::Drain(..) => (),
                                 _ => self.particle = Some(Box::new(p.clone())),
                             }
                         }
@@ -210,36 +209,12 @@ mod tests {
     }
 
     #[test]
-    fn test_update_grid_tap_emits_drain_particle() {
+    fn test_update_grid_tap_should_not_emit_drain_particles() {
         /*
-         * -- -> dd
-         * td    -d
+         * -- -> -- -> --
+         * td    td    -d
          */
         let mut g = Grid::new_with_rand(2, 2, None, Some(|| RowUpdateDirection::Forward));
-
-        g.spawn_particle((0, 1), Particle::from(Tap::new()));
-        g.spawn_particle((1, 1), Particle::from(Drain::new()));
-
-        g.update_grid();
-
-        assert_eq!(
-            vec![
-                Cell::new(Particle::from(Drain::new())).with_cycle(1),
-                Cell::new(Particle::from(Drain::new())).with_cycle(1),
-                Cell::empty().with_cycle(1),
-                Cell::new(Particle::from(Drain::new())).with_cycle(1),
-            ],
-            *g.get_cells()
-        );
-    }
-
-    #[test]
-    fn test_update_grid_tap_emits_drain_particle_gets_deleted_first() {
-        /*
-         * -- -> --
-         * td    -d
-         */
-        let mut g = Grid::new_with_rand(2, 2, None, Some(|| RowUpdateDirection::Reverse));
 
         g.spawn_particle((0, 1), Particle::from(Tap::new()));
         g.spawn_particle((1, 1), Particle::from(Drain::new()));
