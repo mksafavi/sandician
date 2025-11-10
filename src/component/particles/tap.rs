@@ -21,7 +21,7 @@ impl Tap {
 }
 
 impl particle::Updatable for Tap {
-    fn update<T: GridAccess>(&mut self, grid: &mut T, position: (usize, usize)) {
+    fn update<T: GridAccess>(&self, grid: &mut T, position: (usize, usize)) {
         for y in -1..=1 {
             for x in -1..=1 {
                 if let Ok(i) = grid.get_neighbor_index(position, (x, y)) {
