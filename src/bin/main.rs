@@ -19,7 +19,7 @@ fn main() {
                 .set(ImagePlugin::default_nearest())
                 .set(WindowPlugin {
                     primary_window: Some(Window {
-                        resolution: WindowResolution::new(300, 360),
+                        resolution: WindowResolution::new(250, 420),
                         canvas: Some("#window_canvas".to_string()),
                         ..default()
                     }),
@@ -27,7 +27,7 @@ fn main() {
                 }),
         ))
         .add_plugins(GridPlugin {
-            config: ConfigResource::new(300, 300, 240.),
+            config: ConfigResource::new(250, 360, 240.),
         })
         .add_plugins(RenderSimPlugin)
         .run();
