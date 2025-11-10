@@ -280,6 +280,11 @@ fn brush_node(font: Handle<Font>) -> impl Bundle {
             radio(Some(Particle::Rock), font.clone()),
             radio(Some(Particle::from(Drain::new())), font.clone()),
             radio(None, font.clone()),
+            (Node {
+                flex_grow: 100.0,
+                width: Val::Auto,
+                ..default()
+            })
         ],
     )
 }
@@ -297,6 +302,7 @@ fn radio(particle: Option<Particle>, font: Handle<Font>) -> impl Bundle {
     (
         Node {
             height: px(26),
+            flex_grow: 1.0,
             padding: UiRect::all(px(2)),
             margin: UiRect::all(px(2)),
             border: UiRect::all(px(3)),
