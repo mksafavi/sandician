@@ -29,26 +29,28 @@ impl Tap {
 impl particle::Updatable for Tap {
     fn update<T: GridAccess>(&self, grid: &mut T, position: (usize, usize)) {
         let mut particle = self.clone();
-        let mut particle_to_clone = None;
-        for y in -1..=1 {
-            for x in -1..=1 {
-                if let Ok(i) = grid.get_neighbor_index(position, (x, y)) {
-                    if let Some(p) = &grid.get_cell(i).particle {
-                        match p {
-                            Particle::Tap(..) | Particle::Drain(..) => {}
-                            _ => {
-                                particle_to_clone = Some(p.clone());
+        if particle.particle.is_none() {
+            let mut particle_to_clone = None;
+            for y in -1..=1 {
+                for x in -1..=1 {
+                    if let Ok(i) = grid.get_neighbor_index(position, (x, y)) {
+                        if let Some(p) = &grid.get_cell(i).particle {
+                            match p {
+                                Particle::Tap(..) | Particle::Drain(..) => {}
+                                _ => {
+                                    particle_to_clone = Some(p.clone());
+                                }
                             }
                         }
-                    }
-                };
+                    };
+                }
             }
-        }
 
-        if let Some(p) = particle_to_clone {
-            let cell = grid.get_cell_mut(grid.to_index(position));
-            particle.particle = Some(Box::new(p.clone()));
-            cell.particle = Some(Particle::from(particle.clone()));
+            if let Some(p) = particle_to_clone {
+                let cell = grid.get_cell_mut(grid.to_index(position));
+                particle.particle = Some(Box::new(p.clone()));
+                cell.particle = Some(Particle::from(particle.clone()));
+            }
         }
 
         if let Some(particle) = &particle.particle {
@@ -247,7 +249,7 @@ mod tests {
     }
 
     #[test]
-    fn test_update_grid_tap_selects_neighbor_cell_particle() {
+    fn test_update_grid_tap_selects_and_remembers_neighbor_cell_particle() {
         let mut g = Grid::new(1, 2);
 
         g.spawn_particle((0, 0), Particle::from(Tap::new()));
@@ -263,6 +265,23 @@ mod tests {
                     t
                 })),
                 Cell::new(Particle::Rock),
+            ],
+            *g.get_cells()
+        );
+
+        g.despawn_particle((0, 1));
+        g.spawn_particle((0, 1), Particle::from(Sand::new()));
+
+        g.update_grid();
+
+        assert_eq!(
+            vec![
+                Cell::new(Particle::from({
+                    let mut t = Tap::new();
+                    t.particle = Some(Box::new(Particle::Rock));
+                    t
+                })),
+                Cell::new(Particle::from(Sand::new())).with_cycle(1)
             ],
             *g.get_cells()
         );
