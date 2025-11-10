@@ -156,14 +156,14 @@ impl GridAccess for Grid {
 
     fn swap_particles(&mut self, index: usize, next_location_index: usize) {
         self.cells.swap(index, next_location_index);
-        self.cells[index].cycle = self.cycle.wrapping_add(1);
-        self.cells[next_location_index].cycle = self.cycle.wrapping_add(1);
+        self.cells[index].cycle = self.cycle;
+        self.cells[next_location_index].cycle = self.cycle;
     }
 
     fn dissolve_particles(&mut self, index: usize, next_location_index: usize) {
         self.cells[next_location_index].particle = None;
-        self.cells[index].cycle = self.cycle.wrapping_add(1);
-        self.cells[next_location_index].cycle = self.cycle.wrapping_add(1);
+        self.cells[index].cycle = self.cycle;
+        self.cells[next_location_index].cycle = self.cycle;
     }
 
     fn is_empty(&self, position: (usize, usize), offset: (i32, i32)) -> Option<usize> {
@@ -181,7 +181,7 @@ impl GridAccess for Grid {
     }
 
     fn is_simulated(&self, c: &Cell) -> bool {
-        self.cycle() < c.cycle
+        self.cycle() <= c.cycle
     }
 }
 
@@ -227,6 +227,7 @@ impl Grid {
     }
 
     pub fn update_grid(&mut self) {
+        self.cycle = self.cycle.wrapping_add(1);
         for y in (0..self.height).rev() {
             let x_direction = (self.row_update_direction)();
             for x in 0..self.width {
@@ -242,7 +243,6 @@ impl Grid {
                 }
             }
         }
-        self.cycle = self.cycle.wrapping_add(1);
     }
 
     pub fn create_output_frame(width: usize, height: usize) -> Image {

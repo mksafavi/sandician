@@ -58,7 +58,7 @@ impl particle::Updatable for Tap {
                 for x in -1..=1 {
                     if let Ok(i) = grid.get_neighbor_index(position, (x, y)) {
                         if grid.get_cell_mut(i).particle.is_none() {
-                            let cycle = grid.cycle().wrapping_add(1);
+                            let cycle = grid.cycle();
                             let cell = grid.get_cell_mut(i);
                             cell.particle = Some(*particle.clone());
                             cell.cycle = cycle;
