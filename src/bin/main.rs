@@ -19,7 +19,7 @@ fn main() {
                 .set(ImagePlugin::default_nearest())
                 .set(WindowPlugin {
                     primary_window: Some(Window {
-                        resolution: WindowResolution::new(300, 330),
+                        resolution: WindowResolution::new(300, 360),
                         canvas: Some("#window_canvas".to_string()),
                         ..default()
                     }),
