@@ -21,7 +21,7 @@ build-pages BIN:
     sed --in-place 's/binary.js/{{BIN}}.js/' ./target/pages/index.html
 
 ci-test:
-   RUSTFLAGS='-Dwarnings' cargo test
+   RUSTFLAGS='-Dwarnings' cargo test --release
 
 ci-build BIN:
     RUSTFLAGS='-Dwarnings' cargo build --release --bin {{BIN}}
