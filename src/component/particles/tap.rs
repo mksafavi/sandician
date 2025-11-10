@@ -18,24 +18,34 @@ impl Tap {
     pub fn new() -> Self {
         Self { particle: None }
     }
+    pub fn with_particle(particle: &Particle) -> Self {
+        Self {
+            particle: Some(Box::new(particle.clone())),
+        }
+    }
 }
 
 impl particle::Updatable for Tap {
     fn update<T: GridAccess>(&self, grid: &mut T, position: (usize, usize)) {
+        let mut particle = self.clone();
         for y in -1..=1 {
             for x in -1..=1 {
                 if let Ok(i) = grid.get_neighbor_index(position, (x, y)) {
                     if let Some(p) = &grid.get_cell(i).particle {
                         match p {
                             Particle::Tap(..) | Particle::Drain(..) => (),
-                            _ => self.particle = Some(Box::new(p.clone())),
+                            _ => {
+                                particle.particle = Some(Box::new(p.clone()));
+                                let cell = grid.get_cell_mut(grid.to_index(position));
+                                cell.particle = Some(Particle::Tap(particle.clone()));
+                            }
                         }
                     }
                 };
             }
         }
 
-        if let Some(particle) = &self.particle {
+        if let Some(particle) = &particle.particle {
             for y in -1..=1 {
                 for x in -1..=1 {
                     if let Ok(i) = grid.get_neighbor_index(position, (x, y)) {
@@ -198,7 +208,7 @@ mod tests {
                 vec![
                     Cell::new(particle.clone()).with_cycle(1),
                     Cell::new(particle.clone()).with_cycle(1),
-                    Cell::new(Particle::from(Tap::new())).with_cycle(1),
+                    Cell::new(Particle::from(Tap::with_particle(&particle))).with_cycle(1),
                     Cell::new(particle),
                 ],
                 *g.get_cells()
