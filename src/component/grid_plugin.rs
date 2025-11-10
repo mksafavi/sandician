@@ -23,8 +23,8 @@ use bevy::{
     text::{Font, TextFont},
     time::{Fixed, Time},
     ui::{
-        AlignItems, BackgroundColor, BorderColor, Display, FlexDirection, FlexWrap, Node, UiRect,
-        Val, px,
+        AlignItems, BackgroundColor, BorderColor, Display, FlexDirection, FlexWrap, JustifyContent,
+        Node, UiRect, Val, px,
         widget::{Button, ImageNode, Text},
     },
     utils::default,
@@ -301,6 +301,7 @@ fn radio(particle: Option<Particle>, font: Handle<Font>) -> impl Bundle {
             margin: UiRect::all(px(2)),
             border: UiRect::all(px(3)),
             align_items: AlignItems::Center,
+            justify_content: JustifyContent::Center,
             ..default()
         },
         BorderColor::all(color),
