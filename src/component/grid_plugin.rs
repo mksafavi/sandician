@@ -200,15 +200,12 @@ fn observe_particle_button_particle_brush_system(
         commands.entity(e).observe(
             |m: On<Pointer<Click>>,
              mut particle_brush: Query<&mut ParticleBrush>,
-             particle_buttons: Query<(Entity, &ParticleRadio), With<Button>>| {
-                particle_buttons
-                    .iter()
-                    .filter(|(e, _)| m.entity == *e)
-                    .for_each(|(_, pr)| {
-                        if let Ok(mut pb) = particle_brush.single_mut() {
-                            pb.particle = pr.0.clone();
-                        }
-                    });
+             particle_buttons: Query<&ParticleRadio>| {
+                if let Ok(pr) = particle_buttons.get(m.entity) {
+                    if let Ok(mut pb) = particle_brush.single_mut() {
+                        pb.particle = pr.0.clone();
+                    }
+                }
             },
         );
     });
