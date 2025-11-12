@@ -16,10 +16,6 @@ pub enum Particle {
     Tap(Tap),
 }
 
-pub trait Updatable {
-    fn update<T: GridAccess>(&self, grid: &mut T, position: (usize, usize));
-}
-
 impl From<Sand> for Particle {
     fn from(sand: Sand) -> Self {
         Self::Sand(sand)

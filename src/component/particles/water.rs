@@ -24,10 +24,8 @@ impl Water {
             solvant_capacity: capacity,
         }
     }
-}
 
-impl particle::Updatable for Water {
-    fn update<T: GridAccess>(&self, grid: &mut T, position: (usize, usize)) {
+    pub fn update<T: GridAccess>(&self, grid: &mut T, position: (usize, usize)) {
         if dissolve_salt(grid, self.solvant_capacity, position) {
             return;
         }

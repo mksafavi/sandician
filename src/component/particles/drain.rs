@@ -15,10 +15,8 @@ impl Drain {
     pub fn new() -> Self {
         Self
     }
-}
 
-impl particle::Updatable for Drain {
-    fn update<T: GridAccess>(&self, grid: &mut T, position: (usize, usize)) {
+    pub fn update<T: GridAccess>(&self, grid: &mut T, position: (usize, usize)) {
         for offset in [(0, -1), (-1, 0), (1, 0), (0, 1)] {
             if let Ok(i) = grid.get_neighbor_index(position, offset) {
                 if let Some(p) = &grid.get_cell(i).particle {

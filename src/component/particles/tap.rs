@@ -24,10 +24,8 @@ impl Tap {
             particle: Some(Box::new(particle.clone())),
         }
     }
-}
 
-impl particle::Updatable for Tap {
-    fn update<T: GridAccess>(&self, grid: &mut T, position: (usize, usize)) {
+    pub fn update<T: GridAccess>(&self, grid: &mut T, position: (usize, usize)) {
         let mut particle = self.clone();
         if particle.particle.is_none() {
             let mut particle_to_clone = None;
