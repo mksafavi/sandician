@@ -33,11 +33,8 @@ impl Tap {
                 for x in -1..=1 {
                     if let Ok(i) = grid.get_neighbor_index(position, (x, y)) {
                         if let Some(p) = &grid.get_cell(i).particle {
-                            match p {
-                                Particle::Tap(..) | Particle::Drain(..) => {}
-                                _ => {
-                                    particle_to_clone = Some(p.clone());
-                                }
+                            if p.cloneable {
+                                particle_to_clone = Some(p.clone());
                             }
                         }
                     };

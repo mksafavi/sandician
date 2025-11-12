@@ -1,7 +1,10 @@
 use criterion::{Criterion, criterion_group, criterion_main};
 use sandsim::component::{
     grid::Grid,
-    particles::{drain::Drain, particle::Particle, rock::Rock, salt::Salt, sand::Sand, tap::Tap, water::Water},
+    particles::{
+        drain::Drain, particle::Particle, rock::Rock, salt::Salt, sand::Sand, tap::Tap,
+        water::Water,
+    },
 };
 
 fn fill_grid_mixed(g: &mut Grid, (x, y): (usize, usize)) {

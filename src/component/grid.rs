@@ -9,6 +9,8 @@ use bevy::{
 };
 use rand::random_range;
 
+use crate::component::particles::particle::ParticleProperty;
+
 use super::particles::particle::Particle;
 
 pub enum GridError {
@@ -87,13 +89,13 @@ pub trait GridAccess {
 impl fmt::Display for Cell {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &self.particle {
-            Some(p) => match p {
-                Particle::Sand(_) => write!(f, "s"),
-                Particle::Water(_) => write!(f, "w"),
-                Particle::Salt(_) => write!(f, "S"),
-                Particle::Rock(_) => write!(f, "r"),
-                Particle::Drain(_) => write!(f, "d"),
-                Particle::Tap(_) => write!(f, "t"),
+            Some(p) => match p.property {
+                ParticleProperty::Sand(_) => write!(f, "s"),
+                ParticleProperty::Water(_) => write!(f, "w"),
+                ParticleProperty::Salt(_) => write!(f, "S"),
+                ParticleProperty::Rock(_) => write!(f, "r"),
+                ParticleProperty::Drain(_) => write!(f, "d"),
+                ParticleProperty::Tap(_) => write!(f, "t"),
             },
             None => write!(f, "-"),
         }
@@ -746,12 +748,12 @@ mod tests {
 
     #[test]
     fn test_cell_string_names() {
-        assert_eq!("-",Cell::empty().to_string());
-        assert_eq!("s",Cell::new( Particle::from(Sand::new())).to_string());
-        assert_eq!("S",Cell::new( Particle::from(Salt::new())).to_string());
-        assert_eq!("w",Cell::new( Particle::from(Water::new())).to_string());
-        assert_eq!("r",Cell::new( Particle::from(Rock::new())).to_string());
-        assert_eq!("d",Cell::new( Particle::from(Drain::new())).to_string());
-        assert_eq!("t",Cell::new( Particle::from(Tap::new())).to_string());
+        assert_eq!("-", Cell::empty().to_string());
+        assert_eq!("s", Cell::new(Particle::from(Sand::new())).to_string());
+        assert_eq!("S", Cell::new(Particle::from(Salt::new())).to_string());
+        assert_eq!("w", Cell::new(Particle::from(Water::new())).to_string());
+        assert_eq!("r", Cell::new(Particle::from(Rock::new())).to_string());
+        assert_eq!("d", Cell::new(Particle::from(Drain::new())).to_string());
+        assert_eq!("t", Cell::new(Particle::from(Tap::new())).to_string());
     }
 }
