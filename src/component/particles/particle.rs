@@ -4,14 +4,14 @@ use bevy::prelude::Color;
 
 use crate::component::grid::{GridAccess, ParticleHorizontalDirection};
 
-use super::{drain::Drain, salt::Salt, sand::Sand, tap::Tap, water::Water};
+use super::{drain::Drain, rock::Rock, salt::Salt, sand::Sand, tap::Tap, water::Water};
 
 #[derive(Clone, PartialEq, Debug)]
 pub enum Particle {
     Sand(Sand),
     Water(Water),
     Salt(Salt),
-    Rock,
+    Rock(Rock),
     Drain(Drain),
     Tap(Tap),
 }
@@ -31,6 +31,12 @@ impl From<Salt> for Particle {
 impl From<Water> for Particle {
     fn from(water: Water) -> Self {
         Self::Water(water)
+    }
+}
+
+impl From<Rock> for Particle {
+    fn from(rock: Rock) -> Self {
+        Self::Rock(rock)
     }
 }
 
@@ -58,7 +64,7 @@ impl Particle {
             Particle::Sand(..) => (),
             Particle::Water(water) => water.update(grid, position),
             Particle::Salt(..) => (),
-            Particle::Rock => (),
+            Particle::Rock(..) => (),
             Particle::Drain(drain) => drain.update(grid, position),
             Particle::Tap(tap) => tap.update(grid, position),
         };
@@ -74,7 +80,7 @@ impl Particle {
                 1.00,
             ),
             Particle::Salt(..) => Color::hsva(0.00, 0.00, 1.00, 1.00),
-            Particle::Rock => Color::hsva(28.0, 0.25, 0.30, 1.00),
+            Particle::Rock(..) => Color::hsva(28.0, 0.25, 0.30, 1.00),
             Particle::Drain(..) => Color::hsva(0.0, 0.0, 0.10, 1.00),
             Particle::Tap(..) => Color::hsva(190.0, 0.4, 0.75, 1.00),
         }
@@ -85,7 +91,7 @@ impl Particle {
             Particle::Sand(sand) => sand.weight,
             Particle::Water(water) => water.weight + (3 - water.solvant_capacity),
             Particle::Salt(salt) => salt.weight,
-            Particle::Rock => u8::MIN,
+            Particle::Rock(..) => u8::MIN,
             Particle::Drain(..) => u8::MIN,
             Particle::Tap(..) => u8::MIN,
         }
@@ -105,7 +111,7 @@ impl fmt::Display for Particle {
             Particle::Sand(..) => "sand",
             Particle::Water(..) => "water",
             Particle::Salt(..) => "salt",
-            Particle::Rock => "rock",
+            Particle::Rock(..) => "rock",
             Particle::Drain(..) => "drain",
             Particle::Tap(..) => "tap",
         };
@@ -274,7 +280,7 @@ mod tests {
         assert_eq!("sand", Particle::from(Sand::new()).to_string());
         assert_eq!("salt", Particle::from(Salt::new()).to_string());
         assert_eq!("water", Particle::from(Water::new()).to_string());
-        assert_eq!("rock", Particle::Rock.to_string());
+        assert_eq!("rock", Particle::from(Rock::new()).to_string());
         assert_eq!("drain", Particle::from(Drain::new()).to_string());
         assert_eq!("tap", Particle::from(Tap::new()).to_string());
     }

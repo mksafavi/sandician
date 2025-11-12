@@ -30,7 +30,7 @@ use bevy::{
     utils::default,
 };
 
-use crate::component::grid::BACKGROUND_COLOR;
+use crate::component::{grid::BACKGROUND_COLOR, particles::rock::Rock};
 
 use super::{
     grid::Grid,
@@ -274,7 +274,7 @@ fn brush_node(font: Handle<Font>) -> impl Bundle {
             radio(Some(Particle::from(Sand::new())), font.clone()),
             radio(Some(Particle::from(Salt::new())), font.clone()),
             radio(Some(Particle::from(Water::new())), font.clone()),
-            radio(Some(Particle::Rock), font.clone()),
+            radio(Some(Particle::from(Rock::new())), font.clone()),
             radio(Some(Particle::from(Drain::new())), font.clone()),
             radio(Some(Particle::from(Tap::new())), font.clone()),
             radio(None, font.clone()),
@@ -342,6 +342,7 @@ mod tests {
 
     use crate::component::grid::{Cell, GridAccess};
     use crate::component::particles::particle::Particle;
+    use crate::component::particles::rock::Rock;
     use crate::component::{grid::BACKGROUND_COLOR, macros::assert_color_srgb_eq};
 
     use super::*;
@@ -737,9 +738,9 @@ mod tests {
             query_particle_brush(&mut app).particle
         );
 
-        trigger_particle_button_click_event(&mut app, Some(Particle::Rock));
+        trigger_particle_button_click_event(&mut app, Some(Particle::from(Rock::new())));
         assert_eq!(
-            Some(Particle::Rock),
+            Some(Particle::from(Rock::new())),
             query_particle_brush(&mut app).particle
         );
 

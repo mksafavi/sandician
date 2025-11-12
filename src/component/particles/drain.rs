@@ -38,7 +38,7 @@ impl Drain {
 mod tests {
     use crate::component::{
         grid::{Cell, Grid, GridAccess},
-        particles::{drain::Drain, particle::Particle},
+        particles::{drain::Drain, particle::Particle, rock::Rock},
     };
 
     #[test]
@@ -120,21 +120,21 @@ mod tests {
                 if (x, y) == (1, 1) {
                     continue;
                 }
-                g.spawn_particle((x, y), Particle::Rock);
+                g.spawn_particle((x, y), Particle::from(Rock::new()));
             }
         }
 
         assert_eq!(
             vec![
-                Cell::new(Particle::Rock),
-                Cell::new(Particle::Rock),
-                Cell::new(Particle::Rock),
-                Cell::new(Particle::Rock),
+                Cell::new(Particle::from(Rock::new())),
+                Cell::new(Particle::from(Rock::new())),
+                Cell::new(Particle::from(Rock::new())),
+                Cell::new(Particle::from(Rock::new())),
                 Cell::new(Particle::from(Drain::new())),
-                Cell::new(Particle::Rock),
-                Cell::new(Particle::Rock),
-                Cell::new(Particle::Rock),
-                Cell::new(Particle::Rock),
+                Cell::new(Particle::from(Rock::new())),
+                Cell::new(Particle::from(Rock::new())),
+                Cell::new(Particle::from(Rock::new())),
+                Cell::new(Particle::from(Rock::new())),
             ],
             *g.get_cells()
         );
@@ -143,15 +143,15 @@ mod tests {
 
         assert_eq!(
             vec![
-                Cell::new(Particle::Rock),
+                Cell::new(Particle::from(Rock::new())),
                 Cell::empty().with_cycle(1),
-                Cell::new(Particle::Rock),
-                Cell::new(Particle::Rock),
+                Cell::new(Particle::from(Rock::new())),
+                Cell::new(Particle::from(Rock::new())),
                 Cell::new(Particle::from(Drain::new())).with_cycle(1),
-                Cell::new(Particle::Rock),
-                Cell::new(Particle::Rock),
-                Cell::new(Particle::Rock),
-                Cell::new(Particle::Rock),
+                Cell::new(Particle::from(Rock::new())),
+                Cell::new(Particle::from(Rock::new())),
+                Cell::new(Particle::from(Rock::new())),
+                Cell::new(Particle::from(Rock::new())),
             ],
             *g.get_cells()
         );
@@ -160,15 +160,15 @@ mod tests {
 
         assert_eq!(
             vec![
-                Cell::new(Particle::Rock),
+                Cell::new(Particle::from(Rock::new())),
                 Cell::empty().with_cycle(1),
-                Cell::new(Particle::Rock),
+                Cell::new(Particle::from(Rock::new())),
                 Cell::empty().with_cycle(2),
                 Cell::new(Particle::from(Drain::new())).with_cycle(2),
-                Cell::new(Particle::Rock),
-                Cell::new(Particle::Rock),
-                Cell::new(Particle::Rock),
-                Cell::new(Particle::Rock),
+                Cell::new(Particle::from(Rock::new())),
+                Cell::new(Particle::from(Rock::new())),
+                Cell::new(Particle::from(Rock::new())),
+                Cell::new(Particle::from(Rock::new())),
             ],
             *g.get_cells()
         );
@@ -177,15 +177,15 @@ mod tests {
 
         assert_eq!(
             vec![
-                Cell::new(Particle::Rock),
+                Cell::new(Particle::from(Rock::new())),
                 Cell::empty().with_cycle(1),
-                Cell::new(Particle::Rock),
+                Cell::new(Particle::from(Rock::new())),
                 Cell::empty().with_cycle(2),
                 Cell::new(Particle::from(Drain::new())).with_cycle(3),
                 Cell::empty().with_cycle(3),
-                Cell::new(Particle::Rock),
-                Cell::new(Particle::Rock),
-                Cell::new(Particle::Rock),
+                Cell::new(Particle::from(Rock::new())),
+                Cell::new(Particle::from(Rock::new())),
+                Cell::new(Particle::from(Rock::new())),
             ],
             *g.get_cells()
         );
@@ -194,15 +194,15 @@ mod tests {
 
         assert_eq!(
             vec![
-                Cell::new(Particle::Rock),
+                Cell::new(Particle::from(Rock::new())),
                 Cell::empty().with_cycle(1),
-                Cell::new(Particle::Rock),
+                Cell::new(Particle::from(Rock::new())),
                 Cell::empty().with_cycle(2),
                 Cell::new(Particle::from(Drain::new())).with_cycle(4),
                 Cell::empty().with_cycle(3),
-                Cell::new(Particle::Rock),
+                Cell::new(Particle::from(Rock::new())),
                 Cell::empty().with_cycle(4),
-                Cell::new(Particle::Rock),
+                Cell::new(Particle::from(Rock::new())),
             ],
             *g.get_cells()
         );

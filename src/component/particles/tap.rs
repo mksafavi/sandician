@@ -74,7 +74,8 @@ mod tests {
     use crate::component::{
         grid::{Cell, Grid, GridAccess, RowUpdateDirection},
         particles::{
-            drain::Drain, particle::Particle, salt::Salt, sand::Sand, tap::Tap, water::Water,
+            drain::Drain, particle::Particle, rock::Rock, salt::Salt, sand::Sand, tap::Tap,
+            water::Water,
         },
     };
 
@@ -172,7 +173,7 @@ mod tests {
                 let mut g = Grid::new(3, 3);
 
                 g.spawn_particle((1, 1), Particle::from(Tap::new()));
-                g.spawn_particle((x, y), Particle::Rock);
+                g.spawn_particle((x, y), Particle::from(Rock::new()));
 
                 g.update_grid();
 
@@ -182,7 +183,7 @@ mod tests {
                             continue;
                         }
                         assert_eq!(
-                            Some(Particle::Rock),
+                            Some(Particle::from(Rock::new())),
                             g.get_cell(g.to_index((x, y))).particle
                         );
                     }
@@ -201,7 +202,7 @@ mod tests {
             Particle::from(Sand::new()),
             Particle::from(Salt::new()),
             Particle::from(Water::new()),
-            Particle::Rock,
+            Particle::from(Rock::new()),
         ] {
             let mut g = Grid::new(2, 2);
 
@@ -251,7 +252,7 @@ mod tests {
         let mut g = Grid::new(1, 2);
 
         g.spawn_particle((0, 0), Particle::from(Tap::new()));
-        g.spawn_particle((0, 1), Particle::Rock);
+        g.spawn_particle((0, 1), Particle::from(Rock::new()));
 
         g.update_grid();
 
@@ -259,10 +260,10 @@ mod tests {
             vec![
                 Cell::new(Particle::from({
                     let mut t = Tap::new();
-                    t.particle = Some(Box::new(Particle::Rock));
+                    t.particle = Some(Box::new(Particle::from(Rock::new())));
                     t
                 })),
-                Cell::new(Particle::Rock),
+                Cell::new(Particle::from(Rock::new())),
             ],
             *g.get_cells()
         );
@@ -276,7 +277,7 @@ mod tests {
             vec![
                 Cell::new(Particle::from({
                     let mut t = Tap::new();
-                    t.particle = Some(Box::new(Particle::Rock));
+                    t.particle = Some(Box::new(Particle::from(Rock::new())));
                     t
                 })),
                 Cell::new(Particle::from(Sand::new())).with_cycle(1)

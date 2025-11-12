@@ -53,7 +53,7 @@ fn dissolve_salt<T: GridAccess>(grid: &mut T, capacity: u8, position: (usize, us
 mod tests {
     use crate::component::{
         grid::{Cell, Grid, ParticleHorizontalDirection, RowUpdateDirection},
-        particles::{particle::Particle, salt::Salt, sand::Sand},
+        particles::{particle::Particle, rock::Rock, salt::Salt, sand::Sand},
     };
 
     use super::*;
@@ -656,7 +656,7 @@ mod tests {
                         if (xr, yr) == (1, 1) || (xr, yr) == (x, y) {
                             continue;
                         }
-                        g.spawn_particle((xr, yr), Particle::Rock);
+                        g.spawn_particle((xr, yr), Particle::from(Rock::new()));
                     }
                 }
 
@@ -673,7 +673,7 @@ mod tests {
                             assert_eq!(None, g.get_cell(g.to_index((xr, yr))).clone().particle);
                         } else {
                             assert_eq!(
-                                Some(Particle::Rock),
+                                Some(Particle::from(Rock::new())),
                                 g.get_cell(g.to_index((xr, yr))).clone().particle
                             );
                         }

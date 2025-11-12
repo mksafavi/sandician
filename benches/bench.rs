@@ -1,7 +1,7 @@
 use criterion::{Criterion, criterion_group, criterion_main};
 use sandsim::component::{
     grid::Grid,
-    particles::{drain::Drain, particle::Particle, salt::Salt, sand::Sand, tap::Tap, water::Water},
+    particles::{drain::Drain, particle::Particle, rock::Rock, salt::Salt, sand::Sand, tap::Tap, water::Water},
 };
 
 fn fill_grid_mixed(g: &mut Grid, (x, y): (usize, usize)) {
@@ -65,7 +65,7 @@ fn criterion_benchmark(c: &mut Criterion) {
         let mut g = Grid::new(x, y);
         for y in 0..y {
             for x in 0..x {
-                g.spawn_particle((x, y), Particle::Rock);
+                g.spawn_particle((x, y), Particle::from(Rock::new()));
             }
         }
         b.iter(|| {

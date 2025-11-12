@@ -1,8 +1,23 @@
+#[derive(Clone, PartialEq, Debug)]
+pub struct Rock;
+
+impl Default for Rock {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl Rock {
+    pub fn new() -> Self {
+        Self
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::component::{
         grid::{Cell, Grid, GridAccess},
-        particles::{particle::Particle, sand::Sand},
+        particles::{particle::Particle, rock::Rock, sand::Sand},
     };
 
     #[test]
@@ -13,16 +28,16 @@ mod tests {
          */
         let mut g = Grid::new(2, 2);
 
-        g.spawn_particle((0, 0), Particle::Rock);
+        g.spawn_particle((0, 0), Particle::from(Rock::new()));
 
-        assert_eq!(Cell::new(Particle::Rock), *g.get_cell(0));
+        assert_eq!(Cell::new(Particle::from(Rock::new())), *g.get_cell(0));
         assert_eq!(Cell::empty(), *g.get_cell(1));
         assert_eq!(Cell::empty(), *g.get_cell(2));
         assert_eq!(Cell::empty(), *g.get_cell(3));
 
         g.update_grid();
 
-        assert_eq!(Cell::new(Particle::Rock), *g.get_cell(0));
+        assert_eq!(Cell::new(Particle::from(Rock::new())), *g.get_cell(0));
         assert_eq!(Cell::empty(), *g.get_cell(1));
         assert_eq!(Cell::empty(), *g.get_cell(2));
         assert_eq!(Cell::empty(), *g.get_cell(3));
@@ -38,18 +53,18 @@ mod tests {
         let mut g = Grid::new(3, 3);
 
         g.spawn_particle((1, 0), Particle::from(Sand::new()));
-        g.spawn_particle((0, 1), Particle::Rock);
-        g.spawn_particle((1, 1), Particle::Rock);
-        g.spawn_particle((2, 1), Particle::Rock);
+        g.spawn_particle((0, 1), Particle::from(Rock::new()));
+        g.spawn_particle((1, 1), Particle::from(Rock::new()));
+        g.spawn_particle((2, 1), Particle::from(Rock::new()));
 
         assert_eq!(
             vec![
                 Cell::empty(),
                 Cell::new(Particle::from(Sand::new())),
                 Cell::empty(),
-                Cell::new(Particle::Rock),
-                Cell::new(Particle::Rock),
-                Cell::new(Particle::Rock),
+                Cell::new(Particle::from(Rock::new())),
+                Cell::new(Particle::from(Rock::new())),
+                Cell::new(Particle::from(Rock::new())),
                 Cell::empty(),
                 Cell::empty(),
                 Cell::empty(),
@@ -64,9 +79,9 @@ mod tests {
                 Cell::empty(),
                 Cell::new(Particle::from(Sand::new())),
                 Cell::empty(),
-                Cell::new(Particle::Rock),
-                Cell::new(Particle::Rock),
-                Cell::new(Particle::Rock),
+                Cell::new(Particle::from(Rock::new())),
+                Cell::new(Particle::from(Rock::new())),
+                Cell::new(Particle::from(Rock::new())),
                 Cell::empty(),
                 Cell::empty(),
                 Cell::empty(),
@@ -85,7 +100,7 @@ mod tests {
         let mut g = Grid::new(2, 3);
 
         g.spawn_particle((0, 0), Particle::from(Sand::new()));
-        g.spawn_particle((0, 1), Particle::Rock);
+        g.spawn_particle((0, 1), Particle::from(Rock::new()));
 
         g.update_grid();
 
@@ -93,7 +108,7 @@ mod tests {
             vec![
                 Cell::empty().with_cycle(1),
                 Cell::empty(),
-                Cell::new(Particle::Rock),
+                Cell::new(Particle::from(Rock::new())),
                 Cell::new(Particle::from(Sand::new())).with_cycle(1),
                 Cell::empty(),
                 Cell::empty(),
