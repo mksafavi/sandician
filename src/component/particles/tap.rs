@@ -1,6 +1,6 @@
 use crate::component::grid::GridAccess;
 
-use super::particle::{self, Particle};
+use super::particle::Particle;
 
 #[derive(Clone, PartialEq, Debug)]
 

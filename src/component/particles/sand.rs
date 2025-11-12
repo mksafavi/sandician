@@ -1,7 +1,3 @@
-use crate::component::grid::GridAccess;
-
-use super::particle;
-
 #[derive(Clone, PartialEq, Debug)]
 pub struct Sand {
     pub weight: u8,
@@ -22,7 +18,7 @@ impl Sand {
 #[cfg(test)]
 mod tests {
     use crate::component::{
-        grid::{Cell, Grid, ParticleHorizontalDirection},
+        grid::{Cell, Grid, GridAccess, ParticleHorizontalDirection},
         particles::particle::Particle,
     };
 
