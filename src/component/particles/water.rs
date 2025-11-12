@@ -26,15 +26,15 @@ impl Water {
     }
 
     pub fn update<T: GridAccess>(&self, grid: &mut T, position: (usize, usize)) {
-        if dissolve_salt(grid, self.solvant_capacity, position) {
-            return;
-        }
-
         if particle::gravity(grid, position) {
             return;
         }
 
-        slide_water(grid, position);
+        if slide_water(grid, position) {
+            return;
+        }
+
+        dissolve_salt(grid, self.solvant_capacity, position);
     }
 }
 
@@ -718,9 +718,9 @@ mod tests {
     fn test_update_grid_water_dissolve_neighboring_salts() {
         /*
          * for each neighbor:
-         * S-- -> ---
-         * -w-    -w-
-         * ---    ---
+         * Srr -> -rr
+         * rwr    rwr
+         * rrr    rrr
          */
         for y in 0..3 {
             for x in 0..3 {
@@ -731,19 +731,37 @@ mod tests {
                 g.spawn_particle((1, 1), Particle::from(Water::new()));
                 g.spawn_particle((x, y), Particle::from(Salt::new()));
 
-                g.update_grid();
-
-                assert_eq!(
-                    Some(Particle::from(Water::with_capacity(2))),
-                    g.get_cell(4).particle
-                );
-
-                for y in 0..3 {
-                    for x in 0..3 {
-                        if (x, y) == (1, 1) {
+                if (x, y) == (1, 1) {
+                    g.spawn_particle((x, y), Particle::from(Water::new()));
+                } else {
+                    g.spawn_particle((x, y), Particle::from(Salt::new()));
+                }
+                for yr in 0..3 {
+                    for xr in 0..3 {
+                        if (xr, yr) == (1, 1) || (xr, yr) == (x, y) {
                             continue;
                         }
-                        assert_eq!(None, g.get_cell(g.to_index((x, y))).clone().particle);
+                        g.spawn_particle((xr, yr), Particle::Rock);
+                    }
+                }
+
+                g.update_grid();
+
+                for yr in 0..3 {
+                    for xr in 0..3 {
+                        if (xr, yr) == (1, 1) {
+                            assert_eq!(
+                                Some(Particle::from(Water::with_capacity(2))),
+                                g.get_cell(g.to_index((xr, yr))).clone().particle
+                            );
+                        } else if (xr, yr) == (x, y) {
+                            assert_eq!(None, g.get_cell(g.to_index((xr, yr))).clone().particle);
+                        } else {
+                            assert_eq!(
+                                Some(Particle::Rock),
+                                g.get_cell(g.to_index((xr, yr))).clone().particle
+                            );
+                        }
                     }
                 }
             }
