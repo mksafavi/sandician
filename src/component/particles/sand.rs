@@ -1,7 +1,5 @@
 #[derive(Clone, PartialEq, Debug)]
-pub struct Sand {
-    pub weight: u8,
-}
+pub struct Sand;
 
 impl Default for Sand {
     fn default() -> Self {
@@ -11,7 +9,7 @@ impl Default for Sand {
 
 impl Sand {
     pub fn new() -> Self {
-        Self { weight: 5 }
+        Self {}
     }
 }
 

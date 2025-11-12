@@ -1,7 +1,5 @@
 #[derive(Clone, PartialEq, Debug)]
-pub struct Salt {
-    pub weight: u8,
-}
+pub struct Salt;
 
 impl Default for Salt {
     fn default() -> Self {
@@ -11,7 +9,7 @@ impl Default for Salt {
 
 impl Salt {
     pub fn new() -> Self {
-        Self { weight: 5 }
+        Self {}
     }
 }
 

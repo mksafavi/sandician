@@ -3,7 +3,6 @@ use crate::component::grid::GridAccess;
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct Water {
-    pub weight: u8,
     pub solvant_capacity: u8,
 }
 
@@ -20,7 +19,6 @@ impl Water {
 
     pub fn with_capacity(capacity: u8) -> Self {
         Self {
-            weight: 1,
             solvant_capacity: capacity,
         }
     }

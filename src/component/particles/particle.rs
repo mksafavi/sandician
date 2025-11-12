@@ -64,7 +64,7 @@ pub struct Particle {
 impl From<Sand> for Particle {
     fn from(sand: Sand) -> Self {
         Self {
-            weight: sand.weight,
+            weight: 5,
             viscosity: u8::MAX,
             cloneable: true,
             color: Color::hsva(43.20, 0.34, 0.76, 1.00),
@@ -76,7 +76,7 @@ impl From<Sand> for Particle {
 impl From<Salt> for Particle {
     fn from(salt: Salt) -> Self {
         Self {
-            weight: salt.weight,
+            weight: 5,
             viscosity: u8::MAX,
             cloneable: true,
             color: Color::hsva(0.00, 0.00, 1.00, 1.00),
@@ -88,7 +88,7 @@ impl From<Salt> for Particle {
 impl From<Water> for Particle {
     fn from(water: Water) -> Self {
         Self {
-            weight: water.weight,
+            weight: 1,
             viscosity: u8::MIN,
             cloneable: true,
             color: Color::hsva(201.60, 1.0, 0.80, 1.00),
