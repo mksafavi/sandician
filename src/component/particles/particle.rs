@@ -151,10 +151,10 @@ impl From<Tap> for Particle {
 
 impl Particle {
     pub fn update<T: GridAccess>(&self, grid: &mut T, position: (usize, usize)) {
-        if gravity(grid, position) {
+        if Self::gravity(grid, position) {
             return;
         }
-        if flow(grid, position) {
+        if Self::flow(grid, position) {
             return;
         }
         match &self.property {
@@ -189,6 +189,158 @@ impl Particle {
             _ => self.viscosity,
         }
     }
+
+    fn flow<T: GridAccess>(grid: &mut T, position: (usize, usize)) -> bool {
+        let index = grid.to_index(position);
+        let viscosity = match &grid.get_cell(index).particle {
+            Some(p) => p.viscosity(),
+            None => u8::MAX,
+        };
+
+        if viscosity == u8::MAX {
+            return false;
+        }
+
+        let index_left = match grid.get_neighbor_index(position, (-1, 0)) {
+            Ok(i) => {
+                let c = grid.get_cell(i);
+                match &c.particle {
+                    Some(p) => {
+                        if p.viscosity() < viscosity {
+                            Some(i)
+                        } else {
+                            None
+                        }
+                    }
+                    None => match grid.get_neighbor_index(position, (-2, 0)) {
+                        Ok(ii) => {
+                            let c = grid.get_cell(ii);
+                            match &c.particle {
+                                Some(_) => Some(i),
+                                None => Some(ii),
+                            }
+                        }
+                        Err(_) => Some(i),
+                    },
+                }
+            }
+            Err(_) => None,
+        };
+
+        let index_right = match grid.get_neighbor_index(position, (1, 0)) {
+            Ok(i) => {
+                let c = grid.get_cell(i);
+                match &c.particle {
+                    Some(p) => {
+                        if p.viscosity() < viscosity {
+                            Some(i)
+                        } else {
+                            None
+                        }
+                    }
+                    None => match grid.get_neighbor_index(position, (2, 0)) {
+                        Ok(ii) => {
+                            let c = grid.get_cell(ii);
+                            match &c.particle {
+                                Some(_) => Some(i),
+                                None => Some(ii),
+                            }
+                        }
+                        Err(_) => Some(i),
+                    },
+                }
+            }
+            Err(_) => None,
+        };
+
+        let index = match (index_left, index_right) {
+            (None, None) => None,
+            (None, Some(i)) => Some(i),
+            (Some(i), None) => Some(i),
+            (Some(l), Some(r)) => match grid.particle_direction() {
+                ParticleHorizontalDirection::Left => Some(l),
+                ParticleHorizontalDirection::Right => Some(r),
+            },
+        };
+
+        if let Some(index) = index {
+            grid.swap_particles(grid.to_index(position), index);
+            true
+        } else {
+            false
+        }
+    }
+
+    fn gravity<T: GridAccess>(grid: &mut T, position: (usize, usize)) -> bool {
+        let index = grid.to_index(position);
+        let weight = match &grid.get_cell(index).particle {
+            Some(p) => p.weight(),
+            None => u8::MIN,
+        };
+
+        if weight == u8::MIN {
+            return false;
+        }
+
+        if let Ok(index_n) = grid.get_neighbor_index(position, (0, 1)) {
+            let cell = grid.get_cell(index_n);
+            match &cell.particle {
+                Some(p) => {
+                    if !grid.is_simulated(cell) && p.weight() < weight && p.weight() != u8::MIN {
+                        grid.swap_particles(index, index_n);
+                        return true;
+                    }
+                }
+                None => {
+                    grid.swap_particles(index, index_n);
+                    return true;
+                }
+            };
+        }
+
+        let bottom_left = match grid.get_neighbor_index(position, (-1, 1)) {
+            Ok(index_n) => match &grid.get_cell(index_n).particle {
+                Some(p) => {
+                    if p.weight() < weight && p.weight() != u8::MIN {
+                        Some(index_n)
+                    } else {
+                        None
+                    }
+                }
+                None => Some(index_n),
+            },
+            Err(_) => None,
+        };
+
+        let bottom_right = match grid.get_neighbor_index(position, (1, 1)) {
+            Ok(index_n) => match &grid.get_cell(index_n).particle {
+                Some(p) => {
+                    if p.weight() < weight && p.weight() != u8::MIN {
+                        Some(index_n)
+                    } else {
+                        None
+                    }
+                }
+                None => Some(index_n),
+            },
+            Err(_) => None,
+        };
+
+        if let Some(index_n) = match (bottom_left, bottom_right) {
+            (None, None) => None,
+            (None, Some(r)) => Some(r),
+            (Some(l), None) => Some(l),
+            (Some(l), Some(r)) => match grid.particle_direction() {
+                ParticleHorizontalDirection::Left => Some(l),
+                ParticleHorizontalDirection::Right => Some(r),
+            },
+        } {
+            grid.swap_particles(index, index_n);
+            true
+        } else {
+            false
+        }
+    }
 }
 
 impl fmt::Display for Particle {
@@ -202,158 +354,6 @@ impl fmt::Display for Particle {
             ParticleProperty::Tap(..) => "tap",
         };
         write!(f, "{s}")
-    }
-}
-
-fn flow<T: GridAccess>(grid: &mut T, position: (usize, usize)) -> bool {
-    let index = grid.to_index(position);
-    let viscosity = match &grid.get_cell(index).particle {
-        Some(p) => p.viscosity(),
-        None => u8::MAX,
-    };
-
-    if viscosity == u8::MAX {
-        return false;
-    }
-
-    let index_left = match grid.get_neighbor_index(position, (-1, 0)) {
-        Ok(i) => {
-            let c = grid.get_cell(i);
-            match &c.particle {
-                Some(p) => {
-                    if p.viscosity() < viscosity {
-                        Some(i)
-                    } else {
-                        None
-                    }
-                }
-                None => match grid.get_neighbor_index(position, (-2, 0)) {
-                    Ok(ii) => {
-                        let c = grid.get_cell(ii);
-                        match &c.particle {
-                            Some(_) => Some(i),
-                            None => Some(ii),
-                        }
-                    }
-                    Err(_) => Some(i),
-                },
-            }
-        }
-        Err(_) => None,
-    };
-
-    let index_right = match grid.get_neighbor_index(position, (1, 0)) {
-        Ok(i) => {
-            let c = grid.get_cell(i);
-            match &c.particle {
-                Some(p) => {
-                    if p.viscosity() < viscosity {
-                        Some(i)
-                    } else {
-                        None
-                    }
-                }
-                None => match grid.get_neighbor_index(position, (2, 0)) {
-                    Ok(ii) => {
-                        let c = grid.get_cell(ii);
-                        match &c.particle {
-                            Some(_) => Some(i),
-                            None => Some(ii),
-                        }
-                    }
-                    Err(_) => Some(i),
-                },
-            }
-        }
-        Err(_) => None,
-    };
-
-    let index = match (index_left, index_right) {
-        (None, None) => None,
-        (None, Some(i)) => Some(i),
-        (Some(i), None) => Some(i),
-        (Some(l), Some(r)) => match grid.particle_direction() {
-            ParticleHorizontalDirection::Left => Some(l),
-            ParticleHorizontalDirection::Right => Some(r),
-        },
-    };
-
-    if let Some(index) = index {
-        grid.swap_particles(grid.to_index(position), index);
-        true
-    } else {
-        false
-    }
-}
-
-fn gravity<T: GridAccess>(grid: &mut T, position: (usize, usize)) -> bool {
-    let index = grid.to_index(position);
-    let weight = match &grid.get_cell(index).particle {
-        Some(p) => p.weight(),
-        None => u8::MIN,
-    };
-
-    if weight == u8::MIN {
-        return false;
-    }
-
-    if let Ok(index_n) = grid.get_neighbor_index(position, (0, 1)) {
-        let cell = grid.get_cell(index_n);
-        match &cell.particle {
-            Some(p) => {
-                if !grid.is_simulated(cell) && p.weight() < weight && p.weight() != u8::MIN {
-                    grid.swap_particles(index, index_n);
-                    return true;
-                }
-            }
-            None => {
-                grid.swap_particles(index, index_n);
-                return true;
-            }
-        };
-    }
-
-    let bottom_left = match grid.get_neighbor_index(position, (-1, 1)) {
-        Ok(index_n) => match &grid.get_cell(index_n).particle {
-            Some(p) => {
-                if p.weight() < weight && p.weight() != u8::MIN {
-                    Some(index_n)
-                } else {
-                    None
-                }
-            }
-            None => Some(index_n),
-        },
-        Err(_) => None,
-    };
-
-    let bottom_right = match grid.get_neighbor_index(position, (1, 1)) {
-        Ok(index_n) => match &grid.get_cell(index_n).particle {
-            Some(p) => {
-                if p.weight() < weight && p.weight() != u8::MIN {
-                    Some(index_n)
-                } else {
-                    None
-                }
-            }
-            None => Some(index_n),
-        },
-        Err(_) => None,
-    };
-
-    if let Some(index_n) = match (bottom_left, bottom_right) {
-        (None, None) => None,
-        (None, Some(r)) => Some(r),
-        (Some(l), None) => Some(l),
-        (Some(l), Some(r)) => match grid.particle_direction() {
-            ParticleHorizontalDirection::Left => Some(l),
-            ParticleHorizontalDirection::Right => Some(r),
-        },
-    } {
-        grid.swap_particles(index, index_n);
-        true
-    } else {
-        false
     }
 }
 
