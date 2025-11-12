@@ -92,8 +92,8 @@ impl fmt::Display for Cell {
                 Particle::Water(_) => write!(f, "w"),
                 Particle::Salt(_) => write!(f, "S"),
                 Particle::Rock(_) => write!(f, "r"),
-                Particle::Drain(..) => todo!(),
-                Particle::Tap(..) => todo!(),
+                Particle::Drain(_) => write!(f, "d"),
+                Particle::Tap(_) => write!(f, "t"),
             },
             None => write!(f, "-"),
         }
@@ -742,5 +742,16 @@ mod tests {
                 Particle::from(Water::with_capacity(c)).color()
             );
         }
+    }
+
+    #[test]
+    fn test_cell_string_names() {
+        assert_eq!("-",Cell::empty().to_string());
+        assert_eq!("s",Cell::new( Particle::from(Sand::new())).to_string());
+        assert_eq!("S",Cell::new( Particle::from(Salt::new())).to_string());
+        assert_eq!("w",Cell::new( Particle::from(Water::new())).to_string());
+        assert_eq!("r",Cell::new( Particle::from(Rock::new())).to_string());
+        assert_eq!("d",Cell::new( Particle::from(Drain::new())).to_string());
+        assert_eq!("t",Cell::new( Particle::from(Tap::new())).to_string());
     }
 }
