@@ -26,7 +26,7 @@ impl Water {
     }
 
     pub fn update<T: GridAccess>(&self, grid: &mut T, position: (usize, usize)) {
-        if slide_water(grid, position) {
+        if slide_water(self.solvant_capacity, grid, position) {
             return;
         }
 
@@ -53,14 +53,18 @@ fn dissolve_salt<T: GridAccess>(grid: &mut T, capacity: u8, position: (usize, us
     false
 }
 
-fn slide_water<T: GridAccess>(grid: &mut T, position: (usize, usize)) -> bool {
+fn slide_water<T: GridAccess>(
+    solvant_capacity: u8,
+    grid: &mut T,
+    position: (usize, usize),
+) -> bool {
     let index_left = match grid.get_neighbor_index(position, (-1, 0)) {
         Ok(i) => {
             let c = grid.get_cell(i);
             match &c.particle {
                 Some(p) => match p {
                     Particle::Water(water) => {
-                        if water.solvant_capacity == 0 {
+                        if water.solvant_capacity != solvant_capacity {
                             Some(i)
                         } else {
                             None
@@ -89,7 +93,7 @@ fn slide_water<T: GridAccess>(grid: &mut T, position: (usize, usize)) -> bool {
             match &c.particle {
                 Some(p) => match p {
                     Particle::Water(water) => {
-                        if water.solvant_capacity == 0 {
+                        if water.solvant_capacity != solvant_capacity {
                             Some(i)
                         } else {
                             None
@@ -1100,7 +1104,7 @@ mod tests {
          */
         let mut g = Grid::new_with_rand(2, 1, Some(|| ParticleHorizontalDirection::Left), None);
 
-        g.spawn_particle((0, 0), Particle::from(Water::with_capacity(0)));
+        g.spawn_particle((0, 0), Particle::from(Water::with_capacity(1)));
         g.spawn_particle((1, 0), Particle::from(Water::new()));
 
         g.update_grid();
@@ -1108,7 +1112,7 @@ mod tests {
         assert_eq!(
             vec![
                 Cell::new(Particle::from(Water::new())).with_cycle(1),
-                Cell::new(Particle::from(Water::with_capacity(0))).with_cycle(1),
+                Cell::new(Particle::from(Water::with_capacity(1))).with_cycle(1),
             ],
             *g.get_cells()
         );
@@ -1122,13 +1126,13 @@ mod tests {
         let mut g = Grid::new_with_rand(2, 1, Some(|| ParticleHorizontalDirection::Right), None);
 
         g.spawn_particle((0, 0), Particle::from(Water::new()));
-        g.spawn_particle((1, 0), Particle::from(Water::with_capacity(0)));
+        g.spawn_particle((1, 0), Particle::from(Water::with_capacity(1)));
 
         g.update_grid();
 
         assert_eq!(
             vec![
-                Cell::new(Particle::from(Water::with_capacity(0))).with_cycle(1),
+                Cell::new(Particle::from(Water::with_capacity(1))).with_cycle(1),
                 Cell::new(Particle::from(Water::new())).with_cycle(1),
             ],
             *g.get_cells()
