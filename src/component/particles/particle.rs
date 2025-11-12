@@ -124,28 +124,17 @@ fn flow<T: GridAccess>(grid: &mut T, position: (usize, usize)) -> bool {
         return false;
     }
 
-    let solvant_capacity = match &grid.get_cell(index).particle {
-        Some(p) => match p {
-            Particle::Water(water) => water.solvant_capacity,
-            _ => u8::MIN,
-        },
-        None => u8::MIN,
-    };
-
     let index_left = match grid.get_neighbor_index(position, (-1, 0)) {
         Ok(i) => {
             let c = grid.get_cell(i);
             match &c.particle {
-                Some(p) => match p {
-                    Particle::Water(water) => {
-                        if water.solvant_capacity != solvant_capacity {
-                            Some(i)
-                        } else {
-                            None
-                        }
+                Some(p) => {
+                    if p.viscosity() < viscosity {
+                        Some(i)
+                    } else {
+                        None
                     }
-                    _ => None,
-                },
+                }
                 None => match grid.get_neighbor_index(position, (-2, 0)) {
                     Ok(ii) => {
                         let c = grid.get_cell(ii);
@@ -165,16 +154,13 @@ fn flow<T: GridAccess>(grid: &mut T, position: (usize, usize)) -> bool {
         Ok(i) => {
             let c = grid.get_cell(i);
             match &c.particle {
-                Some(p) => match p {
-                    Particle::Water(water) => {
-                        if water.solvant_capacity != solvant_capacity {
-                            Some(i)
-                        } else {
-                            None
-                        }
+                Some(p) => {
+                    if p.viscosity() < viscosity {
+                        Some(i)
+                    } else {
+                        None
                     }
-                    _ => None,
-                },
+                }
                 None => match grid.get_neighbor_index(position, (2, 0)) {
                     Ok(ii) => {
                         let c = grid.get_cell(ii);
