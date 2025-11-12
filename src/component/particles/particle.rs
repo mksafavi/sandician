@@ -1,6 +1,9 @@
 use core::fmt;
 
-use bevy::prelude::{Color, Saturation};
+use bevy::{
+    color::ColorToPacked,
+    prelude::{Color, Saturation},
+};
 
 use crate::component::grid::{GridAccess, ParticleHorizontalDirection};
 
@@ -57,7 +60,7 @@ pub struct Particle {
     weight: u8,
     viscosity: u8,
     pub cloneable: bool,
-    color: Color,
+    color: [u8; 3],
     pub property: ParticleProperty,
 }
 
@@ -67,7 +70,10 @@ impl From<Sand> for Particle {
             weight: 5,
             viscosity: u8::MAX,
             cloneable: true,
-            color: Color::hsva(43.20, 0.34, 0.76, 1.00),
+            color: Color::hsva(43.20, 0.34, 0.76, 1.00)
+                .to_srgba()
+                .to_u8_array_no_alpha(),
+
             property: ParticleProperty::Sand(sand),
         }
     }
@@ -79,7 +85,9 @@ impl From<Salt> for Particle {
             weight: 5,
             viscosity: u8::MAX,
             cloneable: true,
-            color: Color::hsva(0.00, 0.00, 1.00, 1.00),
+            color: Color::hsva(0.00, 0.00, 1.00, 1.00)
+                .to_srgba()
+                .to_u8_array_no_alpha(),
             property: ParticleProperty::Salt(salt),
         }
     }
@@ -91,7 +99,9 @@ impl From<Water> for Particle {
             weight: 1,
             viscosity: u8::MIN,
             cloneable: true,
-            color: Color::hsva(201.60, 1.0, 0.80, 1.00),
+            color: Color::hsva(201.60, 1.0, 0.80, 1.00)
+                .to_srgba()
+                .to_u8_array_no_alpha(),
             property: ParticleProperty::Water(water),
         }
     }
@@ -103,7 +113,9 @@ impl From<Rock> for Particle {
             weight: u8::MIN,
             viscosity: u8::MAX,
             cloneable: true,
-            color: Color::hsva(28.0, 0.25, 0.30, 1.00),
+            color: Color::hsva(28.0, 0.25, 0.30, 1.00)
+                .to_srgba()
+                .to_u8_array_no_alpha(),
             property: ParticleProperty::Rock(rock),
         }
     }
@@ -115,7 +127,9 @@ impl From<Drain> for Particle {
             weight: u8::MIN,
             viscosity: u8::MAX,
             cloneable: false,
-            color: Color::hsva(0.0, 0.0, 0.10, 1.00),
+            color: Color::hsva(0.0, 0.0, 0.10, 1.00)
+                .to_srgba()
+                .to_u8_array_no_alpha(),
             property: ParticleProperty::Drain(drain),
         }
     }
@@ -127,7 +141,9 @@ impl From<Tap> for Particle {
             weight: u8::MIN,
             viscosity: u8::MAX,
             cloneable: false,
-            color: Color::hsva(190.0, 0.4, 0.75, 1.00),
+            color: Color::hsva(190.0, 0.4, 0.75, 1.00)
+                .to_srgba()
+                .to_u8_array_no_alpha(),
             property: ParticleProperty::Tap(tap),
         }
     }
@@ -152,11 +168,11 @@ impl Particle {
     }
 
     pub fn color(&self) -> Color {
+        let color = Color::srgb_u8(self.color[0], self.color[1], self.color[2]);
         match &self.property {
-            ParticleProperty::Water(water) => self
-                .color
+            ParticleProperty::Water(water) => Color::Hsva(color.into())
                 .with_saturation(1.0 - (3 - water.solvant_capacity) as f32 * 0.1),
-            _ => self.color,
+            _ => color,
         }
     }
 
