@@ -93,7 +93,7 @@ impl Particle {
 
     fn viscosity(&self) -> u8 {
         match self {
-            Particle::Water(..) => u8::MIN,
+            Particle::Water(water) => u8::MIN + (3 - water.solvant_capacity),
             _ => u8::MAX,
         }
     }
