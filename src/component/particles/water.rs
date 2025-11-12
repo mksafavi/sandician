@@ -1,5 +1,5 @@
 use super::particle::Particle;
-use crate::component::grid::{GridAccess, ParticleHorizontalDirection};
+use crate::component::grid::GridAccess;
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct Water {
@@ -26,10 +26,6 @@ impl Water {
     }
 
     pub fn update<T: GridAccess>(&self, grid: &mut T, position: (usize, usize)) {
-        if slide_water(self.solvant_capacity, grid, position) {
-            return;
-        }
-
         dissolve_salt(grid, self.solvant_capacity, position);
     }
 }
@@ -53,91 +49,10 @@ fn dissolve_salt<T: GridAccess>(grid: &mut T, capacity: u8, position: (usize, us
     false
 }
 
-fn slide_water<T: GridAccess>(
-    solvant_capacity: u8,
-    grid: &mut T,
-    position: (usize, usize),
-) -> bool {
-    let index_left = match grid.get_neighbor_index(position, (-1, 0)) {
-        Ok(i) => {
-            let c = grid.get_cell(i);
-            match &c.particle {
-                Some(p) => match p {
-                    Particle::Water(water) => {
-                        if water.solvant_capacity != solvant_capacity {
-                            Some(i)
-                        } else {
-                            None
-                        }
-                    }
-                    _ => None,
-                },
-                None => match grid.get_neighbor_index(position, (-2, 0)) {
-                    Ok(ii) => {
-                        let c = grid.get_cell(ii);
-                        match &c.particle {
-                            Some(_) => Some(i),
-                            None => Some(ii),
-                        }
-                    }
-                    Err(_) => Some(i),
-                },
-            }
-        }
-        Err(_) => None,
-    };
-
-    let index_right = match grid.get_neighbor_index(position, (1, 0)) {
-        Ok(i) => {
-            let c = grid.get_cell(i);
-            match &c.particle {
-                Some(p) => match p {
-                    Particle::Water(water) => {
-                        if water.solvant_capacity != solvant_capacity {
-                            Some(i)
-                        } else {
-                            None
-                        }
-                    }
-                    _ => None,
-                },
-                None => match grid.get_neighbor_index(position, (2, 0)) {
-                    Ok(ii) => {
-                        let c = grid.get_cell(ii);
-                        match &c.particle {
-                            Some(_) => Some(i),
-                            None => Some(ii),
-                        }
-                    }
-                    Err(_) => Some(i),
-                },
-            }
-        }
-        Err(_) => None,
-    };
-
-    let index = match (index_left, index_right) {
-        (None, None) => None,
-        (None, Some(i)) => Some(i),
-        (Some(i), None) => Some(i),
-        (Some(l), Some(r)) => match grid.particle_direction() {
-            ParticleHorizontalDirection::Left => Some(l),
-            ParticleHorizontalDirection::Right => Some(r),
-        },
-    };
-
-    if let Some(index) = index {
-        grid.swap_particles(grid.to_index(position), index);
-        true
-    } else {
-        false
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use crate::component::{
-        grid::{Cell, Grid, RowUpdateDirection},
+        grid::{Cell, Grid, ParticleHorizontalDirection, RowUpdateDirection},
         particles::{particle::Particle, salt::Salt, sand::Sand},
     };
 

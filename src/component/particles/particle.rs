@@ -51,6 +51,9 @@ impl Particle {
         if gravity(grid, position) {
             return;
         }
+        if flow(grid, position) {
+            return;
+        }
         match self {
             Particle::Sand(..) => (),
             Particle::Water(water) => water.update(grid, position),
@@ -87,6 +90,13 @@ impl Particle {
             Particle::Tap(..) => u8::MIN,
         }
     }
+
+    fn viscosity(&self) -> u8 {
+        match self {
+            Particle::Water(..) => u8::MIN,
+            _ => u8::MAX,
+        }
+    }
 }
 
 impl fmt::Display for Particle {
@@ -100,6 +110,101 @@ impl fmt::Display for Particle {
             Particle::Tap(..) => "tap",
         };
         write!(f, "{s}")
+    }
+}
+
+fn flow<T: GridAccess>(grid: &mut T, position: (usize, usize)) -> bool {
+    let index = grid.to_index(position);
+    let viscosity = match &grid.get_cell(index).particle {
+        Some(p) => p.viscosity(),
+        None => u8::MAX,
+    };
+
+    if viscosity == u8::MAX {
+        return false;
+    }
+
+    let solvant_capacity = match &grid.get_cell(index).particle {
+        Some(p) => match p {
+            Particle::Water(water) => water.solvant_capacity,
+            _ => u8::MIN,
+        },
+        None => u8::MIN,
+    };
+
+    let index_left = match grid.get_neighbor_index(position, (-1, 0)) {
+        Ok(i) => {
+            let c = grid.get_cell(i);
+            match &c.particle {
+                Some(p) => match p {
+                    Particle::Water(water) => {
+                        if water.solvant_capacity != solvant_capacity {
+                            Some(i)
+                        } else {
+                            None
+                        }
+                    }
+                    _ => None,
+                },
+                None => match grid.get_neighbor_index(position, (-2, 0)) {
+                    Ok(ii) => {
+                        let c = grid.get_cell(ii);
+                        match &c.particle {
+                            Some(_) => Some(i),
+                            None => Some(ii),
+                        }
+                    }
+                    Err(_) => Some(i),
+                },
+            }
+        }
+        Err(_) => None,
+    };
+
+    let index_right = match grid.get_neighbor_index(position, (1, 0)) {
+        Ok(i) => {
+            let c = grid.get_cell(i);
+            match &c.particle {
+                Some(p) => match p {
+                    Particle::Water(water) => {
+                        if water.solvant_capacity != solvant_capacity {
+                            Some(i)
+                        } else {
+                            None
+                        }
+                    }
+                    _ => None,
+                },
+                None => match grid.get_neighbor_index(position, (2, 0)) {
+                    Ok(ii) => {
+                        let c = grid.get_cell(ii);
+                        match &c.particle {
+                            Some(_) => Some(i),
+                            None => Some(ii),
+                        }
+                    }
+                    Err(_) => Some(i),
+                },
+            }
+        }
+        Err(_) => None,
+    };
+
+    let index = match (index_left, index_right) {
+        (None, None) => None,
+        (None, Some(i)) => Some(i),
+        (Some(i), None) => Some(i),
+        (Some(l), Some(r)) => match grid.particle_direction() {
+            ParticleHorizontalDirection::Left => Some(l),
+            ParticleHorizontalDirection::Right => Some(r),
+        },
+    };
+
+    if let Some(index) = index {
+        grid.swap_particles(grid.to_index(position), index);
+        true
+    } else {
+        false
     }
 }
 
