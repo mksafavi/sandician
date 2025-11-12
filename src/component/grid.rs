@@ -732,16 +732,12 @@ mod tests {
     }
 
     #[test]
-    fn test_water_particle_gets_lighter_color_when_it_cannot_dissolve_anymore_salt() {
-        for s in 1..=3 {
+    fn test_water_particle_gets_lighter_color_with_more_dissolved_salt_particles() {
+        for (c, s) in (0..=3).zip([0.7, 0.8, 0.9, 1.00]) {
             assert_color_srgb_eq!(
-                Color::hsva(201.60, 1.00, 0.80, 1.00),
-                Particle::from(Water::with_capacity(s)).color()
+                Color::hsva(201.60, s, 0.80, 1.00),
+                Particle::from(Water::with_capacity(c)).color()
             );
         }
-        assert_color_srgb_eq!(
-            Color::hsva(201.60, 0.60, 0.80, 1.00),
-            Particle::from(Water::with_capacity(0)).color()
-        );
     }
 }

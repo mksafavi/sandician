@@ -64,10 +64,12 @@ impl Particle {
     pub fn color(&self) -> Color {
         match self {
             Particle::Sand(..) => Color::hsva(43.20, 0.34, 0.76, 1.00),
-            Particle::Water(water) => match water.solvant_capacity {
-                0 => Color::hsva(201.60, 0.60, 0.80, 1.00),
-                _ => Color::hsva(201.60, 1.00, 0.80, 1.00),
-            },
+            Particle::Water(water) => Color::hsva(
+                201.60,
+                1.0 - (3 - water.solvant_capacity) as f32 * 0.1,
+                0.80,
+                1.00,
+            ),
             Particle::Salt(..) => Color::hsva(0.00, 0.00, 1.00, 1.00),
             Particle::Rock => Color::hsva(28.0, 0.25, 0.30, 1.00),
             Particle::Drain(..) => Color::hsva(0.0, 0.0, 0.10, 1.00),
