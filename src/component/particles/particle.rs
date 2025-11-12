@@ -48,10 +48,13 @@ impl From<Tap> for Particle {
 
 impl Particle {
     pub fn update<T: GridAccess>(&self, grid: &mut T, position: (usize, usize)) {
+        if gravity(grid, position) {
+            return;
+        }
         match self {
-            Particle::Sand(sand) => sand.update(grid, position),
+            Particle::Sand(..) => (),
             Particle::Water(water) => water.update(grid, position),
-            Particle::Salt(salt) => salt.update(grid, position),
+            Particle::Salt(..) => (),
             Particle::Rock => (),
             Particle::Drain(drain) => drain.update(grid, position),
             Particle::Tap(tap) => tap.update(grid, position),
@@ -77,9 +80,9 @@ impl Particle {
             Particle::Sand(sand) => sand.weight,
             Particle::Water(water) => water.weight + (3 - water.solvant_capacity),
             Particle::Salt(salt) => salt.weight,
-            Particle::Rock => u8::MAX,
-            Particle::Drain(..) => u8::MAX,
-            Particle::Tap(..) => u8::MAX,
+            Particle::Rock => u8::MIN,
+            Particle::Drain(..) => u8::MIN,
+            Particle::Tap(..) => u8::MIN,
         }
     }
 }
@@ -98,18 +101,22 @@ impl fmt::Display for Particle {
     }
 }
 
-pub fn gravity<T: GridAccess>(grid: &mut T, position: (usize, usize)) -> bool {
+fn gravity<T: GridAccess>(grid: &mut T, position: (usize, usize)) -> bool {
     let index = grid.to_index(position);
     let weight = match &grid.get_cell(index).particle {
         Some(p) => p.weight(),
-        None => u8::MAX,
+        None => u8::MIN,
     };
+
+    if weight == u8::MIN {
+        return false;
+    }
 
     if let Ok(index_n) = grid.get_neighbor_index(position, (0, 1)) {
         let cell = grid.get_cell(index_n);
         match &cell.particle {
             Some(p) => {
-                if !grid.is_simulated(cell) && p.weight() < weight {
+                if !grid.is_simulated(cell) && p.weight() < weight && p.weight() != u8::MIN {
                     grid.swap_particles(index, index_n);
                     return true;
                 }
@@ -124,7 +131,7 @@ pub fn gravity<T: GridAccess>(grid: &mut T, position: (usize, usize)) -> bool {
     let bottom_left = match grid.get_neighbor_index(position, (-1, 1)) {
         Ok(index_n) => match &grid.get_cell(index_n).particle {
             Some(p) => {
-                if p.weight() < weight {
+                if p.weight() < weight && p.weight() != u8::MIN {
                     Some(index_n)
                 } else {
                     None
@@ -138,7 +145,7 @@ pub fn gravity<T: GridAccess>(grid: &mut T, position: (usize, usize)) -> bool {
     let bottom_right = match grid.get_neighbor_index(position, (1, 1)) {
         Ok(index_n) => match &grid.get_cell(index_n).particle {
             Some(p) => {
-                if p.weight() < weight {
+                if p.weight() < weight && p.weight() != u8::MIN {
                     Some(index_n)
                 } else {
                     None

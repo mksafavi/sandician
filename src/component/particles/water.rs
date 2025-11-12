@@ -1,4 +1,4 @@
-use super::particle::{self, Particle};
+use super::particle::Particle;
 use crate::component::grid::{GridAccess, ParticleHorizontalDirection};
 
 #[derive(Clone, PartialEq, Debug)]
@@ -26,10 +26,6 @@ impl Water {
     }
 
     pub fn update<T: GridAccess>(&self, grid: &mut T, position: (usize, usize)) {
-        if particle::gravity(grid, position) {
-            return;
-        }
-
         if slide_water(grid, position) {
             return;
         }

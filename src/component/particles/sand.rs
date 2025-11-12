@@ -17,10 +17,6 @@ impl Sand {
     pub fn new() -> Self {
         Self { weight: 5 }
     }
-
-    pub fn update<T: GridAccess>(&self, grid: &mut T, position: (usize, usize)) {
-        particle::gravity(grid, position);
-    }
 }
 
 #[cfg(test)]
