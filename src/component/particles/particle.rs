@@ -151,10 +151,10 @@ impl From<Tap> for Particle {
 
 impl Particle {
     pub fn update<T: GridAccess>(&self, grid: &mut T, position: (usize, usize)) {
-        if Self::gravity(grid, position) {
+        if self.gravity(grid, position) {
             return;
         }
-        if Self::flow(grid, position) {
+        if self.flow(grid, position) {
             return;
         }
         match &self.property {
@@ -190,12 +190,8 @@ impl Particle {
         }
     }
 
-    fn flow<T: GridAccess>(grid: &mut T, position: (usize, usize)) -> bool {
-        let index = grid.to_index(position);
-        let viscosity = match &grid.get_cell(index).particle {
-            Some(p) => p.viscosity(),
-            None => u8::MAX,
-        };
+    fn flow<T: GridAccess>(&self, grid: &mut T, position: (usize, usize)) -> bool {
+        let viscosity = self.viscosity();
 
         if viscosity == u8::MAX {
             return false;
@@ -271,12 +267,8 @@ impl Particle {
         }
     }
 
-    fn gravity<T: GridAccess>(grid: &mut T, position: (usize, usize)) -> bool {
-        let index = grid.to_index(position);
-        let weight = match &grid.get_cell(index).particle {
-            Some(p) => p.weight(),
-            None => u8::MIN,
-        };
+    fn gravity<T: GridAccess>(&self, grid: &mut T, position: (usize, usize)) -> bool {
+        let weight = self.weight();
 
         if weight == u8::MIN {
             return false;
@@ -287,12 +279,12 @@ impl Particle {
             match &cell.particle {
                 Some(p) => {
                     if !grid.is_simulated(cell) && p.weight() < weight && p.weight() != u8::MIN {
-                        grid.swap_particles(index, index_n);
+                        grid.swap_particles(grid.to_index(position), index_n);
                         return true;
                     }
                 }
                 None => {
-                    grid.swap_particles(index, index_n);
+                    grid.swap_particles(grid.to_index(position), index_n);
                     return true;
                 }
             };
@@ -335,7 +327,7 @@ impl Particle {
                 ParticleHorizontalDirection::Right => Some(r),
             },
         } {
-            grid.swap_particles(index, index_n);
+            grid.swap_particles(grid.to_index(position), index_n);
             true
         } else {
             false
