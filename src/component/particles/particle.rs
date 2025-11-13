@@ -19,42 +19,6 @@ pub enum ParticleProperty {
     Tap(Tap),
 }
 
-impl From<Sand> for ParticleProperty {
-    fn from(sand: Sand) -> Self {
-        Self::Sand(sand)
-    }
-}
-
-impl From<Salt> for ParticleProperty {
-    fn from(salt: Salt) -> Self {
-        Self::Salt(salt)
-    }
-}
-
-impl From<Water> for ParticleProperty {
-    fn from(water: Water) -> Self {
-        Self::Water(water)
-    }
-}
-
-impl From<Rock> for ParticleProperty {
-    fn from(rock: Rock) -> Self {
-        Self::Rock(rock)
-    }
-}
-
-impl From<Drain> for ParticleProperty {
-    fn from(drain: Drain) -> Self {
-        Self::Drain(drain)
-    }
-}
-
-impl From<Tap> for ParticleProperty {
-    fn from(tap: Tap) -> Self {
-        Self::Tap(tap)
-    }
-}
-
 #[derive(Clone, PartialEq, Debug)]
 pub struct Particle {
     weight: u8,
