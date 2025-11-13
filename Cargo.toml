@@ -32,6 +32,7 @@ features = [
 [lib]
 name = "sandsim"
 path = "src/lib.rs"
+bench = false
 
 # Enable a small amount of optimization in the dev profile.
 [profile.dev]
