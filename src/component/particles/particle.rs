@@ -86,7 +86,7 @@ impl Particle {
             cloneable: true,
             color: color.to_srgba().to_u8_array_no_alpha(),
             kind,
-            velocity: 1,
+            velocity: 0,
         }
     }
 
@@ -286,20 +286,33 @@ impl Particle {
             return false;
         }
 
-        if let Ok(index_n) = grid.get_neighbor_index(position, (0, 1)) {
-            let cell = grid.get_cell(index_n);
-            match &cell.particle {
-                Some(p) => {
-                    if !grid.is_simulated(cell) && p.weight < self.weight && p.weight != u8::MIN {
-                        grid.swap_particles(grid.to_index(position), index_n);
-                        return true;
+        let downs =
+            (1..=self.velocity+1).map(|y| match grid.get_neighbor_index(position, (0, y as i32)) {
+                Ok(index_n) => {
+                    let cell = grid.get_cell(index_n);
+                    match &cell.particle {
+                        Some(p) => {
+                            if !grid.is_simulated(cell)
+                                && p.weight < self.weight
+                                && p.weight != u8::MIN
+                            {
+                                Some(index_n)
+                            } else {
+                                None
+                            }
+                        }
+                        None => Some(index_n),
                     }
                 }
-                None => {
-                    grid.swap_particles(grid.to_index(position), index_n);
-                    return true;
-                }
-            };
+                _ => None,
+            });
+
+        //TODO: handle this case 1 2 None 4 None should use 2
+        if let Some(index_n) = downs.fuse().filter(|x| x.is_some()).last() {
+            if let Some(index_n) = index_n {
+                grid.swap_particles(grid.to_index(position), index_n);
+                return true;
+            }
         }
 
         let bottom_left = match grid.get_neighbor_index(position, (-1, 1)) {

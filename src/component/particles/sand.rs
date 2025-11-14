@@ -160,7 +160,7 @@ mod tests {
             vec![
                 Cell::empty().with_cycle(1),
                 Cell::empty(),
-                Cell::new(Particle::from(Sand::new())).with_cycle(1),
+                Cell::new(Particle::from(Sand::new()).with_velocity(2)).with_cycle(1),
             ],
             *g.get_cells()
         );
