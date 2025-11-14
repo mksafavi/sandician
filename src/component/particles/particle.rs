@@ -286,8 +286,8 @@ impl Particle {
             return false;
         }
 
-        let downs =
-            (1..=self.velocity+1).map(|y| match grid.get_neighbor_index(position, (0, y as i32)) {
+        let downs = (1..=self.velocity + 1).map(|y| {
+            match grid.get_neighbor_index(position, (0, y as i32)) {
                 Ok(index_n) => {
                     let cell = grid.get_cell(index_n);
                     match &cell.particle {
@@ -305,12 +305,17 @@ impl Particle {
                     }
                 }
                 _ => None,
-            });
+            }
+        });
 
         //TODO: handle this case 1 2 None 4 None should use 2
         if let Some(index_n) = downs.fuse().filter(|x| x.is_some()).last() {
             if let Some(index_n) = index_n {
                 grid.swap_particles(grid.to_index(position), index_n);
+                let cell = grid.get_cell_mut(index_n);
+                if let Some(particle) = &cell.particle {
+                    cell.particle = Some(particle.clone().with_velocity(particle.velocity + 1));
+                }
                 return true;
             }
         }

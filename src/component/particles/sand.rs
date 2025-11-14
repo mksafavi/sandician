@@ -146,21 +146,35 @@ mod tests {
     #[test]
     fn test_update_grid_sand_moves_based_on_velocity() {
         /*
-         * s -> -
-         * -    -
-         * -    s
+         * s -> - -> -
+         * -    s    -
+         * -    -    -
+         * -    -    s
          */
-        let mut g = Grid::new(1, 3);
+        let mut g = Grid::new(1, 4);
 
-        g.spawn_particle((0, 0), Particle::from(Sand::new()).with_velocity(2));
+        g.spawn_particle((0, 0), Particle::from(Sand::new()));
 
         g.update_grid();
 
         assert_eq!(
             vec![
                 Cell::empty().with_cycle(1),
+                Cell::new(Particle::from(Sand::new()).with_velocity(1)).with_cycle(1),
                 Cell::empty(),
-                Cell::new(Particle::from(Sand::new()).with_velocity(2)).with_cycle(1),
+                Cell::empty(),
+            ],
+            *g.get_cells()
+        );
+
+        g.update_grid();
+
+        assert_eq!(
+            vec![
+                Cell::empty().with_cycle(1),
+                Cell::empty().with_cycle(2),
+                Cell::empty(),
+                Cell::new(Particle::from(Sand::new()).with_velocity(2)).with_cycle(2),
             ],
             *g.get_cells()
         );
