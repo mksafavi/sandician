@@ -10,7 +10,7 @@ use crate::component::grid::{GridAccess, ParticleHorizontalDirection};
 use super::{drain::Drain, rock::Rock, salt::Salt, sand::Sand, tap::Tap, water::Water};
 
 #[derive(Clone, PartialEq, Debug)]
-pub enum ParticleProperty {
+pub enum ParticleKind {
     Sand(Sand),
     Water(Water),
     Salt(Salt),
@@ -19,37 +19,37 @@ pub enum ParticleProperty {
     Tap(Tap),
 }
 
-impl From<Sand> for ParticleProperty {
+impl From<Sand> for ParticleKind {
     fn from(sand: Sand) -> Self {
         Self::Sand(sand)
     }
 }
 
-impl From<Salt> for ParticleProperty {
+impl From<Salt> for ParticleKind {
     fn from(salt: Salt) -> Self {
         Self::Salt(salt)
     }
 }
 
-impl From<Water> for ParticleProperty {
+impl From<Water> for ParticleKind {
     fn from(water: Water) -> Self {
         Self::Water(water)
     }
 }
 
-impl From<Rock> for ParticleProperty {
+impl From<Rock> for ParticleKind {
     fn from(rock: Rock) -> Self {
         Self::Rock(rock)
     }
 }
 
-impl From<Drain> for ParticleProperty {
+impl From<Drain> for ParticleKind {
     fn from(drain: Drain) -> Self {
         Self::Drain(drain)
     }
 }
 
-impl From<Tap> for ParticleProperty {
+impl From<Tap> for ParticleKind {
     fn from(tap: Tap) -> Self {
         Self::Tap(tap)
     }
@@ -61,17 +61,17 @@ pub struct Particle {
     viscosity: u8,
     pub cloneable: bool,
     color: [u8; 3],
-    pub property: ParticleProperty,
+    pub kind: ParticleKind,
 }
 
 impl Particle {
-    pub fn new(color: Color, property: ParticleProperty) -> Self {
+    pub fn new(color: Color, kind: ParticleKind) -> Self {
         Self {
             weight: u8::MIN,
             viscosity: u8::MAX,
             cloneable: true,
             color: color.to_srgba().to_u8_array_no_alpha(),
-            property,
+            kind,
         }
     }
 
@@ -94,15 +94,15 @@ impl Particle {
     }
 }
 
-impl From<ParticleProperty> for Particle {
-    fn from(property: ParticleProperty) -> Self {
-        match property {
-            ParticleProperty::Sand(sand) => Self::from(sand),
-            ParticleProperty::Water(water) => Self::from(water),
-            ParticleProperty::Salt(salt) => Self::from(salt),
-            ParticleProperty::Rock(rock) => Self::from(rock),
-            ParticleProperty::Drain(drain) => Self::from(drain),
-            ParticleProperty::Tap(tap) => Self::from(tap),
+impl From<ParticleKind> for Particle {
+    fn from(kind: ParticleKind) -> Self {
+        match kind {
+            ParticleKind::Sand(sand) => Self::from(sand),
+            ParticleKind::Water(water) => Self::from(water),
+            ParticleKind::Salt(salt) => Self::from(salt),
+            ParticleKind::Rock(rock) => Self::from(rock),
+            ParticleKind::Drain(drain) => Self::from(drain),
+            ParticleKind::Tap(tap) => Self::from(tap),
         }
     }
 }
@@ -111,7 +111,7 @@ impl From<Sand> for Particle {
     fn from(sand: Sand) -> Self {
         Self::new(
             Color::hsva(43.20, 0.34, 0.76, 1.00),
-            ParticleProperty::Sand(sand),
+            ParticleKind::Sand(sand),
         )
         .with_weight(5)
     }
@@ -121,7 +121,7 @@ impl From<Salt> for Particle {
     fn from(salt: Salt) -> Self {
         Self::new(
             Color::hsva(0.00, 0.00, 1.00, 1.00),
-            ParticleProperty::Salt(salt),
+            ParticleKind::Salt(salt),
         )
         .with_weight(5)
     }
@@ -133,7 +133,7 @@ impl From<Water> for Particle {
         let viscosity = u8::MIN + 3 - water.solvant_capacity;
         let color = Color::hsva(201.60, 1.0, 0.80, 1.00)
             .with_saturation(1.0 - (3 - water.solvant_capacity) as f32 * 0.1);
-        Self::new(color, ParticleProperty::Water(water))
+        Self::new(color, ParticleKind::Water(water))
             .with_weight(weight)
             .with_viscosity(viscosity)
     }
@@ -143,7 +143,7 @@ impl From<Rock> for Particle {
     fn from(rock: Rock) -> Self {
         Self::new(
             Color::hsva(28.0, 0.25, 0.30, 1.00),
-            ParticleProperty::Rock(rock),
+            ParticleKind::Rock(rock),
         )
     }
 }
@@ -152,7 +152,7 @@ impl From<Drain> for Particle {
     fn from(drain: Drain) -> Self {
         Self::new(
             Color::hsva(0.0, 0.0, 0.10, 1.00),
-            ParticleProperty::Drain(drain),
+            ParticleKind::Drain(drain),
         )
         .with_cloneable(false)
     }
@@ -162,7 +162,7 @@ impl From<Tap> for Particle {
     fn from(tap: Tap) -> Self {
         Self::new(
             Color::hsva(190.00, 0.40, 0.75, 1.00),
-            ParticleProperty::Tap(tap),
+            ParticleKind::Tap(tap),
         )
         .with_cloneable(false)
     }
@@ -176,13 +176,13 @@ impl Particle {
         if self.flow(grid, position) {
             return;
         }
-        match &self.property {
-            ParticleProperty::Sand(..) => (),
-            ParticleProperty::Water(water) => water.update(grid, position),
-            ParticleProperty::Salt(..) => (),
-            ParticleProperty::Rock(..) => (),
-            ParticleProperty::Drain(drain) => drain.update(grid, position),
-            ParticleProperty::Tap(tap) => tap.update(grid, position),
+        match &self.kind {
+            ParticleKind::Sand(..) => (),
+            ParticleKind::Water(water) => water.update(grid, position),
+            ParticleKind::Salt(..) => (),
+            ParticleKind::Rock(..) => (),
+            ParticleKind::Drain(drain) => drain.update(grid, position),
+            ParticleKind::Tap(tap) => tap.update(grid, position),
         };
     }
 
@@ -329,13 +329,13 @@ impl Particle {
 
 impl fmt::Display for Particle {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let s = match self.property {
-            ParticleProperty::Sand(..) => "sand",
-            ParticleProperty::Water(..) => "water",
-            ParticleProperty::Salt(..) => "salt",
-            ParticleProperty::Rock(..) => "rock",
-            ParticleProperty::Drain(..) => "drain",
-            ParticleProperty::Tap(..) => "tap",
+        let s = match self.kind {
+            ParticleKind::Sand(..) => "sand",
+            ParticleKind::Water(..) => "water",
+            ParticleKind::Salt(..) => "salt",
+            ParticleKind::Rock(..) => "rock",
+            ParticleKind::Drain(..) => "drain",
+            ParticleKind::Tap(..) => "tap",
         };
         write!(f, "{s}")
     }

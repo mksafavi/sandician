@@ -9,7 +9,7 @@ use bevy::{
 };
 use rand::random_range;
 
-use crate::component::particles::particle::ParticleProperty;
+use crate::component::particles::particle::ParticleKind;
 
 use super::particles::particle::Particle;
 
@@ -89,13 +89,13 @@ pub trait GridAccess {
 impl fmt::Display for Cell {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &self.particle {
-            Some(p) => match p.property {
-                ParticleProperty::Sand(_) => write!(f, "s"),
-                ParticleProperty::Water(_) => write!(f, "w"),
-                ParticleProperty::Salt(_) => write!(f, "S"),
-                ParticleProperty::Rock(_) => write!(f, "r"),
-                ParticleProperty::Drain(_) => write!(f, "d"),
-                ParticleProperty::Tap(_) => write!(f, "t"),
+            Some(p) => match p.kind {
+                ParticleKind::Sand(_) => write!(f, "s"),
+                ParticleKind::Water(_) => write!(f, "w"),
+                ParticleKind::Salt(_) => write!(f, "S"),
+                ParticleKind::Rock(_) => write!(f, "r"),
+                ParticleKind::Drain(_) => write!(f, "d"),
+                ParticleKind::Tap(_) => write!(f, "t"),
             },
             None => write!(f, "-"),
         }

@@ -1,4 +1,4 @@
-use super::particle::{Particle, ParticleProperty};
+use super::particle::{Particle, ParticleKind};
 use crate::component::grid::GridAccess;
 
 #[derive(Clone, PartialEq, Debug)]
@@ -33,7 +33,7 @@ fn dissolve_salt<T: GridAccess>(grid: &mut T, capacity: u8, position: (usize, us
         for x in -1..=1 {
             if let Ok(i) = grid.get_neighbor_index(position, (x, y)) {
                 if let Some(p) = &grid.get_cell(i).particle {
-                    if let ParticleProperty::Salt(..) = p.property {
+                    if let ParticleKind::Salt(..) = p.kind {
                         if 0 < capacity {
                             let index = grid.to_index(position);
                             grid.get_cell_mut(index).particle =
