@@ -55,25 +55,15 @@ impl Particle {
 
     pub fn color(&self) -> Color {
         let color = Color::srgb_u8(self.color[0], self.color[1], self.color[2]);
-        match &self.property {
-            ParticleProperty::Water(water) => Color::Hsva(color.into())
-                .with_saturation(1.0 - (3 - water.solvant_capacity) as f32 * 0.1),
-            _ => color,
-        }
+        color
     }
 
     fn weight(&self) -> u8 {
-        match &self.property {
-            ParticleProperty::Water(water) => self.weight + (3 - water.solvant_capacity),
-            _ => self.weight,
-        }
+        self.weight
     }
 
     fn viscosity(&self) -> u8 {
-        match &self.property {
-            ParticleProperty::Water(water) => self.viscosity + (3 - water.solvant_capacity),
-            _ => self.viscosity,
-        }
+        self.viscosity
     }
 }
 
@@ -99,12 +89,13 @@ impl From<Salt> for Particle {
 
 impl From<Water> for Particle {
     fn from(water: Water) -> Self {
-        Self::new(
-            Color::hsva(201.60, 1.0, 0.80, 1.00),
-            ParticleProperty::Water(water),
-        )
-        .with_weight(1)
-        .with_viscosity(u8::MIN)
+        let weight = 1 + 3 - water.solvant_capacity;
+        let viscosity = u8::MIN + 3 - water.solvant_capacity;
+        let color = Color::hsva(201.60, 1.0, 0.80, 1.00)
+            .with_saturation(1.0 - (3 - water.solvant_capacity) as f32 * 0.1);
+        Self::new(color, ParticleProperty::Water(water))
+            .with_weight(weight)
+            .with_viscosity(viscosity)
     }
 }
 
