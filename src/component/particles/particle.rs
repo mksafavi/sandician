@@ -58,6 +58,19 @@ impl Particle {
     }
 }
 
+impl From<ParticleProperty> for Particle {
+    fn from(property: ParticleProperty) -> Self {
+        match property {
+            ParticleProperty::Sand(sand) => Self::from(sand),
+            ParticleProperty::Water(water) => Self::from(water),
+            ParticleProperty::Salt(salt) => Self::from(salt),
+            ParticleProperty::Rock(rock) => Self::from(rock),
+            ParticleProperty::Drain(drain) => Self::from(drain),
+            ParticleProperty::Tap(tap) => Self::from(tap),
+        }
+    }
+}
+
 impl From<Sand> for Particle {
     fn from(sand: Sand) -> Self {
         Self::new(
