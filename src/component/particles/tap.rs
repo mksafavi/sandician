@@ -1,11 +1,11 @@
 use crate::component::grid::GridAccess;
 
-use super::particle::Particle;
+use super::particle::{Particle, ParticleKind};
 
 #[derive(Clone, PartialEq, Debug)]
 
 pub struct Tap {
-    pub particle: Option<Box<Particle>>,
+    pub particle_kind: Option<Box<ParticleKind>>,
 }
 
 impl Default for Tap {
@@ -16,18 +16,20 @@ impl Default for Tap {
 
 impl Tap {
     pub fn new() -> Self {
-        Self { particle: None }
+        Self {
+            particle_kind: None,
+        }
     }
 
     pub fn with_particle(particle: &Particle) -> Self {
         Self {
-            particle: Some(Box::new(particle.clone())),
+            particle_kind: Some(Box::new(particle.kind.clone())),
         }
     }
 
     pub fn update<T: GridAccess>(&self, grid: &mut T, position: (usize, usize)) {
         let mut particle = self.clone();
-        if particle.particle.is_none() {
+        if particle.particle_kind.is_none() {
             let mut particle_to_clone = None;
             for y in -1..=1 {
                 for x in -1..=1 {
@@ -43,19 +45,19 @@ impl Tap {
 
             if let Some(p) = particle_to_clone {
                 let cell = grid.get_cell_mut(grid.to_index(position));
-                particle.particle = Some(Box::new(p.clone()));
+                particle.particle_kind = Some(Box::new(p.kind.to_default()));
                 cell.particle = Some(Particle::from(particle.clone()));
             }
         }
 
-        if let Some(particle) = &particle.particle {
+        if let Some(particle_kind) = particle.particle_kind {
             for y in -1..=1 {
                 for x in -1..=1 {
                     if let Ok(i) = grid.get_neighbor_index(position, (x, y)) {
                         if grid.get_cell_mut(i).particle.is_none() {
                             let cycle = grid.cycle();
                             let cell = grid.get_cell_mut(i);
-                            cell.particle = Some(*particle.clone());
+                            cell.particle = Some(Particle::from(*particle_kind.clone()));
                             cell.cycle = cycle;
                             grid.get_cell_mut(grid.to_index(position)).cycle = cycle;
                         }
@@ -274,6 +276,42 @@ mod tests {
                     Rock::new()
                 )))),
                 Cell::new(Particle::from(Sand::new())).with_cycle(1)
+            ],
+            *g.get_cells()
+        );
+    }
+
+    #[test]
+    fn test_update_grid_tap_clones_a_new_particle_with_the_selected_kind_instead_of_the_exact_particle()
+     {
+        let mut g = Grid::new(1, 2);
+
+        g.spawn_particle((0, 0), Particle::from(Tap::new()));
+        g.spawn_particle((0, 1), Particle::from(Water::with_capacity(0)));
+
+        g.update_grid();
+
+        assert_eq!(
+            vec![
+                Cell::new(Particle::from(Tap::with_particle(&Particle::from(
+                    Water::new()
+                )))),
+                Cell::new(Particle::from(Water::with_capacity(0))),
+            ],
+            *g.get_cells()
+        );
+
+        g.despawn_particle((0, 1));
+
+        g.update_grid();
+
+        assert_eq!(
+            vec![
+                Cell::new(Particle::from(Tap::with_particle(&Particle::from(
+                    Water::new()
+                ))))
+                .with_cycle(2),
+                Cell::new(Particle::from(Water::new())).with_cycle(2)
             ],
             *g.get_cells()
         );
