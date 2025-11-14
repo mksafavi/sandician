@@ -29,6 +29,30 @@ pub struct Particle {
 }
 
 impl Particle {
+    pub fn new(color: Color, property: ParticleProperty) -> Self {
+        Self {
+            weight: u8::MIN,
+            viscosity: u8::MAX,
+            cloneable: true,
+            color: color.to_srgba().to_u8_array_no_alpha(),
+            property,
+        }
+    }
+
+    pub fn with_weight(mut self, weight: u8) -> Self {
+        self.weight = weight;
+        self
+    }
+    pub fn with_cloneable(mut self, cloneable: bool) -> Self {
+        self.cloneable = cloneable;
+        self
+    }
+
+    pub fn with_viscosity(mut self, viscosity: u8) -> Self {
+        self.viscosity = viscosity;
+        self
+    }
+
     pub fn color(&self) -> Color {
         let color = Color::srgb_u8(self.color[0], self.color[1], self.color[2]);
         match &self.property {
@@ -55,86 +79,61 @@ impl Particle {
 
 impl From<Sand> for Particle {
     fn from(sand: Sand) -> Self {
-        Self {
-            weight: 5,
-            viscosity: u8::MAX,
-            cloneable: true,
-            color: Color::hsva(43.20, 0.34, 0.76, 1.00)
-                .to_srgba()
-                .to_u8_array_no_alpha(),
-
-            property: ParticleProperty::Sand(sand),
-        }
+        Self::new(
+            Color::hsva(43.20, 0.34, 0.76, 1.00),
+            ParticleProperty::Sand(sand),
+        )
+        .with_weight(5)
     }
 }
 
 impl From<Salt> for Particle {
     fn from(salt: Salt) -> Self {
-        Self {
-            weight: 5,
-            viscosity: u8::MAX,
-            cloneable: true,
-            color: Color::hsva(0.00, 0.00, 1.00, 1.00)
-                .to_srgba()
-                .to_u8_array_no_alpha(),
-            property: ParticleProperty::Salt(salt),
-        }
+        Self::new(
+            Color::hsva(0.00, 0.00, 1.00, 1.00),
+            ParticleProperty::Salt(salt),
+        )
+        .with_weight(5)
     }
 }
 
 impl From<Water> for Particle {
     fn from(water: Water) -> Self {
-        Self {
-            weight: 1,
-            viscosity: u8::MIN,
-            cloneable: true,
-            color: Color::hsva(201.60, 1.0, 0.80, 1.00)
-                .to_srgba()
-                .to_u8_array_no_alpha(),
-            property: ParticleProperty::Water(water),
-        }
+        Self::new(
+            Color::hsva(201.60, 1.0, 0.80, 1.00),
+            ParticleProperty::Water(water),
+        )
+        .with_weight(1)
+        .with_viscosity(u8::MIN)
     }
 }
 
 impl From<Rock> for Particle {
     fn from(rock: Rock) -> Self {
-        Self {
-            weight: u8::MIN,
-            viscosity: u8::MAX,
-            cloneable: true,
-            color: Color::hsva(28.0, 0.25, 0.30, 1.00)
-                .to_srgba()
-                .to_u8_array_no_alpha(),
-            property: ParticleProperty::Rock(rock),
-        }
+        Self::new(
+            Color::hsva(28.0, 0.25, 0.30, 1.00),
+            ParticleProperty::Rock(rock),
+        )
     }
 }
 
 impl From<Drain> for Particle {
     fn from(drain: Drain) -> Self {
-        Self {
-            weight: u8::MIN,
-            viscosity: u8::MAX,
-            cloneable: false,
-            color: Color::hsva(0.0, 0.0, 0.10, 1.00)
-                .to_srgba()
-                .to_u8_array_no_alpha(),
-            property: ParticleProperty::Drain(drain),
-        }
+        Self::new(
+            Color::hsva(0.0, 0.0, 0.10, 1.00),
+            ParticleProperty::Drain(drain),
+        )
+        .with_cloneable(false)
     }
 }
 
 impl From<Tap> for Particle {
     fn from(tap: Tap) -> Self {
-        Self {
-            weight: u8::MIN,
-            viscosity: u8::MAX,
-            cloneable: false,
-            color: Color::hsva(190.0, 0.4, 0.75, 1.00)
-                .to_srgba()
-                .to_u8_array_no_alpha(),
-            property: ParticleProperty::Tap(tap),
-        }
+        Self::new(
+            Color::hsva(190.00, 0.40, 0.75, 1.00),
+            ParticleProperty::Tap(tap),
+        )
+        .with_cloneable(false)
     }
 }
 
