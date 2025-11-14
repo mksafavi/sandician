@@ -19,6 +19,19 @@ pub enum ParticleKind {
     Tap(Tap),
 }
 
+impl ParticleKind {
+    pub fn to_default(&self) -> Self {
+        match self {
+            ParticleKind::Sand(..) => Self::from(Sand::new()),
+            ParticleKind::Water(..) => Self::from(Water::new()),
+            ParticleKind::Salt(..) => Self::from(Salt::new()),
+            ParticleKind::Rock(..) => Self::from(Rock::new()),
+            ParticleKind::Drain(..) => Self::from(Drain::new()),
+            ParticleKind::Tap(..) => Self::from(Tap::new()),
+        }
+    }
+}
+
 impl From<Sand> for ParticleKind {
     fn from(sand: Sand) -> Self {
         Self::Sand(sand)
@@ -353,5 +366,18 @@ mod tests {
         assert_eq!("rock", Particle::from(Rock::new()).to_string());
         assert_eq!("drain", Particle::from(Drain::new()).to_string());
         assert_eq!("tap", Particle::from(Tap::new()).to_string());
+    }
+
+    #[test]
+    fn test_particle_kind_to_default() {
+        assert_eq!(
+            ParticleKind::from(Water::new()),
+            ParticleKind::from(Water::with_capacity(0)).to_default()
+        );
+
+        assert_eq!(
+            ParticleKind::from(Tap::new()),
+            ParticleKind::from(Tap::with_particle(&Particle::from(Rock))).to_default()
+        );
     }
 }
