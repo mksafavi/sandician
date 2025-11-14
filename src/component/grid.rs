@@ -279,11 +279,11 @@ impl Grid {
         &mut self,
         position: (usize, usize),
         size: usize,
-        particle: Option<Particle>,
+        kind: Option<&ParticleKind>,
     ) {
         for position in Self::circle_brush(position, size) {
-            match particle.clone() {
-                Some(p) => self.spawn_particle(position, p),
+            match kind {
+                Some(k) => self.spawn_particle(position, Particle::from(k.clone())),
                 None => self.despawn_particle(position),
             }
         }
@@ -466,7 +466,7 @@ mod tests {
          * ---
          */
         let mut g = Grid::new(3, 3);
-        g.spawn_brush((1, 1), 1, Some(Particle::from(Sand::new())));
+        g.spawn_brush((1, 1), 1, Some(&ParticleKind::from(Sand::new())));
         assert_eq!(
             vec![
                 Cell::empty(),
@@ -491,7 +491,7 @@ mod tests {
          * -s-
          */
         let mut g = Grid::new(3, 3);
-        g.spawn_brush((1, 1), 2, Some(Particle::from(Sand::new())));
+        g.spawn_brush((1, 1), 2, Some(&ParticleKind::from(Sand::new())));
         assert_eq!(
             vec![
                 Cell::empty(),
@@ -518,7 +518,7 @@ mod tests {
          * --s--
          */
         let mut g = Grid::new(5, 5);
-        g.spawn_brush((2, 2), 4, Some(Particle::from(Sand::new())));
+        g.spawn_brush((2, 2), 4, Some(&ParticleKind::from(Sand::new())));
         assert_eq!(
             vec![
                 Cell::empty(),
@@ -560,7 +560,7 @@ mod tests {
          */
         let mut g = Grid::new(3, 3);
 
-        g.spawn_brush((1, 1), 2, Some(Particle::from(Sand::new())));
+        g.spawn_brush((1, 1), 2, Some(&ParticleKind::from(Sand::new())));
 
         assert_eq!(
             vec![
