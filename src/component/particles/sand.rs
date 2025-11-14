@@ -142,4 +142,27 @@ mod tests {
             *g.get_cell(5)
         );
     }
+
+    #[test]
+    fn test_update_grid_sand_moves_based_on_velocity() {
+        /*
+         * s -> -
+         * -    -
+         * -    s
+         */
+        let mut g = Grid::new(1, 3);
+
+        g.spawn_particle((0, 0), Particle::from(Sand::new()).with_velocity(2));
+
+        g.update_grid();
+
+        assert_eq!(
+            vec![
+                Cell::empty().with_cycle(1),
+                Cell::empty(),
+                Cell::new(Particle::from(Sand::new())).with_cycle(1),
+            ],
+            *g.get_cells()
+        );
+    }
 }

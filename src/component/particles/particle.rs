@@ -75,6 +75,7 @@ pub struct Particle {
     pub cloneable: bool,
     color: [u8; 3],
     pub kind: ParticleKind,
+    velocity: i8,
 }
 
 impl Particle {
@@ -85,6 +86,7 @@ impl Particle {
             cloneable: true,
             color: color.to_srgba().to_u8_array_no_alpha(),
             kind,
+            velocity: 1,
         }
     }
 
@@ -94,6 +96,11 @@ impl Particle {
     }
     pub fn with_cloneable(mut self, cloneable: bool) -> Self {
         self.cloneable = cloneable;
+        self
+    }
+
+    pub fn with_velocity(mut self, velocity: i8) -> Particle {
+        self.velocity = velocity;
         self
     }
 
