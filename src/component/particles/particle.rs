@@ -28,6 +28,31 @@ pub struct Particle {
     pub property: ParticleProperty,
 }
 
+impl Particle {
+    pub fn color(&self) -> Color {
+        let color = Color::srgb_u8(self.color[0], self.color[1], self.color[2]);
+        match &self.property {
+            ParticleProperty::Water(water) => Color::Hsva(color.into())
+                .with_saturation(1.0 - (3 - water.solvant_capacity) as f32 * 0.1),
+            _ => color,
+        }
+    }
+
+    fn weight(&self) -> u8 {
+        match &self.property {
+            ParticleProperty::Water(water) => self.weight + (3 - water.solvant_capacity),
+            _ => self.weight,
+        }
+    }
+
+    fn viscosity(&self) -> u8 {
+        match &self.property {
+            ParticleProperty::Water(water) => self.viscosity + (3 - water.solvant_capacity),
+            _ => self.viscosity,
+        }
+    }
+}
+
 impl From<Sand> for Particle {
     fn from(sand: Sand) -> Self {
         Self {
@@ -129,29 +154,6 @@ impl Particle {
             ParticleProperty::Drain(drain) => drain.update(grid, position),
             ParticleProperty::Tap(tap) => tap.update(grid, position),
         };
-    }
-
-    pub fn color(&self) -> Color {
-        let color = Color::srgb_u8(self.color[0], self.color[1], self.color[2]);
-        match &self.property {
-            ParticleProperty::Water(water) => Color::Hsva(color.into())
-                .with_saturation(1.0 - (3 - water.solvant_capacity) as f32 * 0.1),
-            _ => color,
-        }
-    }
-
-    fn weight(&self) -> u8 {
-        match &self.property {
-            ParticleProperty::Water(water) => self.weight + (3 - water.solvant_capacity),
-            _ => self.weight,
-        }
-    }
-
-    fn viscosity(&self) -> u8 {
-        match &self.property {
-            ParticleProperty::Water(water) => self.viscosity + (3 - water.solvant_capacity),
-            _ => self.viscosity,
-        }
     }
 
     fn flow<T: GridAccess>(&self, grid: &mut T, position: (usize, usize)) -> bool {
