@@ -255,11 +255,9 @@ mod tests {
 
         assert_eq!(
             vec![
-                Cell::new(Particle::from({
-                    let mut t = Tap::new();
-                    t.particle = Some(Box::new(Particle::from(Rock::new())));
-                    t
-                })),
+                Cell::new(Particle::from(Tap::with_particle(&Particle::from(
+                    Rock::new()
+                )))),
                 Cell::new(Particle::from(Rock::new())),
             ],
             *g.get_cells()
@@ -272,11 +270,9 @@ mod tests {
 
         assert_eq!(
             vec![
-                Cell::new(Particle::from({
-                    let mut t = Tap::new();
-                    t.particle = Some(Box::new(Particle::from(Rock::new())));
-                    t
-                })),
+                Cell::new(Particle::from(Tap::with_particle(&Particle::from(
+                    Rock::new()
+                )))),
                 Cell::new(Particle::from(Sand::new())).with_cycle(1)
             ],
             *g.get_cells()
