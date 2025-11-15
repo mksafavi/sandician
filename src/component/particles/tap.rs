@@ -3,7 +3,6 @@ use crate::component::grid::GridAccess;
 use super::particle::{Particle, ParticleKind};
 
 #[derive(Clone, PartialEq, Debug)]
-
 pub struct Tap {
     pub particle_kind: Option<Box<ParticleKind>>,
 }
