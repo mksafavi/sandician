@@ -32,12 +32,11 @@ impl Tap {
             let mut particle_to_clone = None;
             for y in -1..=1 {
                 for x in -1..=1 {
-                    if let Ok(i) = grid.get_neighbor_index(position, (x, y)) {
-                        if let Some(p) = &grid.get_cell(i).particle {
-                            if p.cloneable {
-                                particle_to_clone = Some(p.clone());
-                            }
-                        }
+                    if let Ok(i) = grid.get_neighbor_index(position, (x, y))
+                        && let Some(p) = &grid.get_cell(i).particle
+                        && p.cloneable
+                    {
+                        particle_to_clone = Some(p.clone());
                     };
                 }
             }
@@ -52,14 +51,14 @@ impl Tap {
         if let Some(particle_kind) = particle.particle_kind {
             for y in -1..=1 {
                 for x in -1..=1 {
-                    if let Ok(i) = grid.get_neighbor_index(position, (x, y)) {
-                        if grid.get_cell_mut(i).particle.is_none() {
-                            let cycle = grid.cycle();
-                            let cell = grid.get_cell_mut(i);
-                            cell.particle = Some(Particle::from(*particle_kind.clone()));
-                            cell.cycle = cycle;
-                            grid.get_cell_mut(grid.to_index(position)).cycle = cycle;
-                        }
+                    if let Ok(i) = grid.get_neighbor_index(position, (x, y))
+                        && grid.get_cell_mut(i).particle.is_none()
+                    {
+                        let cycle = grid.cycle();
+                        let cell = grid.get_cell_mut(i);
+                        cell.particle = Some(Particle::from(*particle_kind.clone()));
+                        cell.cycle = cycle;
+                        grid.get_cell_mut(grid.to_index(position)).cycle = cycle;
                     };
                 }
             }

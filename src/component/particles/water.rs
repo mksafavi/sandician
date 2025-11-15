@@ -31,19 +31,17 @@ impl Water {
 fn dissolve_salt<T: GridAccess>(grid: &mut T, capacity: u8, position: (usize, usize)) -> bool {
     for y in -1..=1 {
         for x in -1..=1 {
-            if let Ok(i) = grid.get_neighbor_index(position, (x, y)) {
-                if let Some(p) = &grid.get_cell(i).particle {
-                    if let ParticleKind::Salt(..) = p.kind {
-                        if 0 < capacity {
-                            let index = grid.to_index(position);
-                            grid.get_cell_mut(index).particle =
-                                Some(Particle::from(Water::with_capacity(capacity - 1)));
-                            grid.dissolve_particles(index, i);
-                            return true;
-                        }
-                    };
-                }
-            };
+            if let Ok(i) = grid.get_neighbor_index(position, (x, y))
+                && let Some(p) = &grid.get_cell(i).particle
+                && let ParticleKind::Salt(..) = p.kind
+                && 0 < capacity
+            {
+                let index = grid.to_index(position);
+                grid.get_cell_mut(index).particle =
+                    Some(Particle::from(Water::with_capacity(capacity - 1)));
+                grid.dissolve_particles(index, i);
+                return true;
+            }
         }
     }
     false
