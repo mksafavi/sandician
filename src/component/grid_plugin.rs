@@ -109,6 +109,7 @@ pub struct ConfigResource {
     pub height: usize,
     update_rate: f64,
 }
+
 impl ConfigResource {
     pub fn new(width: usize, height: usize, update_rate: f64) -> Self {
         Self {

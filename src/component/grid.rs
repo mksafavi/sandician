@@ -19,7 +19,6 @@ pub enum GridError {
 
 pub const BACKGROUND_COLOR: bevy::prelude::Color = Color::srgb(0.82, 0.93, 1.);
 
-#[derive(Clone, Debug)]
 pub enum ParticleHorizontalDirection {
     Left = -1,
     Right = 1,
@@ -57,7 +56,7 @@ impl Cell {
     }
 }
 
-#[derive(Component, Clone, PartialEq, Debug)]
+#[derive(Component, Debug)]
 pub struct Grid {
     cells: Vec<Cell>,
     width: usize,
