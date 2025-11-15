@@ -172,26 +172,25 @@ fn draw_grid_system(
     output_frame_handle: Res<OutputFrameHandle>,
     mut images: ResMut<Assets<Image>>,
 ) {
-    if let Ok(mut g) = grid.single_mut() {
-        if let Some(image) = images.get_mut(&output_frame_handle.0) {
-            g.draw_grid(image);
-        }
+    if let Ok(mut g) = grid.single_mut()
+        && let Some(image) = images.get_mut(&output_frame_handle.0)
+    {
+        g.draw_grid(image);
     }
 }
 
 fn spawn_brush_system(mut particle_brush: Query<&mut ParticleBrush>, mut grid: Query<&mut Grid>) {
-    if let Ok(mut g) = grid.single_mut() {
-        if let Ok(mut pb) = particle_brush.single_mut() {
-            if pb.spawning {
-                while pb.positions.len() != 1 {
-                    if let Some(position) = pb.positions.pop_front() {
-                        g.spawn_brush(position, pb.size, pb.particle_kind.as_ref());
-                    }
-                }
-                if let Some(&position) = pb.positions.front() {
-                    g.spawn_brush(position, pb.size, pb.particle_kind.as_ref());
-                }
+    if let Ok(mut g) = grid.single_mut()
+        && let Ok(mut pb) = particle_brush.single_mut()
+        && pb.spawning
+    {
+        while pb.positions.len() != 1 {
+            if let Some(position) = pb.positions.pop_front() {
+                g.spawn_brush(position, pb.size, pb.particle_kind.as_ref());
             }
+        }
+        if let Some(&position) = pb.positions.front() {
+            g.spawn_brush(position, pb.size, pb.particle_kind.as_ref());
         }
     }
 }
@@ -205,10 +204,10 @@ fn observe_particle_button_particle_brush_system(
             |m: On<Pointer<Click>>,
              mut particle_brush: Query<&mut ParticleBrush>,
              particle_buttons: Query<&ParticleRadio>| {
-                if let Ok(pr) = particle_buttons.get(m.entity) {
-                    if let Ok(mut pb) = particle_brush.single_mut() {
-                        pb.particle_kind = pr.0.clone();
-                    }
+                if let Ok(pr) = particle_buttons.get(m.entity)
+                    && let Ok(mut pb) = particle_brush.single_mut()
+                {
+                    pb.particle_kind = pr.0.clone();
                 }
             },
         );
@@ -251,12 +250,11 @@ fn init_inputs_system(mut commands: Commands, image_node_query: Query<Entity, Wi
                 |m: On<Pointer<Move>>,
                  mut particle_brush: Query<&mut ParticleBrush>,
                  config: Res<ConfigResource>| {
-                    if let Ok(mut pb) = particle_brush.single_mut() {
-                        if let Some(p) = m.hit.position {
-                            if pb.spawning {
-                                pb.set_position_linear(p, (config.width, config.height));
-                            }
-                        }
+                    if let Ok(mut pb) = particle_brush.single_mut()
+                        && let Some(p) = m.hit.position
+                        && pb.spawning
+                    {
+                        pb.set_position_linear(p, (config.width, config.height));
                     }
                 },
             );
