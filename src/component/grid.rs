@@ -255,6 +255,10 @@ impl Grid {
         }
     }
 
+    pub fn clear_grid(&mut self) {
+        self.cells.iter_mut().for_each(|c| c.particle = None);
+    }
+
     pub fn create_output_frame(width: usize, height: usize) -> Image {
         Image::new_fill(
             Extent3d {
@@ -823,5 +827,43 @@ mod tests {
         let mut g = Grid::new_with_rand_seed(1, 1, || 0);
         g.cycle = 256;
         assert_eq!(0, g.particle_seed(), "cycle is moduloed by 256");
+    }
+
+    #[test]
+    fn test_clear_grid_sets_all_cells_to_empty() {
+        /*
+         *  ss -> --
+         *  ss    --
+         */
+        let mut g = Grid::new(2, 2);
+        g.spawn_particle((0, 0), Particle::from(Sand::new()));
+        g.spawn_particle((1, 0), Particle::from(Sand::new()));
+        g.spawn_particle((0, 1), Particle::from(Sand::new()));
+        g.spawn_particle((1, 1), Particle::from(Sand::new()));
+
+        assert_eq!(
+            vec![
+                Cell::new(Particle::from(Sand::new())),
+                Cell::new(Particle::from(Sand::new())),
+                Cell::new(Particle::from(Sand::new())),
+                Cell::new(Particle::from(Sand::new())),
+            ],
+            g.cells
+        );
+
+        g.clear_grid();
+
+        assert_eq!(
+            vec![Cell::empty(), Cell::empty(), Cell::empty(), Cell::empty(),],
+            g.cells
+        );
+
+        //let mut image = Grid::create_output_frame(2, 2);
+        //g.draw_grid(&mut image);
+
+        //assert_color_srgb_eq!(
+        //    Particle::from(Sand::new()).color(),
+        //    image.get_color_at(0, 0).unwrap()
+        //);
     }
 }
