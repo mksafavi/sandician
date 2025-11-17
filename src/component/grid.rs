@@ -293,7 +293,7 @@ impl Grid {
             match kind {
                 Some(k) => self.spawn_particle(
                     position,
-                    Particle::from(k.clone()).with_seed((self.particle_seed)()),
+                    Particle::from(k.clone()).with_seed(self.particle_seed()),
                 ),
                 None => self.despawn_particle(position),
             }
@@ -478,10 +478,11 @@ mod tests {
 
     #[test]
     fn test_spawn_particles_brush_sets_a_random_seed_to_particles() {
-        let mut g = Grid::new_with_rand_seed(1, 1, || 111);
+        let mut g = Grid::new_with_rand_seed(1, 1, || 255);
+        g.cycle = 255;
         g.spawn_brush((0, 0), 1, Some(&ParticleKind::from(Sand::new())));
         assert_eq!(
-            vec![Cell::new(Particle::from(Sand::new()).with_seed(111)),],
+            vec![Cell::new(Particle::from(Sand::new()).with_seed(254)).with_cycle(255),],
             g.cells
         );
     }
@@ -493,7 +494,7 @@ mod tests {
          * -s-
          * ---
          */
-        let mut g = Grid::new_with_rand_seed(3, 3, || 127);
+        let mut g = Grid::new_with_rand_seed(3, 3, || 255);
         g.spawn_brush((1, 1), 1, Some(&ParticleKind::from(Sand::new())));
         assert_eq!(
             vec![
@@ -518,7 +519,7 @@ mod tests {
          * sss
          * -s-
          */
-        let mut g = Grid::new_with_rand_seed(3, 3, || 127);
+        let mut g = Grid::new_with_rand_seed(3, 3, || 255);
         g.spawn_brush((1, 1), 2, Some(&ParticleKind::from(Sand::new())));
         assert_eq!(
             vec![
@@ -545,7 +546,7 @@ mod tests {
          * -sss-
          * --s--
          */
-        let mut g = Grid::new_with_rand_seed(5, 5, || 127);
+        let mut g = Grid::new_with_rand_seed(5, 5, || 255);
         g.spawn_brush((2, 2), 4, Some(&ParticleKind::from(Sand::new())));
         assert_eq!(
             vec![
@@ -586,7 +587,7 @@ mod tests {
          * ---    sss    ---
          * ---    -s-    ---
          */
-        let mut g = Grid::new_with_rand_seed(3, 3, || 127);
+        let mut g = Grid::new_with_rand_seed(3, 3, || 255);
 
         g.spawn_brush((1, 1), 2, Some(&ParticleKind::from(Sand::new())));
 
