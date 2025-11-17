@@ -188,7 +188,7 @@ impl GridAccess for Grid {
 
 impl Grid {
     pub fn new(width: usize, height: usize) -> Self {
-        fn random_water_direction() -> ParticleHorizontalDirection {
+        fn random_particle_direction() -> ParticleHorizontalDirection {
             match random_range(0..=1) {
                 0 => ParticleHorizontalDirection::Left,
                 _ => ParticleHorizontalDirection::Right,
@@ -204,7 +204,7 @@ impl Grid {
             cells: (0..width * height).map(|_| Cell::empty()).collect(),
             width,
             height,
-            particle_direction: random_water_direction,
+            particle_direction: random_particle_direction,
             row_update_direction: random_row_update_direction,
             cycle: 0,
             draw_cycle: 0,
