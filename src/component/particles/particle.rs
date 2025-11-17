@@ -182,25 +182,35 @@ impl From<Tap> for Particle {
 }
 
 impl Particle {
-    pub fn update<T: GridAccess>(&self, grid: &mut T, position: (usize, usize)) {
-        if self.gravity(grid, position) {
+    pub fn update<T: GridAccess>(grid: &mut T, position: (usize, usize)) {
+        if Self::gravity(grid, position) {
             return;
         }
-        if self.flow(grid, position) {
+
+        if Self::flow(grid, position) {
             return;
         }
-        match &self.kind {
-            ParticleKind::Sand(..) => (),
-            ParticleKind::Water(water) => water.update(grid, position),
-            ParticleKind::Salt(..) => (),
-            ParticleKind::Rock(..) => (),
-            ParticleKind::Drain(drain) => drain.update(grid, position),
-            ParticleKind::Tap(tap) => tap.update(grid, position),
-        };
+
+        let c = grid.get_cell(grid.to_index(position));
+        if let Some(this) = &c.particle {
+            match this.kind.clone() {
+                ParticleKind::Sand(..) => (),
+                ParticleKind::Water(water) => water.update(grid, position),
+                ParticleKind::Salt(..) => (),
+                ParticleKind::Rock(..) => (),
+                ParticleKind::Drain(drain) => drain.update(grid, position),
+                ParticleKind::Tap(tap) => tap.update(grid, position),
+            };
+        }
     }
 
-    fn flow<T: GridAccess>(&self, grid: &mut T, position: (usize, usize)) -> bool {
-        if self.viscosity == u8::MAX {
+    fn flow<T: GridAccess>(grid: &mut T, position: (usize, usize)) -> bool {
+        let c = grid.get_cell(grid.to_index(position));
+        let Some(ref this) = c.particle else {
+            return false;
+        };
+
+        if this.viscosity == u8::MAX {
             return false;
         }
 
@@ -209,7 +219,7 @@ impl Particle {
                 let c = grid.get_cell(i);
                 match &c.particle {
                     Some(p) => {
-                        if p.viscosity < self.viscosity {
+                        if p.viscosity < this.viscosity {
                             Some(i)
                         } else {
                             None
@@ -235,7 +245,7 @@ impl Particle {
                 let c = grid.get_cell(i);
                 match &c.particle {
                     Some(p) => {
-                        if p.viscosity < self.viscosity {
+                        if p.viscosity < this.viscosity {
                             Some(i)
                         } else {
                             None
@@ -274,8 +284,13 @@ impl Particle {
         }
     }
 
-    fn gravity<T: GridAccess>(&self, grid: &mut T, position: (usize, usize)) -> bool {
-        if self.weight == u8::MIN {
+    fn gravity<T: GridAccess>(grid: &mut T, position: (usize, usize)) -> bool {
+        let c = grid.get_cell(grid.to_index(position));
+        let Some(ref this) = c.particle else {
+            return false;
+        };
+
+        if this.weight == u8::MIN {
             return false;
         }
 
@@ -283,7 +298,7 @@ impl Particle {
             let cell = grid.get_cell(index_n);
             match &cell.particle {
                 Some(p) => {
-                    if !grid.is_simulated(cell) && p.weight < self.weight && p.weight != u8::MIN {
+                    if !grid.is_simulated(cell) && p.weight < this.weight && p.weight != u8::MIN {
                         grid.swap_particles(grid.to_index(position), index_n);
                         return true;
                     }
@@ -298,7 +313,7 @@ impl Particle {
         let bottom_left = match grid.get_neighbor_index(position, (-1, 1)) {
             Ok(index_n) => match &grid.get_cell(index_n).particle {
                 Some(p) => {
-                    if p.weight < self.weight && p.weight != u8::MIN {
+                    if p.weight < this.weight && p.weight != u8::MIN {
                         Some(index_n)
                     } else {
                         None
@@ -312,7 +327,7 @@ impl Particle {
         let bottom_right = match grid.get_neighbor_index(position, (1, 1)) {
             Ok(index_n) => match &grid.get_cell(index_n).particle {
                 Some(p) => {
-                    if p.weight < self.weight && p.weight != u8::MIN {
+                    if p.weight < this.weight && p.weight != u8::MIN {
                         Some(index_n)
                     } else {
                         None

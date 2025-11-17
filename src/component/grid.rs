@@ -237,10 +237,8 @@ impl Grid {
                     RowUpdateDirection::Reverse => self.width - 1 - x,
                 };
                 let c = self.get_cell(self.to_index((x, y)));
-                if !self.is_simulated(c)
-                    && let Some(p) = &c.particle
-                {
-                    p.clone().update(self, (x, y)); // TODO: is there any other way to handle this double borrow instead of clone?
+                if !self.is_simulated(c) && c.particle.is_some() {
+                    Particle::update(self, (x, y));
                 };
             }
         }
