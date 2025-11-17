@@ -218,6 +218,10 @@ impl Grid {
         }
     }
 
+    fn particle_seed(&self) -> u8 {
+        ((self.particle_seed)() / 2) + (self.cycle as u8 / 2)
+    }
+
     pub fn spawn_particle(&mut self, (x, y): (usize, usize), particle: Particle) {
         if y < self.height && x < self.width {
             let index = self.to_index((x, y));
@@ -795,5 +799,28 @@ mod tests {
         assert_eq!("r", Cell::new(Particle::from(Rock::new())).to_string());
         assert_eq!("d", Cell::new(Particle::from(Drain::new())).to_string());
         assert_eq!("t", Cell::new(Particle::from(Tap::new())).to_string());
+    }
+
+    #[test]
+    fn test_the_current_cycle_affects_half_of_the_particle_seed_value() {
+        let mut g = Grid::new_with_rand_seed(1, 1, || 0);
+        g.cycle = 0;
+        assert_eq!(0, g.particle_seed());
+
+        let mut g = Grid::new_with_rand_seed(1, 1, || 255);
+        g.cycle = 0;
+        assert_eq!(127, g.particle_seed());
+
+        let mut g = Grid::new_with_rand_seed(1, 1, || 0);
+        g.cycle = 255;
+        assert_eq!(127, g.particle_seed());
+
+        let mut g = Grid::new_with_rand_seed(1, 1, || 255);
+        g.cycle = 255;
+        assert_eq!(254, g.particle_seed());
+
+        let mut g = Grid::new_with_rand_seed(1, 1, || 0);
+        g.cycle = 256;
+        assert_eq!(0, g.particle_seed(), "cycle is moduloed by 256");
     }
 }
