@@ -10,8 +10,7 @@ macro_rules! assert_color_srgb_eq {
         {
             panic!(
                 "assertion `left == right` failed left:{:?} right:{:?}",
-                $a.to_srgba(),
-                $b
+                $a, $b
             );
         }
     };
