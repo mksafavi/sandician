@@ -65,6 +65,7 @@ pub struct Grid {
     row_update_direction: fn() -> RowUpdateDirection,
     cycle: u32,
     draw_cycle: u32,
+    particle_seed: fn() -> u8,
 }
 
 pub trait GridAccess {
@@ -200,6 +201,11 @@ impl Grid {
                 _ => RowUpdateDirection::Reverse,
             }
         }
+
+        fn random_particle_seed_direction() -> u8 {
+            random_range(u8::MIN..=u8::MAX)
+        }
+
         Self {
             cells: (0..width * height).map(|_| Cell::empty()).collect(),
             width,
@@ -208,6 +214,7 @@ impl Grid {
             row_update_direction: random_row_update_direction,
             cycle: 0,
             draw_cycle: 0,
+            particle_seed: random_particle_seed_direction,
         }
     }
 
@@ -280,7 +287,10 @@ impl Grid {
     ) {
         for position in Self::circle_brush(position, size) {
             match kind {
-                Some(k) => self.spawn_particle(position, Particle::from(k.clone())),
+                Some(k) => self.spawn_particle(
+                    position,
+                    Particle::from(k.clone()).with_seed((self.particle_seed)()),
+                ),
                 None => self.despawn_particle(position),
             }
         }
@@ -316,6 +326,13 @@ impl Grid {
             Some(f) => f,
             None => || RowUpdateDirection::Forward,
         };
+        g
+    }
+
+    #[allow(dead_code)]
+    pub fn new_with_rand_seed(width: usize, height: usize, particle_seed: fn() -> u8) -> Self {
+        let mut g = Self::new(width, height);
+        g.particle_seed = particle_seed;
         g
     }
 }
@@ -456,13 +473,23 @@ mod tests {
     }
 
     #[test]
+    fn test_spawn_particles_brush_sets_a_random_seed_to_particles() {
+        let mut g = Grid::new_with_rand_seed(1, 1, || 111);
+        g.spawn_brush((0, 0), 1, Some(&ParticleKind::from(Sand::new())));
+        assert_eq!(
+            vec![Cell::new(Particle::from(Sand::new()).with_seed(111)),],
+            g.cells
+        );
+    }
+
+    #[test]
     fn test_spawn_particles_brush_size_one() {
         /*
          * ---
          * -s-
          * ---
          */
-        let mut g = Grid::new(3, 3);
+        let mut g = Grid::new_with_rand_seed(3, 3, || 127);
         g.spawn_brush((1, 1), 1, Some(&ParticleKind::from(Sand::new())));
         assert_eq!(
             vec![
@@ -487,7 +514,7 @@ mod tests {
          * sss
          * -s-
          */
-        let mut g = Grid::new(3, 3);
+        let mut g = Grid::new_with_rand_seed(3, 3, || 127);
         g.spawn_brush((1, 1), 2, Some(&ParticleKind::from(Sand::new())));
         assert_eq!(
             vec![
@@ -514,7 +541,7 @@ mod tests {
          * -sss-
          * --s--
          */
-        let mut g = Grid::new(5, 5);
+        let mut g = Grid::new_with_rand_seed(5, 5, || 127);
         g.spawn_brush((2, 2), 4, Some(&ParticleKind::from(Sand::new())));
         assert_eq!(
             vec![
@@ -555,7 +582,7 @@ mod tests {
          * ---    sss    ---
          * ---    -s-    ---
          */
-        let mut g = Grid::new(3, 3);
+        let mut g = Grid::new_with_rand_seed(3, 3, || 127);
 
         g.spawn_brush((1, 1), 2, Some(&ParticleKind::from(Sand::new())));
 
