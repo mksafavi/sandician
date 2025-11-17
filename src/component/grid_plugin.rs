@@ -48,6 +48,9 @@ struct OutputFrameHandle(Handle<Image>);
 #[derive(Component, Debug)]
 struct ParticleRadio(Option<ParticleKind>);
 
+#[derive(Component, Debug)]
+struct ClearButton;
+
 #[derive(Component)]
 pub struct ParticleBrush {
     pub spawning: bool,
@@ -132,6 +135,7 @@ impl Plugin for GridPlugin {
             .add_systems(Update, draw_grid_system)
             .add_systems(PostStartup, init_inputs_system)
             .add_systems(PostStartup, observe_particle_button_particle_brush_system)
+            .add_systems(PostStartup, observe_clear_button_system)
             .add_systems(Update, spawn_brush_system);
     }
 }
@@ -214,6 +218,21 @@ fn observe_particle_button_particle_brush_system(
     });
 }
 
+fn observe_clear_button_system(
+    mut commands: Commands,
+    clear_button: Query<Entity, With<ClearButton>>,
+) {
+    if let Ok(entity) = clear_button.single() {
+        commands
+            .entity(entity)
+            .observe(|_: On<Pointer<Click>>, mut grid: Query<&mut Grid>| {
+                if let Ok(mut g) = grid.single_mut() {
+                    g.clear_grid();
+                }
+            });
+    }
+}
+
 fn init_inputs_system(mut commands: Commands, image_node_query: Query<Entity, With<ImageNode>>) {
     if let Ok(image_node_entity) = image_node_query.single() {
         commands
@@ -284,7 +303,8 @@ fn brush_node(font: Handle<Font>) -> impl Bundle {
                 flex_grow: 100.0,
                 width: Val::Auto,
                 ..default()
-            })
+            }),
+            clear_button(font.clone()),
         ],
     )
 }
@@ -317,6 +337,35 @@ fn radio(particle: Option<Particle>, font: Handle<Font>) -> impl Bundle {
                 None => None,
             }
         }),
+        BackgroundColor(color.with_alpha(0.3)),
+        Button,
+        children![(
+            Text::new(text),
+            TextFont {
+                font_size: 16.,
+                font,
+                ..default()
+            }
+        )],
+    )
+}
+
+fn clear_button(font: Handle<Font>) -> impl Bundle {
+    let color = Color::WHITE;
+    let text = "clear";
+    (
+        Node {
+            height: px(26),
+            flex_grow: 1.0,
+            padding: UiRect::all(px(2)),
+            margin: UiRect::all(px(2)),
+            border: UiRect::all(px(3)),
+            align_items: AlignItems::Center,
+            justify_content: JustifyContent::Center,
+            ..default()
+        },
+        BorderColor::all(color),
+        ClearButton,
         BackgroundColor(color.with_alpha(0.3)),
         Button,
         children![(
@@ -769,6 +818,76 @@ mod tests {
         assert_eq!(None, query_particle_brush(&mut app).particle_kind);
     }
 
+    #[test]
+    fn test_clear_buttons_clears_the_grid() {
+        let mut app = App::new();
+        app.init_resource::<Assets<Image>>();
+        app.add_plugins(InputPlugin);
+        app.add_plugins(DefaultPickingPlugins);
+        app.add_plugins(WindowPlugin {
+            primary_window: Some(Window {
+                resolution: WindowResolution::new(2, 2),
+                ..default()
+            }),
+            ..default()
+        });
+        app.add_plugins(GridPlugin {
+            config: ConfigResource::new(2, 2, 100.),
+        });
+
+        app.update();
+
+        let mut grid = app.world_mut().query::<&mut Grid>();
+        if let Ok(mut g) = grid.single_mut(app.world_mut()) {
+            g.spawn_particle((0, 0), Particle::from(Sand::new()));
+            g.spawn_particle((1, 0), Particle::from(Sand::new()));
+            g.spawn_particle((0, 1), Particle::from(Sand::new()));
+            g.spawn_particle((1, 1), Particle::from(Sand::new()));
+        }
+
+        let mut grid = app.world_mut().query::<&Grid>();
+        if let Ok(g) = grid.single(app.world()) {
+            assert_eq!(
+                vec![Some(()), Some(()), Some(()), Some(()),],
+                g.get_cells()
+                    .iter()
+                    .map(|c| match c.particle {
+                        Some(_) => Some(()),
+                        None => None,
+                    })
+                    .collect::<Vec<_>>()
+            );
+        } else {
+            panic!("grid not found");
+        }
+
+        let clear_button = app
+            .world_mut()
+            .query::<(Entity, &ClearButton)>()
+            .single(app.world());
+        if let Ok((entity, _)) = clear_button {
+            trigger_button_click_event(&mut app, entity);
+        } else {
+            panic!("clear button not found");
+        }
+
+        let mut grid = app.world_mut().query::<&Grid>();
+        if let Ok(g) = grid.single(app.world()) {
+            assert_eq!(
+                vec![None, None, None, None,],
+                g.get_cells()
+                    .iter()
+                    .map(|c| match c.particle {
+                        Some(_) => Some(()),
+                        None => None,
+                    })
+                    .collect::<Vec<_>>()
+            );
+        } else {
+            panic!("grid not found");
+        }
+    }
+
     fn trigger_pressed_event(app: &mut App, position: Vec3) {
         let mut entity_query = app.world_mut().query_filtered::<Entity, With<ImageNode>>();
         if let Ok(entity) = entity_query.single(app.world()) {
@@ -907,8 +1026,11 @@ mod tests {
             .iter(app.world())
             .filter(|(_, p)| p.0 == particle.clone().map(|p| p.kind))
             .collect::<Vec<_>>();
-
         let (entity, _) = radio_button[0];
+        trigger_button_click_event(app, entity);
+    }
+
+    fn trigger_button_click_event(app: &mut App, entity: Entity) {
         let event = Pointer::new(
             PointerId::Mouse,
             Location {
