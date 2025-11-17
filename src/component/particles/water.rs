@@ -662,11 +662,6 @@ mod tests {
                 g.spawn_particle((1, 1), Particle::from(Water::new()));
                 g.spawn_particle((x, y), Particle::from(Salt::new()));
 
-                if (x, y) == (1, 1) {
-                    g.spawn_particle((x, y), Particle::from(Water::new()));
-                } else {
-                    g.spawn_particle((x, y), Particle::from(Salt::new()));
-                }
                 for yr in 0..3 {
                     for xr in 0..3 {
                         if (xr, yr) == (1, 1) || (xr, yr) == (x, y) {
