@@ -744,6 +744,22 @@ mod tests {
     }
 
     #[test]
+    fn test_particles_can_have_10_percent_color_value_variation() {
+        assert_color_srgb_eq!(
+            Color::hsva(43.20, 0.34, 0.71, 1.00),
+            Particle::from(Sand::new()).with_seed(0).color()
+        );
+        assert_color_srgb_eq!(
+            Color::hsva(43.20, 0.34, 0.76, 1.00),
+            Particle::from(Sand::new()).with_seed(127).color()
+        );
+        assert_color_srgb_eq!(
+            Color::hsva(43.20, 0.34, 0.81, 1.00),
+            Particle::from(Sand::new()).with_seed(255).color()
+        );
+    }
+
+    #[test]
     fn test_cell_string_names() {
         assert_eq!("-", Cell::empty().to_string());
         assert_eq!("s", Cell::new(Particle::from(Sand::new())).to_string());
