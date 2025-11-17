@@ -37,8 +37,12 @@ fn dissolve_salt<T: GridAccess>(grid: &mut T, capacity: u8, position: (usize, us
                 && 0 < capacity
             {
                 let index = grid.to_index(position);
-                grid.get_cell_mut(index).particle =
-                    Some(Particle::from(Water::with_capacity(capacity - 1)));
+                let cell = grid.get_cell_mut(index);
+                if let Some(particle) = &cell.particle {
+                    cell.particle = Some(
+                        Particle::from(Water::with_capacity(capacity - 1)).with_seed(particle.seed),
+                    );
+                }
                 grid.dissolve_particles(index, i);
                 return true;
             }
@@ -1060,6 +1064,24 @@ mod tests {
             vec![
                 Cell::new(Particle::from(Water::with_capacity(1))).with_cycle(1),
                 Cell::new(Particle::from(Water::new())).with_cycle(1),
+            ],
+            *g.get_cells()
+        );
+    }
+
+    #[test]
+    fn test_update_grid_water_particle_keeps_its_seed_after_dissolving_salts() {
+        let mut g = Grid::new(2, 1);
+
+        g.spawn_particle((0, 0), Particle::from(Water::new()).with_seed(111));
+        g.spawn_particle((1, 0), Particle::from(Salt::new()));
+
+        g.update_grid();
+
+        assert_eq!(
+            vec![
+                Cell::new(Particle::from(Water::with_capacity(2)).with_seed(111)).with_cycle(1),
+                Cell::empty().with_cycle(1)
             ],
             *g.get_cells()
         );

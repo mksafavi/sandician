@@ -75,7 +75,7 @@ pub struct Particle {
     pub cloneable: bool,
     color: [u8; 3],
     pub kind: ParticleKind,
-    seed: u8,
+    pub seed: u8,
 }
 
 impl Particle {
