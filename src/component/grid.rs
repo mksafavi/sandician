@@ -256,7 +256,10 @@ impl Grid {
     }
 
     pub fn clear_grid(&mut self) {
-        self.cells.iter_mut().for_each(|c| c.particle = None);
+        self.cells.iter_mut().for_each(|c| {
+            c.particle = None;
+            c.cycle = self.cycle;
+        });
     }
 
     pub fn create_output_frame(width: usize, height: usize) -> Image {
@@ -851,19 +854,17 @@ mod tests {
             g.cells
         );
 
+        g.update_grid();
         g.clear_grid();
 
         assert_eq!(
-            vec![Cell::empty(), Cell::empty(), Cell::empty(), Cell::empty(),],
+            vec![
+                Cell::empty().with_cycle(1),
+                Cell::empty().with_cycle(1),
+                Cell::empty().with_cycle(1),
+                Cell::empty().with_cycle(1)
+            ],
             g.cells
         );
-
-        //let mut image = Grid::create_output_frame(2, 2);
-        //g.draw_grid(&mut image);
-
-        //assert_color_srgb_eq!(
-        //    Particle::from(Sand::new()).color(),
-        //    image.get_color_at(0, 0).unwrap()
-        //);
     }
 }
