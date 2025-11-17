@@ -451,13 +451,14 @@ mod tests {
         let mut grid = app.world_mut().query::<&Grid>();
         if let Ok(g) = grid.single(app.world()) {
             assert_eq!(
-                &vec![
-                    Cell::new(Particle::from(Sand::new())),
-                    Cell::empty(),
-                    Cell::new(Particle::from(Sand::new())),
-                    Cell::new(Particle::from(Sand::new()))
-                ],
+                vec![Some(()), None, Some(()), Some(()),],
                 g.get_cells()
+                    .iter()
+                    .map(|c| match c.particle {
+                        Some(_) => Some(()),
+                        None => None,
+                    })
+                    .collect::<Vec<_>>()
             );
         } else {
             panic!("grid not found");
@@ -504,13 +505,14 @@ mod tests {
         let mut grid = app.world_mut().query::<&Grid>();
         if let Ok(g) = grid.single(app.world()) {
             assert_eq!(
-                &vec![
-                    Cell::new(Particle::from(Sand::new())),
-                    Cell::new(Particle::from(Sand::new())),
-                    Cell::new(Particle::from(Sand::new())),
-                    Cell::empty(),
-                ],
+                vec![Some(()), Some(()), Some(()), None],
                 g.get_cells()
+                    .iter()
+                    .map(|c| match c.particle {
+                        Some(_) => Some(()),
+                        None => None,
+                    })
+                    .collect::<Vec<_>>()
             );
         } else {
             panic!("grid not found");
