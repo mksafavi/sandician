@@ -197,10 +197,10 @@ fn spawn_brush_system(mut particle_brush: Query<&mut ParticleBrush>, mut grid: Q
 
 fn observe_particle_button_particle_brush_system(
     mut commands: Commands,
-    particle_buttons: Query<Entity, With<Button>>,
+    particle_buttons: Query<Entity, With<ParticleRadio>>,
 ) {
-    particle_buttons.iter().for_each(|e| {
-        commands.entity(e).observe(
+    particle_buttons.iter().for_each(|entity| {
+        commands.entity(entity).observe(
             |m: On<Pointer<Click>>,
              mut particle_brush: Query<&mut ParticleBrush>,
              particle_buttons: Query<&ParticleRadio>| {
