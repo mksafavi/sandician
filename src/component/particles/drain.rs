@@ -42,36 +42,9 @@ mod tests {
     };
 
     #[test]
-    fn test_update_grid_drain_stays_in_place() {
-        /*
-         * d- -> d-
-         * --    --
-         */
-        let mut g = Grid::new(2, 2);
-
-        g.spawn_particle((0, 0), Particle::from(Drain::new()));
-
-        assert_eq!(
-            vec![
-                Cell::new(Particle::from(Drain::new())),
-                Cell::empty(),
-                Cell::empty(),
-                Cell::empty(),
-            ],
-            *g.get_cells()
-        );
-
-        g.update_grid();
-
-        assert_eq!(
-            vec![
-                Cell::new(Particle::from(Drain::new())),
-                Cell::empty(),
-                Cell::empty(),
-                Cell::empty(),
-            ],
-            *g.get_cells()
-        );
+    fn test_tap_particles_are_weightless() {
+        let particle = Particle::from(Drain::new());
+        assert_eq!(0, particle.weight);
     }
 
     #[test]

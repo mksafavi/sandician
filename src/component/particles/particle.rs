@@ -70,7 +70,7 @@ impl From<Tap> for ParticleKind {
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct Particle {
-    weight: u8,
+    pub weight: u8,
     viscosity: u8,
     pub cloneable: bool,
     color: [u8; 3],
@@ -381,6 +381,8 @@ impl fmt::Display for Particle {
 
 #[cfg(test)]
 mod tests {
+    use crate::component::grid::{Cell, Grid};
+
     use super::*;
 
     #[test]
@@ -404,5 +406,44 @@ mod tests {
             ParticleKind::from(Tap::new()),
             ParticleKind::from(Tap::with_particle(&Particle::from(Rock))).to_default()
         );
+    }
+
+    #[test]
+    fn test_weightless_particles_stay_in_place() {
+        /*
+         * t- -> t-
+         * --    --
+         */
+        for particle in vec![
+            Particle::from(Rock::new()),
+            Particle::from(Tap::new()),
+            Particle::from(Drain::new()),
+        ] {
+            let mut g = Grid::new(2, 2);
+
+            g.spawn_particle((0, 0), particle.clone());
+
+            assert_eq!(
+                vec![
+                    Cell::new(particle.clone()),
+                    Cell::empty(),
+                    Cell::empty(),
+                    Cell::empty(),
+                ],
+                *g.get_cells()
+            );
+
+            g.update_grid();
+
+            assert_eq!(
+                vec![
+                    Cell::new(particle),
+                    Cell::empty(),
+                    Cell::empty(),
+                    Cell::empty(),
+                ],
+                *g.get_cells()
+            );
+        }
     }
 }

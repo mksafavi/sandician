@@ -21,36 +21,9 @@ mod tests {
     };
 
     #[test]
-    fn test_update_grid_rock_stays_in_place() {
-        /*
-         * r- -> r-
-         * --    --
-         */
-        let mut g = Grid::new(2, 2);
-
-        g.spawn_particle((0, 0), Particle::from(Rock::new()));
-
-        assert_eq!(
-            vec![
-                Cell::new(Particle::from(Rock::new())),
-                Cell::empty(),
-                Cell::empty(),
-                Cell::empty(),
-            ],
-            *g.get_cells()
-        );
-
-        g.update_grid();
-
-        assert_eq!(
-            vec![
-                Cell::new(Particle::from(Rock::new())),
-                Cell::empty(),
-                Cell::empty(),
-                Cell::empty(),
-            ],
-            *g.get_cells()
-        );
+    fn test_rock_particles_are_weightless() {
+        let particle = Particle::from(Rock::new());
+        assert_eq!(0, particle.weight);
     }
 
     #[test]
