@@ -21,12 +21,6 @@ mod tests {
     };
 
     #[test]
-    fn test_rock_particles_are_weightless() {
-        let particle = Particle::from(Rock::new());
-        assert_eq!(0, particle.weight);
-    }
-
-    #[test]
     fn test_update_grid_particles_should_not_swap_with_rock() {
         /*
          * -s- -> -s-

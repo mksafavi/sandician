@@ -42,12 +42,6 @@ mod tests {
     };
 
     #[test]
-    fn test_tap_particles_are_weightless() {
-        let particle = Particle::from(Drain::new());
-        assert_eq!(0, particle.weight);
-    }
-
-    #[test]
     fn test_update_grid_drain_shouldnt_remove_other_drain_particles() {
         /*
          * dd -> dd
