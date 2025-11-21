@@ -382,6 +382,7 @@ impl fmt::Display for Particle {
 #[cfg(test)]
 mod tests {
     use crate::component::grid::{Cell, Grid};
+    use proptest::prelude::*;
 
     use super::*;
 
@@ -408,17 +409,21 @@ mod tests {
         );
     }
 
-    #[test]
-    fn test_weightless_particles_stay_in_place() {
-        /*
-         * t- -> t-
-         * --    --
-         */
-        for particle in vec![
-            Particle::from(Rock::new()),
-            Particle::from(Tap::new()),
-            Particle::from(Drain::new()),
-        ] {
+    fn weightless_particle() -> impl Strategy<Value = Particle> {
+        prop_oneof![
+            Just(Particle::from(Rock::new())),
+            Just(Particle::from(Tap::new())),
+            Just(Particle::from(Drain::new())),
+        ]
+    }
+
+    proptest! {
+        #[test]
+        fn test_weightless_particles_stay_in_place(particle in weightless_particle()) {
+            /*
+             * t- -> t-
+             * --    --
+             */
             let mut g = Grid::new(2, 2);
 
             g.spawn_particle((0, 0), particle.clone());
