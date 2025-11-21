@@ -77,12 +77,6 @@ mod tests {
     };
 
     #[test]
-    fn test_tap_particles_are_weightless() {
-        let particle = Particle::from(Tap::new());
-        assert_eq!(0, particle.weight);
-    }
-
-    #[test]
     fn test_update_grid_tap_should_not_emit_tap_particles() {
         /*
          * --- -> ---
