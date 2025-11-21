@@ -61,10 +61,6 @@ mod tests {
         g.spawn_particle((0, 1), Particle::from(Drain::new()));
         g.spawn_particle((1, 1), Particle::from(Drain::new()));
 
-        //for _ in 0..4 {
-        //    g.update_grid();
-        //}
-
         g.update_grid();
 
         assert_eq!(
