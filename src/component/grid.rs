@@ -868,4 +868,14 @@ mod tests {
             g.cells
         );
     }
+
+    #[test]
+    fn test_grid_update_cycle_overflows_and_wraps_to_zero() {
+        let mut g = Grid::new(2, 2);
+        g.cycle = u32::MAX;
+
+        g.update_grid();
+
+        assert_eq!(0, g.cycle);
+    }
 }
