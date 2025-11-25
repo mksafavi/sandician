@@ -382,7 +382,6 @@ impl fmt::Display for Particle {
 #[cfg(test)]
 mod tests {
     use crate::component::grid::{Cell, Grid};
-    use proptest::prelude::*;
 
     use super::*;
 
@@ -409,28 +408,25 @@ mod tests {
         );
     }
 
-    fn weighted_particle() -> impl Strategy<Value = Particle> {
-        prop_oneof![
-            Just(Particle::from(Sand::new())),
-            Just(Particle::from(Salt::new())),
+    fn weighted_particle() -> Vec<Particle> {
+        vec![Particle::from(Sand::new()), Particle::from(Salt::new())]
+    }
+
+    fn weightless_particle() -> Vec<Particle> {
+        vec![
+            Particle::from(Rock::new()),
+            Particle::from(Tap::new()),
+            Particle::from(Drain::new()),
         ]
     }
 
-    fn weightless_particle() -> impl Strategy<Value = Particle> {
-        prop_oneof![
-            Just(Particle::from(Rock::new())),
-            Just(Particle::from(Tap::new())),
-            Just(Particle::from(Drain::new())),
-        ]
-    }
-
-    proptest! {
-        #[test]
-        fn test_weightless_particles_stay_in_place(particle in weightless_particle()) {
-            /*
-             * t- -> t-
-             * --    --
-             */
+    #[test]
+    fn test_weightless_particles_stay_in_place() {
+        /*
+         * t- -> t-
+         * --    --
+         */
+        for particle in weightless_particle() {
             let mut g = Grid::new(2, 2);
 
             g.spawn_particle((0, 0), particle.clone());
@@ -459,13 +455,13 @@ mod tests {
         }
     }
 
-    proptest! {
-        #[test]
-        fn test_weighted_particle_falls_down_when_bottom_cell_is_empty(particle in weighted_particle()) {
-            /*
-             * S- -> --
-             * --    S-
-             */
+    #[test]
+    fn test_weighted_particle_falls_down_when_bottom_cell_is_empty() {
+        /*
+         * S- -> --
+         * --    S-
+         */
+        for particle in weighted_particle() {
             let mut g = Grid::new(2, 2);
 
             g.spawn_particle((0, 0), particle.clone());
@@ -494,15 +490,14 @@ mod tests {
         }
     }
 
-    proptest! {
-        #[test]
-        fn test_weighted_particle_falls_to_bottom_right_when_bottom_cell_and_bottom_left_are_full_and_bottom_right_is_empty(
-            particle in weighted_particle()
-        ) {
-            /*
-             * S- -> --
-             * S-    SS
-             */
+    #[test]
+    fn test_weighted_particle_falls_to_bottom_right_when_bottom_cell_and_bottom_left_are_full_and_bottom_right_is_empty(
+    ) {
+        /*
+         * S- -> --
+         * S-    SS
+         */
+        for particle in weighted_particle() {
             let mut g = Grid::new(2, 2);
 
             g.spawn_particle((0, 0), particle.clone());
@@ -522,15 +517,14 @@ mod tests {
         }
     }
 
-    proptest! {
-        #[test]
-        fn test_weighted_particle_falls_to_bottom_left_when_bottom_cell_and_bottom_right_are_full_and_bottom_left_is_empty(
-            particle in weighted_particle()
-        ) {
-            /*
-             * -S -> --
-             * -S    SS
-             */
+    #[test]
+    fn test_weighted_particle_falls_to_bottom_left_when_bottom_cell_and_bottom_right_are_full_and_bottom_left_is_empty(
+    ) {
+        /*
+         * -S -> --
+         * -S    SS
+         */
+        for particle in weighted_particle() {
             let mut g = Grid::new(2, 2);
 
             g.spawn_particle((1, 0), particle.clone());
@@ -550,15 +544,14 @@ mod tests {
         }
     }
 
-    proptest! {
-        #[test]
-        fn test_weighted_particle_falls_to_bottom_left_or_bottom_right_when_bottom_cell_is_full_and_both_bottom_right_and_bottom_left_are_empty_forced_left(
-            particle in weighted_particle()
-        ) {
-            /*
-             * -S- -> ---
-             * -S-    SS-
-             */
+    #[test]
+    fn test_weighted_particle_falls_to_bottom_left_or_bottom_right_when_bottom_cell_is_full_and_both_bottom_right_and_bottom_left_are_empty_forced_left(
+    ) {
+        /*
+         * -S- -> ---
+         * -S-    SS-
+         */
+        for particle in weighted_particle() {
             let mut g = Grid::new_with_rand(3, 2, Some(|| ParticleHorizontalDirection::Left), None);
 
             g.spawn_particle((1, 0), particle.clone());
@@ -580,15 +573,14 @@ mod tests {
         }
     }
 
-    proptest! {
-        #[test]
-        fn test_weighted_particle_falls_to_bottom_left_or_bottom_right_when_bottom_cell_is_full_and_both_bottom_right_and_bottom_left_are_empty_forced_right(
-         particle in weighted_particle()
-        ) {
-            /*
-             * -S- -> ---
-             * -S-    -SS
-             */
+    #[test]
+    fn test_weighted_particle_falls_to_bottom_left_or_bottom_right_when_bottom_cell_is_full_and_both_bottom_right_and_bottom_left_are_empty_forced_right(
+    ) {
+        /*
+         * -S- -> ---
+         * -S-    -SS
+         */
+        for particle in weighted_particle() {
             let mut g =
                 Grid::new_with_rand(3, 2, Some(|| ParticleHorizontalDirection::Right), None);
 
