@@ -491,8 +491,8 @@ mod tests {
     }
 
     #[test]
-    fn test_weighted_particle_falls_to_bottom_right_when_bottom_cell_and_bottom_left_are_full_and_bottom_right_is_empty(
-    ) {
+    fn test_weighted_particle_falls_to_bottom_right_when_bottom_cell_and_bottom_left_are_full_and_bottom_right_is_empty()
+     {
         /*
          * S- -> --
          * S-    SS
@@ -518,8 +518,8 @@ mod tests {
     }
 
     #[test]
-    fn test_weighted_particle_falls_to_bottom_left_when_bottom_cell_and_bottom_right_are_full_and_bottom_left_is_empty(
-    ) {
+    fn test_weighted_particle_falls_to_bottom_left_when_bottom_cell_and_bottom_right_are_full_and_bottom_left_is_empty()
+     {
         /*
          * -S -> --
          * -S    SS
@@ -545,8 +545,8 @@ mod tests {
     }
 
     #[test]
-    fn test_weighted_particle_falls_to_bottom_left_or_bottom_right_when_bottom_cell_is_full_and_both_bottom_right_and_bottom_left_are_empty_forced_left(
-    ) {
+    fn test_weighted_particle_falls_to_bottom_left_or_bottom_right_when_bottom_cell_is_full_and_both_bottom_right_and_bottom_left_are_empty_forced_left()
+     {
         /*
          * -S- -> ---
          * -S-    SS-
@@ -574,8 +574,8 @@ mod tests {
     }
 
     #[test]
-    fn test_weighted_particle_falls_to_bottom_left_or_bottom_right_when_bottom_cell_is_full_and_both_bottom_right_and_bottom_left_are_empty_forced_right(
-    ) {
+    fn test_weighted_particle_falls_to_bottom_left_or_bottom_right_when_bottom_cell_is_full_and_both_bottom_right_and_bottom_left_are_empty_forced_right()
+     {
         /*
          * -S- -> ---
          * -S-    -SS
