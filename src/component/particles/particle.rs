@@ -320,9 +320,15 @@ impl Particle {
             match &cell.particle {
                 Some(p) => {
                     if !grid.is_simulated(cell) && p.weight < weight && p.weight != u8::MIN {
+                        let neighbor_viscosity = p.viscosity;
                         if let Some(ref mut this) =
                             grid.get_cell_mut(grid.to_index(position)).particle
                         {
+                            let velocity = if neighbor_viscosity < this.viscosity {
+                                ((velocity as u16) * 9 / 10) as u8
+                            } else {
+                                velocity
+                            };
                             this.velocity = velocity.saturating_add(1);
                         };
                         if velocity_probability <= velocity {
@@ -701,6 +707,35 @@ mod tests {
                 *g.get_cells()
             );
         }
+    }
+
+    #[test]
+    fn test_weighted_particle_loses_10_percent_of_its_velocity_when_sinking_in_water() {
+        /*
+         * S -> w
+         * w    S
+         */
+        for particle in weighted_particle() {
+            let mut g = Grid::new_with_rand_velocity(1, 2, || 0);
+
+            g.spawn_particle((0, 0), particle.clone().with_velocity(100));
+            g.spawn_particle((0, 1), Particle::from(Water::with_capacity(0)));
+
+            g.update_grid();
+
+            assert_eq!(
+                vec![
+                    Cell::new(Particle::from(Water::with_capacity(0))).with_cycle(1),
+                    Cell::new(particle.clone().with_velocity(91)).with_cycle(1),
+                ],
+                *g.get_cells()
+            );
+        }
+    }
+
+    #[test]
+    fn test_weighted_particle_loses_10_percent_of_its_velocity_when_sinking_diagonally_in_water() {
+        // TODO: todo!();
     }
 
     #[test]
