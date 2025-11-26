@@ -212,6 +212,10 @@ impl Grid {
             random_range(u8::MIN..=u8::MAX)
         }
 
+        fn random_velocity_probability() -> u8 {
+            random_range(u8::MIN..=u8::MAX)
+        }
+
         Self {
             cells: (0..width * height).map(|_| Cell::empty()).collect(),
             width,
@@ -221,7 +225,7 @@ impl Grid {
             cycle: 0,
             draw_cycle: 0,
             particle_seed: random_particle_seed_direction,
-            velocity_probability: || u8::MAX,
+            velocity_probability: random_velocity_probability,
         }
     }
 
