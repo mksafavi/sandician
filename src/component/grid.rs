@@ -19,6 +19,8 @@ pub enum GridError {
 
 pub const BACKGROUND_COLOR: bevy::prelude::Color = Color::srgb(0.82, 0.93, 1.);
 
+const BRUSH_INITIAL_VELOCITY: u8 = 50;
+
 pub enum ParticleHorizontalDirection {
     Left = -1,
     Right = 1,
@@ -311,7 +313,9 @@ impl Grid {
             match kind {
                 Some(k) => self.spawn_particle(
                     position,
-                    Particle::from(k.clone()).with_seed(self.particle_seed()),
+                    Particle::from(k.clone())
+                        .with_seed(self.particle_seed())
+                        .with_velocity(BRUSH_INITIAL_VELOCITY),
                 ),
                 None => self.despawn_particle(position),
             }
@@ -512,7 +516,14 @@ mod tests {
         g.cycle = 255;
         g.spawn_brush((0, 0), 1, Some(&ParticleKind::from(Sand::new())));
         assert_eq!(
-            vec![Cell::new(Particle::from(Sand::new()).with_seed(254)).with_cycle(255),],
+            vec![
+                Cell::new(
+                    Particle::from(Sand::new())
+                        .with_seed(254)
+                        .with_velocity(BRUSH_INITIAL_VELOCITY)
+                )
+                .with_cycle(255),
+            ],
             g.cells
         );
     }
@@ -526,13 +537,15 @@ mod tests {
          */
         let mut g = Grid::new_with_rand_seed(3, 3, || 255);
         g.spawn_brush((1, 1), 1, Some(&ParticleKind::from(Sand::new())));
+
+        let particle = Particle::from(Sand::new()).with_velocity(BRUSH_INITIAL_VELOCITY);
         assert_eq!(
             vec![
                 Cell::empty(),
                 Cell::empty(),
                 Cell::empty(),
                 Cell::empty(),
-                Cell::new(Particle::from(Sand::new())),
+                Cell::new(particle.clone()),
                 Cell::empty(),
                 Cell::empty(),
                 Cell::empty(),
@@ -551,16 +564,18 @@ mod tests {
          */
         let mut g = Grid::new_with_rand_seed(3, 3, || 255);
         g.spawn_brush((1, 1), 2, Some(&ParticleKind::from(Sand::new())));
+
+        let particle = Particle::from(Sand::new()).with_velocity(BRUSH_INITIAL_VELOCITY);
         assert_eq!(
             vec![
                 Cell::empty(),
-                Cell::new(Particle::from(Sand::new())),
+                Cell::new(particle.clone()),
                 Cell::empty(),
-                Cell::new(Particle::from(Sand::new())),
-                Cell::new(Particle::from(Sand::new())),
-                Cell::new(Particle::from(Sand::new())),
+                Cell::new(particle.clone()),
+                Cell::new(particle.clone()),
+                Cell::new(particle.clone()),
                 Cell::empty(),
-                Cell::new(Particle::from(Sand::new())),
+                Cell::new(particle.clone()),
                 Cell::empty(),
             ],
             g.cells
@@ -578,31 +593,33 @@ mod tests {
          */
         let mut g = Grid::new_with_rand_seed(5, 5, || 255);
         g.spawn_brush((2, 2), 4, Some(&ParticleKind::from(Sand::new())));
+
+        let particle = Particle::from(Sand::new()).with_velocity(BRUSH_INITIAL_VELOCITY);
         assert_eq!(
             vec![
                 Cell::empty(),
                 Cell::empty(),
-                Cell::new(Particle::from(Sand::new())),
+                Cell::new(particle.clone()),
                 Cell::empty(),
                 Cell::empty(),
                 Cell::empty(),
-                Cell::new(Particle::from(Sand::new())),
-                Cell::new(Particle::from(Sand::new())),
-                Cell::new(Particle::from(Sand::new())),
+                Cell::new(particle.clone()),
+                Cell::new(particle.clone()),
+                Cell::new(particle.clone()),
                 Cell::empty(),
-                Cell::new(Particle::from(Sand::new())),
-                Cell::new(Particle::from(Sand::new())),
-                Cell::new(Particle::from(Sand::new())),
-                Cell::new(Particle::from(Sand::new())),
-                Cell::new(Particle::from(Sand::new())),
+                Cell::new(particle.clone()),
+                Cell::new(particle.clone()),
+                Cell::new(particle.clone()),
+                Cell::new(particle.clone()),
+                Cell::new(particle.clone()),
                 Cell::empty(),
-                Cell::new(Particle::from(Sand::new())),
-                Cell::new(Particle::from(Sand::new())),
-                Cell::new(Particle::from(Sand::new())),
+                Cell::new(particle.clone()),
+                Cell::new(particle.clone()),
+                Cell::new(particle.clone()),
                 Cell::empty(),
                 Cell::empty(),
                 Cell::empty(),
-                Cell::new(Particle::from(Sand::new())),
+                Cell::new(particle.clone()),
                 Cell::empty(),
                 Cell::empty(),
             ],
@@ -621,16 +638,17 @@ mod tests {
 
         g.spawn_brush((1, 1), 2, Some(&ParticleKind::from(Sand::new())));
 
+        let particle = Particle::from(Sand::new()).with_velocity(BRUSH_INITIAL_VELOCITY);
         assert_eq!(
             vec![
                 Cell::empty(),
-                Cell::new(Particle::from(Sand::new())),
+                Cell::new(particle.clone()),
                 Cell::empty(),
-                Cell::new(Particle::from(Sand::new())),
-                Cell::new(Particle::from(Sand::new())),
-                Cell::new(Particle::from(Sand::new())),
+                Cell::new(particle.clone()),
+                Cell::new(particle.clone()),
+                Cell::new(particle.clone()),
                 Cell::empty(),
-                Cell::new(Particle::from(Sand::new())),
+                Cell::new(particle.clone()),
                 Cell::empty(),
             ],
             g.cells
