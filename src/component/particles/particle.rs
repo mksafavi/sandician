@@ -303,11 +303,13 @@ impl Particle {
 
     fn gravity<T: GridAccess>(grid: &mut T, position: (usize, usize)) -> bool {
         let c = grid.get_cell(grid.to_index(position));
-        let Some(ref this) = c.particle else {
+        let (weight, velocity) = if let Some(p) = &c.particle {
+            (p.weight, p.velocity)
+        } else {
             return false;
         };
 
-        if this.weight == u8::MIN {
+        if weight == u8::MIN {
             return false;
         }
 
@@ -315,13 +317,17 @@ impl Particle {
             let cell = grid.get_cell(index_n);
             match &cell.particle {
                 Some(p) => {
-                    if !grid.is_simulated(cell) && p.weight < this.weight && p.weight != u8::MIN {
+                    if !grid.is_simulated(cell) && p.weight < weight && p.weight != u8::MIN {
                         grid.swap_particles(grid.to_index(position), index_n);
                         return true;
                     }
                 }
                 None => {
-                    if grid.velocity_probability() <= this.velocity {
+                    if let Some(ref mut this) = grid.get_cell_mut(grid.to_index(position)).particle
+                    {
+                        this.velocity = velocity.saturating_add(1);
+                    };
+                    if grid.velocity_probability() <= velocity {
                         grid.swap_particles(grid.to_index(position), index_n);
                         return true;
                     }
@@ -332,7 +338,7 @@ impl Particle {
         let bottom_left = match grid.get_neighbor_index(position, (-1, 1)) {
             Ok(index_n) => match &grid.get_cell(index_n).particle {
                 Some(p) => {
-                    if p.weight < this.weight && p.weight != u8::MIN {
+                    if p.weight < weight && p.weight != u8::MIN {
                         Some(index_n)
                     } else {
                         None
@@ -346,7 +352,7 @@ impl Particle {
         let bottom_right = match grid.get_neighbor_index(position, (1, 1)) {
             Ok(index_n) => match &grid.get_cell(index_n).particle {
                 Some(p) => {
-                    if p.weight < this.weight && p.weight != u8::MIN {
+                    if p.weight < weight && p.weight != u8::MIN {
                         Some(index_n)
                     } else {
                         None
@@ -650,7 +656,7 @@ mod tests {
             g.update_grid();
 
             assert_eq!(
-                vec![Cell::new(particle.clone().with_velocity(0)), Cell::empty(),],
+                vec![Cell::new(particle.clone().with_velocity(1)), Cell::empty(),],
                 *g.get_cells()
             );
         }
