@@ -313,6 +313,8 @@ impl Particle {
             return false;
         }
 
+        let velocity_probability = grid.velocity_probability();
+
         if let Ok(index_n) = grid.get_neighbor_index(position, (0, 1)) {
             let cell = grid.get_cell(index_n);
             match &cell.particle {
@@ -327,7 +329,7 @@ impl Particle {
                     {
                         this.velocity = velocity.saturating_add(1);
                     };
-                    if grid.velocity_probability() <= velocity {
+                    if velocity_probability <= velocity {
                         grid.swap_particles(grid.to_index(position), index_n);
                         return true;
                     }
@@ -375,7 +377,7 @@ impl Particle {
             if let Some(ref mut this) = grid.get_cell_mut(grid.to_index(position)).particle {
                 this.velocity = velocity.saturating_add(1);
             };
-            if grid.velocity_probability() <= velocity {
+            if velocity_probability <= velocity {
                 grid.swap_particles(grid.to_index(position), index_n);
                 true
             } else {
@@ -405,6 +407,7 @@ impl fmt::Display for Particle {
 mod tests {
     use crate::component::grid::{Cell, Grid};
     use pretty_assertions::assert_eq;
+    use std::sync::atomic::{AtomicUsize, Ordering};
 
     use super::*;
 
@@ -721,4 +724,39 @@ mod tests {
         }
     }
 
+    #[test]
+    fn test_weighted_particle_should_use_the_same_velocity_probability_for_all_direction_checks_so_that_it_spreads_less()
+     {
+        /*
+         * -S- -> -S-
+         * ---    ---
+         */
+        for particle in weighted_particle() {
+            static V: &[u8] = &[255, 0]; /*255 won't swap but 0 will*/
+            static V_INDEX: AtomicUsize = AtomicUsize::new(0);
+            V_INDEX.store(0, Ordering::SeqCst);
+            fn velocity_probability() -> u8 {
+                let idx = V_INDEX.fetch_add(1, Ordering::SeqCst);
+                V[idx]
+            }
+
+            let mut g = Grid::new_with_rand_velocity(3, 2, velocity_probability);
+
+            g.spawn_particle((1, 0), particle.clone().with_velocity(0));
+
+            g.update_grid();
+
+            assert_eq!(
+                vec![
+                    Cell::empty(),
+                    Cell::new(particle.clone().with_velocity(1)),
+                    Cell::empty(),
+                    Cell::empty(),
+                    Cell::empty(),
+                    Cell::empty(),
+                ],
+                *g.get_cells()
+            );
+        }
+    }
 }
