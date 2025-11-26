@@ -320,8 +320,15 @@ impl Particle {
             match &cell.particle {
                 Some(p) => {
                     if !grid.is_simulated(cell) && p.weight < weight && p.weight != u8::MIN {
-                        grid.swap_particles(grid.to_index(position), index_n);
-                        return true;
+                        if let Some(ref mut this) =
+                            grid.get_cell_mut(grid.to_index(position)).particle
+                        {
+                            this.velocity = velocity.saturating_add(1);
+                        };
+                        if velocity_probability <= velocity {
+                            grid.swap_particles(grid.to_index(position), index_n);
+                            return true;
+                        }
                     }
                 }
                 None => {
@@ -667,6 +674,30 @@ mod tests {
 
             assert_eq!(
                 vec![Cell::new(particle.clone().with_velocity(1)), Cell::empty(),],
+                *g.get_cells()
+            );
+        }
+    }
+
+    #[test]
+    fn test_weighted_particle_does_not_sink_into_water_when_velocity_is_zero() {
+        /*
+         * S -> S
+         * w    w
+         */
+        for particle in weighted_particle() {
+            let mut g = Grid::new_with_rand_velocity(1, 2, || 255);
+
+            g.spawn_particle((0, 0), particle.clone().with_velocity(0));
+            g.spawn_particle((0, 1), Particle::from(Water::with_capacity(0)));
+
+            g.update_grid();
+
+            assert_eq!(
+                vec![
+                    Cell::new(particle.clone().with_velocity(1)),
+                    Cell::new(Particle::from(Water::with_capacity(0)))
+                ],
                 *g.get_cells()
             );
         }
