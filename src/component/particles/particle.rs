@@ -372,8 +372,15 @@ impl Particle {
                 ParticleHorizontalDirection::Right => Some(r),
             },
         } {
-            grid.swap_particles(grid.to_index(position), index_n);
-            true
+            if let Some(ref mut this) = grid.get_cell_mut(grid.to_index(position)).particle {
+                this.velocity = velocity.saturating_add(1);
+            };
+            if grid.velocity_probability() <= velocity {
+                grid.swap_particles(grid.to_index(position), index_n);
+                true
+            } else {
+                false // TODO: this behavior is not tested!
+            }
         } else {
             false
         }
@@ -661,4 +668,57 @@ mod tests {
             );
         }
     }
+
+    #[test]
+    fn test_weighted_particle_does_not_fall_to_right_when_velocity_is_zero() {
+        /*
+         * S- -> S-
+         * r-    r-
+         */
+        for particle in weighted_particle() {
+            let mut g = Grid::new_with_rand_velocity(2, 2, || 255);
+
+            g.spawn_particle((0, 0), particle.clone().with_velocity(0));
+            g.spawn_particle((0, 1), Particle::from(Rock::new()));
+
+            g.update_grid();
+
+            assert_eq!(
+                vec![
+                    Cell::new(particle.clone().with_velocity(1)),
+                    Cell::empty(),
+                    Cell::new(Particle::from(Rock::new())),
+                    Cell::empty(),
+                ],
+                *g.get_cells()
+            );
+        }
+    }
+
+    #[test]
+    fn test_weighted_particle_does_not_fall_to_left_when_velocity_is_zero() {
+        /*
+         * -S -> -S
+         * -r    -r
+         */
+        for particle in weighted_particle() {
+            let mut g = Grid::new_with_rand_velocity(2, 2, || 255);
+
+            g.spawn_particle((1, 0), particle.clone().with_velocity(0));
+            g.spawn_particle((1, 1), Particle::from(Rock::new()));
+
+            g.update_grid();
+
+            assert_eq!(
+                vec![
+                    Cell::empty(),
+                    Cell::new(particle.clone().with_velocity(1)),
+                    Cell::empty(),
+                    Cell::new(Particle::from(Rock::new())),
+                ],
+                *g.get_cells()
+            );
+        }
+    }
+
 }
