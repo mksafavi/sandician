@@ -76,6 +76,7 @@ pub struct Particle {
     color: [u8; 3],
     pub kind: ParticleKind,
     pub seed: u8,
+    velocity: u8,
 }
 
 impl Particle {
@@ -87,6 +88,7 @@ impl Particle {
             color: color.to_srgba().to_u8_array_no_alpha(),
             kind,
             seed: 127,
+            velocity: u8::MAX,
         }
     }
 
@@ -106,6 +108,11 @@ impl Particle {
 
     pub fn with_seed(mut self, seed: u8) -> Self {
         self.seed = seed;
+        self
+    }
+
+    pub fn with_velocity(mut self, velocity: u8) -> Particle {
+        self.velocity = velocity;
         self
     }
 
@@ -314,8 +321,10 @@ impl Particle {
                     }
                 }
                 None => {
-                    grid.swap_particles(grid.to_index(position), index_n);
-                    return true;
+                    if grid.velocity_probability() <= this.velocity {
+                        grid.swap_particles(grid.to_index(position), index_n);
+                        return true;
+                    }
                 }
             };
         }
@@ -599,6 +608,49 @@ mod tests {
                     Cell::new(particle.clone()),
                     Cell::new(particle.clone()).with_cycle(1),
                 ],
+                *g.get_cells()
+            );
+        }
+    }
+
+    #[test]
+    fn test_weighted_particle_fall_when_probability_is_max() {
+        /*
+         * S -> -
+         * -    S
+         */
+        for particle in weighted_particle() {
+            let mut g = Grid::new_with_rand_velocity(1, 2, || 255);
+
+            g.spawn_particle((0, 0), particle.clone());
+
+            g.update_grid();
+
+            assert_eq!(
+                vec![
+                    Cell::empty().with_cycle(1),
+                    Cell::new(particle.clone()).with_cycle(1),
+                ],
+                *g.get_cells()
+            );
+        }
+    }
+
+    #[test]
+    fn test_weighted_particle_does_not_fall_when_velocity_is_zero() {
+        /*
+         * S -> S
+         * -    -
+         */
+        for particle in weighted_particle() {
+            let mut g = Grid::new_with_rand_velocity(1, 2, || 255);
+
+            g.spawn_particle((0, 0), particle.clone().with_velocity(0));
+
+            g.update_grid();
+
+            assert_eq!(
+                vec![Cell::new(particle.clone().with_velocity(0)), Cell::empty(),],
                 *g.get_cells()
             );
         }

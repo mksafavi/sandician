@@ -66,10 +66,12 @@ pub struct Grid {
     cycle: u32,
     draw_cycle: u32,
     particle_seed: fn() -> u8,
+    velocity_probability: fn() -> u8,
 }
 
 pub trait GridAccess {
     fn particle_direction(&self) -> ParticleHorizontalDirection;
+    fn velocity_probability(&self) -> u8;
     fn get_neighbor_index(
         &self,
         position: (usize, usize),
@@ -152,6 +154,10 @@ impl GridAccess for Grid {
         (self.particle_direction)()
     }
 
+    fn velocity_probability(&self) -> u8 {
+        (self.velocity_probability)()
+    }
+
     fn get_cells(&self) -> &Vec<Cell> {
         &self.cells
     }
@@ -215,6 +221,7 @@ impl Grid {
             cycle: 0,
             draw_cycle: 0,
             particle_seed: random_particle_seed_direction,
+            velocity_probability: || u8::MAX,
         }
     }
 
@@ -344,6 +351,17 @@ impl Grid {
     pub fn new_with_rand_seed(width: usize, height: usize, particle_seed: fn() -> u8) -> Self {
         let mut g = Self::new(width, height);
         g.particle_seed = particle_seed;
+        g
+    }
+
+    #[allow(dead_code)]
+    pub fn new_with_rand_velocity(
+        width: usize,
+        height: usize,
+        velocity_probability: fn() -> u8,
+    ) -> Self {
+        let mut g = Self::new(width, height);
+        g.velocity_probability = velocity_probability;
         g
     }
 }
