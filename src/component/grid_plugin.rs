@@ -393,6 +393,7 @@ fn grid_node(handle: &Handle<Image>) -> impl Bundle {
 
 #[cfg(test)]
 mod tests {
+    use pretty_assertions::assert_eq;
 
     use std::time::Duration;
 

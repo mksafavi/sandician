@@ -382,6 +382,7 @@ impl fmt::Display for Particle {
 #[cfg(test)]
 mod tests {
     use crate::component::grid::{Cell, Grid};
+    use pretty_assertions::assert_eq;
 
     use super::*;
 

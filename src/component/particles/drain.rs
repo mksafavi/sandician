@@ -40,6 +40,7 @@ mod tests {
         grid::{Cell, Grid, GridAccess},
         particles::{drain::Drain, particle::Particle, rock::Rock},
     };
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_update_grid_drain_shouldnt_remove_other_drain_particles() {

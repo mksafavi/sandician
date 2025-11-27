@@ -43,6 +43,7 @@ opt-level = 3
 
 [dev-dependencies]
 criterion = "0.7.0"
+pretty_assertions = "1.4.1"
 
 [[bench]]
 name = "bench"

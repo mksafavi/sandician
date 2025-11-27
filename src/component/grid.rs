@@ -351,6 +351,7 @@ impl Grid {
 #[cfg(test)]
 mod tests {
     use bevy::color::{Gray, Hsva};
+    use pretty_assertions::assert_eq;
 
     use super::*;
     use crate::component::{

@@ -19,6 +19,7 @@ mod tests {
         grid::{Cell, Grid, GridAccess},
         particles::{particle::Particle, rock::Rock, sand::Sand},
     };
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_update_grid_particles_should_not_swap_with_rock() {

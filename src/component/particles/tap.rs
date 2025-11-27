@@ -75,6 +75,7 @@ mod tests {
             water::Water,
         },
     };
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_update_grid_tap_should_not_emit_tap_particles() {

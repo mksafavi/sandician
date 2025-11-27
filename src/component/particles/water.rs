@@ -57,6 +57,7 @@ mod tests {
         grid::{Cell, Grid, ParticleHorizontalDirection, RowUpdateDirection},
         particles::{particle::Particle, rock::Rock, salt::Salt, sand::Sand},
     };
+    use pretty_assertions::assert_eq;
 
     use super::*;
 
