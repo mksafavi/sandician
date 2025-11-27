@@ -344,8 +344,8 @@ impl Particle {
                     };
                     if velocity_probability <= velocity {
                         grid.swap_particles(grid.to_index(position), index_n);
-                        return true;
                     }
+                    return true;
                 }
             };
         }
@@ -392,10 +392,8 @@ impl Particle {
             };
             if velocity_probability <= velocity {
                 grid.swap_particles(grid.to_index(position), index_n);
-                true
-            } else {
-                false // TODO: this behavior is not tested!
             }
+            true
         } else {
             false
         }
@@ -788,6 +786,104 @@ mod tests {
                 *g.get_cells()
             );
         }
+    }
+
+    #[test]
+    fn test_if_water_did_not_fall_due_to_probability_should_not_flow_either() {
+        /*
+         * w- -> w-
+         * --    --
+         */
+        static V: &[u8] = &[255]; /*255 won't swap*/
+        static V_INDEX: AtomicUsize = AtomicUsize::new(0);
+        V_INDEX.store(0, Ordering::SeqCst);
+        fn velocity_probability() -> u8 {
+            let idx = V_INDEX.fetch_add(1, Ordering::SeqCst);
+            V[idx]
+        }
+
+        let mut g = Grid::new_with_rand_velocity(2, 2, velocity_probability);
+        let particle = Particle::from(Water::new()).with_velocity(0);
+
+        g.spawn_particle((0, 0), particle.clone());
+
+        g.update_grid();
+
+        assert_eq!(
+            vec![
+                Cell::new(particle.clone().with_velocity(1)),
+                Cell::empty(),
+                Cell::empty(),
+                Cell::empty(),
+            ],
+            *g.get_cells()
+        );
+    }
+
+    #[test]
+    fn test_if_water_did_not_fall_left_due_to_probability_should_not_flow_either() {
+        /*
+         * -w -> -w
+         * -r    -r
+         */
+        static V: &[u8] = &[255]; /*255 won't swap*/
+        static V_INDEX: AtomicUsize = AtomicUsize::new(0);
+        V_INDEX.store(0, Ordering::SeqCst);
+        fn velocity_probability() -> u8 {
+            let idx = V_INDEX.fetch_add(1, Ordering::SeqCst);
+            V[idx]
+        }
+
+        let mut g = Grid::new_with_rand_velocity(2, 2, velocity_probability);
+        let particle = Particle::from(Water::new()).with_velocity(0);
+
+        g.spawn_particle((1, 0), particle.clone());
+        g.spawn_particle((1, 1), Particle::from(Rock::new()));
+
+        g.update_grid();
+
+        assert_eq!(
+            vec![
+                Cell::empty(),
+                Cell::new(particle.clone().with_velocity(1)),
+                Cell::empty(),
+                Cell::new(Particle::from(Rock::new())),
+            ],
+            *g.get_cells()
+        );
+    }
+
+    #[test]
+    fn test_if_water_did_not_fall_right_due_to_probability_should_not_flow_either() {
+        /*
+         * w- -> w-
+         * r-    r-
+         */
+        static V: &[u8] = &[255]; /*255 won't swap*/
+        static V_INDEX: AtomicUsize = AtomicUsize::new(0);
+        V_INDEX.store(0, Ordering::SeqCst);
+        fn velocity_probability() -> u8 {
+            let idx = V_INDEX.fetch_add(1, Ordering::SeqCst);
+            V[idx]
+        }
+
+        let mut g = Grid::new_with_rand_velocity(2, 2, velocity_probability);
+        let particle = Particle::from(Water::new()).with_velocity(0);
+
+        g.spawn_particle((0, 0), particle.clone());
+        g.spawn_particle((0, 1), Particle::from(Rock::new()));
+
+        g.update_grid();
+
+        assert_eq!(
+            vec![
+                Cell::new(particle.clone().with_velocity(1)),
+                Cell::empty(),
+                Cell::new(Particle::from(Rock::new())),
+                Cell::empty(),
+            ],
+            *g.get_cells()
+        );
     }
 
     #[test]
