@@ -416,7 +416,7 @@ impl fmt::Display for Particle {
 
 #[cfg(test)]
 mod tests {
-    use crate::component::grid::{Cell, Grid};
+    use crate::component::grid::{Cell, Grid, Random};
     use pretty_assertions::assert_eq;
     use std::sync::atomic::{AtomicUsize, Ordering};
 
@@ -589,7 +589,8 @@ mod tests {
          * -S-    SS-
          */
         for particle in weighted_particle() {
-            let mut g = Grid::new_with_rand(3, 2, Some(|| ParticleHorizontalDirection::Left), None);
+            let mut g =
+                Grid::new_with_rand(3, 2, Some(|_| ParticleHorizontalDirection::Left), None);
 
             g.spawn_particle((1, 0), particle.clone());
             g.spawn_particle((1, 1), particle.clone());
@@ -619,7 +620,7 @@ mod tests {
          */
         for particle in weighted_particle() {
             let mut g =
-                Grid::new_with_rand(3, 2, Some(|| ParticleHorizontalDirection::Right), None);
+                Grid::new_with_rand(3, 2, Some(|_| ParticleHorizontalDirection::Right), None);
 
             g.spawn_particle((1, 0), particle.clone());
             g.spawn_particle((1, 1), particle.clone());
@@ -647,7 +648,7 @@ mod tests {
          * -    S
          */
         for particle in weighted_particle() {
-            let mut g = Grid::new_with_rand_velocity(1, 2, || 255);
+            let mut g = Grid::new_with_rand_velocity(1, 2, |_| 255);
 
             g.spawn_particle((0, 0), particle.clone());
 
@@ -670,7 +671,7 @@ mod tests {
          * -    -
          */
         for particle in weighted_particle() {
-            let mut g = Grid::new_with_rand_velocity(1, 2, || 255);
+            let mut g = Grid::new_with_rand_velocity(1, 2, |_| 255);
 
             g.spawn_particle((0, 0), particle.clone().with_velocity(0));
 
@@ -690,7 +691,7 @@ mod tests {
          * w    w
          */
         for particle in weighted_particle() {
-            let mut g = Grid::new_with_rand_velocity(1, 2, || 255);
+            let mut g = Grid::new_with_rand_velocity(1, 2, |_| 255);
 
             g.spawn_particle((0, 0), particle.clone().with_velocity(0));
             g.spawn_particle((0, 1), Particle::from(Water::with_capacity(0)));
@@ -714,7 +715,7 @@ mod tests {
          * w    S
          */
         for particle in weighted_particle() {
-            let mut g = Grid::new_with_rand_velocity(1, 2, || 0);
+            let mut g = Grid::new_with_rand_velocity(1, 2, |_| 0);
 
             g.spawn_particle((0, 0), particle.clone().with_velocity(100));
             g.spawn_particle((0, 1), Particle::from(Water::with_capacity(0)));
@@ -743,7 +744,7 @@ mod tests {
          * r-    r-
          */
         for particle in weighted_particle() {
-            let mut g = Grid::new_with_rand_velocity(2, 2, || 255);
+            let mut g = Grid::new_with_rand_velocity(2, 2, |_| 255);
 
             g.spawn_particle((0, 0), particle.clone().with_velocity(0));
             g.spawn_particle((0, 1), Particle::from(Rock::new()));
@@ -769,7 +770,7 @@ mod tests {
          * -r    -r
          */
         for particle in weighted_particle() {
-            let mut g = Grid::new_with_rand_velocity(2, 2, || 255);
+            let mut g = Grid::new_with_rand_velocity(2, 2, |_| 255);
 
             g.spawn_particle((1, 0), particle.clone().with_velocity(0));
             g.spawn_particle((1, 1), Particle::from(Rock::new()));
@@ -797,7 +798,7 @@ mod tests {
         static V: &[u8] = &[255]; /*255 won't swap*/
         static V_INDEX: AtomicUsize = AtomicUsize::new(0);
         V_INDEX.store(0, Ordering::SeqCst);
-        fn velocity_probability() -> u8 {
+        fn velocity_probability(_: &mut Random) -> u8 {
             let idx = V_INDEX.fetch_add(1, Ordering::SeqCst);
             V[idx]
         }
@@ -829,7 +830,7 @@ mod tests {
         static V: &[u8] = &[255]; /*255 won't swap*/
         static V_INDEX: AtomicUsize = AtomicUsize::new(0);
         V_INDEX.store(0, Ordering::SeqCst);
-        fn velocity_probability() -> u8 {
+        fn velocity_probability(_: &mut Random) -> u8 {
             let idx = V_INDEX.fetch_add(1, Ordering::SeqCst);
             V[idx]
         }
@@ -862,7 +863,7 @@ mod tests {
         static V: &[u8] = &[255]; /*255 won't swap*/
         static V_INDEX: AtomicUsize = AtomicUsize::new(0);
         V_INDEX.store(0, Ordering::SeqCst);
-        fn velocity_probability() -> u8 {
+        fn velocity_probability(_: &mut Random) -> u8 {
             let idx = V_INDEX.fetch_add(1, Ordering::SeqCst);
             V[idx]
         }
@@ -897,7 +898,7 @@ mod tests {
             static V: &[u8] = &[255, 0]; /*255 won't swap but 0 will*/
             static V_INDEX: AtomicUsize = AtomicUsize::new(0);
             V_INDEX.store(0, Ordering::SeqCst);
-            fn velocity_probability() -> u8 {
+            fn velocity_probability(_: &mut Random) -> u8 {
                 let idx = V_INDEX.fetch_add(1, Ordering::SeqCst);
                 V[idx]
             }

@@ -7,7 +7,7 @@ use bevy::{
     image::Image,
     render::render_resource::{Extent3d, TextureDimension, TextureFormat},
 };
-use rand::random_range;
+use rand::{Rng, SeedableRng};
 
 use crate::component::particles::particle::ParticleKind;
 
@@ -60,10 +60,11 @@ impl Cell {
 
 #[derive(Debug)]
 pub struct Random {
-    particle_direction: fn() -> ParticleHorizontalDirection,
-    row_update_direction: fn() -> RowUpdateDirection,
-    particle_seed: fn() -> u8,
-    velocity_probability: fn() -> u8,
+    particle_direction: fn(r: &mut Random) -> ParticleHorizontalDirection,
+    row_update_direction: fn(r: &mut Random) -> RowUpdateDirection,
+    particle_seed: fn(r: &mut Random) -> u8,
+    velocity_probability: fn(r: &mut Random) -> u8,
+    rng: rand::prelude::SmallRng,
 }
 
 #[derive(Component, Debug)]
@@ -77,8 +78,8 @@ pub struct Grid {
 }
 
 pub trait GridAccess {
-    fn particle_direction(&self) -> ParticleHorizontalDirection;
-    fn velocity_probability(&self) -> u8;
+    fn particle_direction(&mut self) -> ParticleHorizontalDirection;
+    fn velocity_probability(&mut self) -> u8;
     fn get_neighbor_index(
         &self,
         position: (usize, usize),
@@ -157,12 +158,12 @@ impl GridAccess for Grid {
         }
     }
 
-    fn particle_direction(&self) -> ParticleHorizontalDirection {
-        (self.random.particle_direction)()
+    fn particle_direction(&mut self) -> ParticleHorizontalDirection {
+        (self.random.particle_direction)(&mut self.random)
     }
 
-    fn velocity_probability(&self) -> u8 {
-        (self.random.velocity_probability)()
+    fn velocity_probability(&mut self) -> u8 {
+        (self.random.velocity_probability)(&mut self.random)
     }
 
     fn get_cells(&self) -> &Vec<Cell> {
@@ -207,28 +208,29 @@ impl Random {
             row_update_direction: Random::random_row_update_direction,
             particle_seed: Random::random_particle_seed_direction,
             velocity_probability: Random::random_velocity_probability,
+            rng: rand::prelude::SmallRng::from_os_rng(),
         }
     }
 
-    fn random_particle_direction() -> ParticleHorizontalDirection {
-        match random_range(0..=1) {
+    fn random_particle_direction(r: &mut Random) -> ParticleHorizontalDirection {
+        match r.rng.random_range(0..=1) {
             0 => ParticleHorizontalDirection::Left,
             _ => ParticleHorizontalDirection::Right,
         }
     }
-    fn random_row_update_direction() -> RowUpdateDirection {
-        match random_range(0..=1) {
+    fn random_row_update_direction(r: &mut Random) -> RowUpdateDirection {
+        match r.rng.random_range(0..=1) {
             0 => RowUpdateDirection::Forward,
             _ => RowUpdateDirection::Reverse,
         }
     }
 
-    fn random_particle_seed_direction() -> u8 {
-        random_range(u8::MIN..=u8::MAX)
+    fn random_particle_seed_direction(r: &mut Random) -> u8 {
+        r.rng.random_range(u8::MIN..=u8::MAX)
     }
 
-    fn random_velocity_probability() -> u8 {
-        random_range(u8::MIN..=u8::MAX)
+    fn random_velocity_probability(r: &mut Random) -> u8 {
+        r.rng.random_range(u8::MIN..=u8::MAX)
     }
 }
 
@@ -245,7 +247,7 @@ impl Grid {
     }
 
     fn particle_seed(&mut self) -> u8 {
-        ((self.random.particle_seed)() / 2) + (self.cycle as u8 / 2)
+        ((self.random.particle_seed)(&mut self.random) / 2) + (self.cycle as u8 / 2)
     }
 
     pub fn spawn_particle(&mut self, (x, y): (usize, usize), particle: Particle) {
@@ -267,7 +269,7 @@ impl Grid {
     pub fn update_grid(&mut self) {
         self.cycle = self.cycle.wrapping_add(1);
         for y in (0..self.height).rev() {
-            let x_direction = (self.random.row_update_direction)();
+            let x_direction = (self.random.row_update_direction)(&mut self.random);
             for x in 0..self.width {
                 let x = match x_direction {
                     RowUpdateDirection::Forward => x,
@@ -355,24 +357,28 @@ impl Grid {
     pub fn new_with_rand(
         width: usize,
         height: usize,
-        particle_direction: Option<fn() -> ParticleHorizontalDirection>,
-        row_update_direction: Option<fn() -> RowUpdateDirection>,
+        particle_direction: Option<fn(&mut Random) -> ParticleHorizontalDirection>,
+        row_update_direction: Option<fn(&mut Random) -> RowUpdateDirection>,
     ) -> Self {
         let mut g = Self::new(width, height);
         g.random.particle_direction = match particle_direction {
             Some(f) => f,
-            None => || ParticleHorizontalDirection::Right,
+            None => |_| ParticleHorizontalDirection::Right,
         };
 
         g.random.row_update_direction = match row_update_direction {
             Some(f) => f,
-            None => || RowUpdateDirection::Forward,
+            None => |_| RowUpdateDirection::Forward,
         };
         g
     }
 
     #[allow(dead_code)]
-    pub fn new_with_rand_seed(width: usize, height: usize, particle_seed: fn() -> u8) -> Self {
+    pub fn new_with_rand_seed(
+        width: usize,
+        height: usize,
+        particle_seed: fn(r: &mut Random) -> u8,
+    ) -> Self {
         let mut g = Self::new(width, height);
         g.random.particle_seed = particle_seed;
         g
@@ -382,7 +388,7 @@ impl Grid {
     pub fn new_with_rand_velocity(
         width: usize,
         height: usize,
-        velocity_probability: fn() -> u8,
+        velocity_probability: fn(r: &mut Random) -> u8,
     ) -> Self {
         let mut g = Self::new(width, height);
         g.random.velocity_probability = velocity_probability;
@@ -528,7 +534,7 @@ mod tests {
 
     #[test]
     fn test_spawn_particles_brush_sets_a_random_seed_to_particles() {
-        let mut g = Grid::new_with_rand_seed(1, 1, || 255);
+        let mut g = Grid::new_with_rand_seed(1, 1, |_| 255);
         g.cycle = 255;
         g.spawn_brush((0, 0), 1, Some(&ParticleKind::from(Sand::new())));
         assert_eq!(
@@ -551,7 +557,7 @@ mod tests {
          * -s-
          * ---
          */
-        let mut g = Grid::new_with_rand_seed(3, 3, || 255);
+        let mut g = Grid::new_with_rand_seed(3, 3, |_| 255);
         g.spawn_brush((1, 1), 1, Some(&ParticleKind::from(Sand::new())));
 
         let particle = Particle::from(Sand::new()).with_velocity(BRUSH_INITIAL_VELOCITY);
@@ -578,7 +584,7 @@ mod tests {
          * sss
          * -s-
          */
-        let mut g = Grid::new_with_rand_seed(3, 3, || 255);
+        let mut g = Grid::new_with_rand_seed(3, 3, |_| 255);
         g.spawn_brush((1, 1), 2, Some(&ParticleKind::from(Sand::new())));
 
         let particle = Particle::from(Sand::new()).with_velocity(BRUSH_INITIAL_VELOCITY);
@@ -607,7 +613,7 @@ mod tests {
          * -sss-
          * --s--
          */
-        let mut g = Grid::new_with_rand_seed(5, 5, || 255);
+        let mut g = Grid::new_with_rand_seed(5, 5, |_| 255);
         g.spawn_brush((2, 2), 4, Some(&ParticleKind::from(Sand::new())));
 
         let particle = Particle::from(Sand::new()).with_velocity(BRUSH_INITIAL_VELOCITY);
@@ -650,7 +656,7 @@ mod tests {
          * ---    sss    ---
          * ---    -s-    ---
          */
-        let mut g = Grid::new_with_rand_seed(3, 3, || 255);
+        let mut g = Grid::new_with_rand_seed(3, 3, |_| 255);
 
         g.spawn_brush((1, 1), 2, Some(&ParticleKind::from(Sand::new())));
 
@@ -868,23 +874,23 @@ mod tests {
 
     #[test]
     fn test_the_current_cycle_affects_half_of_the_particle_seed_value() {
-        let mut g = Grid::new_with_rand_seed(1, 1, || 0);
+        let mut g = Grid::new_with_rand_seed(1, 1, |_| 0);
         g.cycle = 0;
         assert_eq!(0, g.particle_seed());
 
-        let mut g = Grid::new_with_rand_seed(1, 1, || 255);
+        let mut g = Grid::new_with_rand_seed(1, 1, |_| 255);
         g.cycle = 0;
         assert_eq!(127, g.particle_seed());
 
-        let mut g = Grid::new_with_rand_seed(1, 1, || 0);
+        let mut g = Grid::new_with_rand_seed(1, 1, |_| 0);
         g.cycle = 255;
         assert_eq!(127, g.particle_seed());
 
-        let mut g = Grid::new_with_rand_seed(1, 1, || 255);
+        let mut g = Grid::new_with_rand_seed(1, 1, |_| 255);
         g.cycle = 255;
         assert_eq!(254, g.particle_seed());
 
-        let mut g = Grid::new_with_rand_seed(1, 1, || 0);
+        let mut g = Grid::new_with_rand_seed(1, 1, |_| 0);
         g.cycle = 256;
         assert_eq!(0, g.particle_seed(), "cycle is moduloed by 256");
     }
