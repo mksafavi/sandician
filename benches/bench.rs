@@ -26,8 +26,8 @@ fn fill_grid_mixed(g: &mut Grid, (x, y): (usize, usize)) {
 }
 
 fn criterion_benchmark(c: &mut Criterion) {
-    let y: usize = 1920;
-    let x: usize = 1080;
+    let y: usize = 360;
+    let x: usize = 250;
     c.bench_function("update grid sand", |b| {
         let mut g = Grid::new(x, y);
         for y in 0..y {
