@@ -58,17 +58,22 @@ impl Cell {
     }
 }
 
+#[derive(Debug)]
+pub struct Random {
+    particle_direction: fn() -> ParticleHorizontalDirection,
+    row_update_direction: fn() -> RowUpdateDirection,
+    particle_seed: fn() -> u8,
+    velocity_probability: fn() -> u8,
+}
+
 #[derive(Component, Debug)]
 pub struct Grid {
     cells: Vec<Cell>,
     width: usize,
     height: usize,
-    particle_direction: fn() -> ParticleHorizontalDirection,
-    row_update_direction: fn() -> RowUpdateDirection,
     cycle: u32,
     draw_cycle: u32,
-    particle_seed: fn() -> u8,
-    velocity_probability: fn() -> u8,
+    random: Random,
 }
 
 pub trait GridAccess {
@@ -153,11 +158,11 @@ impl GridAccess for Grid {
     }
 
     fn particle_direction(&self) -> ParticleHorizontalDirection {
-        (self.particle_direction)()
+        (self.random.particle_direction)()
     }
 
     fn velocity_probability(&self) -> u8 {
-        (self.velocity_probability)()
+        (self.random.velocity_probability)()
     }
 
     fn get_cells(&self) -> &Vec<Cell> {
@@ -195,44 +200,52 @@ impl GridAccess for Grid {
     }
 }
 
+impl Random {
+    fn new() -> Self {
+        Self {
+            particle_direction: Random::random_particle_direction,
+            row_update_direction: Random::random_row_update_direction,
+            particle_seed: Random::random_particle_seed_direction,
+            velocity_probability: Random::random_velocity_probability,
+        }
+    }
+
+    fn random_particle_direction() -> ParticleHorizontalDirection {
+        match random_range(0..=1) {
+            0 => ParticleHorizontalDirection::Left,
+            _ => ParticleHorizontalDirection::Right,
+        }
+    }
+    fn random_row_update_direction() -> RowUpdateDirection {
+        match random_range(0..=1) {
+            0 => RowUpdateDirection::Forward,
+            _ => RowUpdateDirection::Reverse,
+        }
+    }
+
+    fn random_particle_seed_direction() -> u8 {
+        random_range(u8::MIN..=u8::MAX)
+    }
+
+    fn random_velocity_probability() -> u8 {
+        random_range(u8::MIN..=u8::MAX)
+    }
+}
+
 impl Grid {
     pub fn new(width: usize, height: usize) -> Self {
-        fn random_particle_direction() -> ParticleHorizontalDirection {
-            match random_range(0..=1) {
-                0 => ParticleHorizontalDirection::Left,
-                _ => ParticleHorizontalDirection::Right,
-            }
-        }
-        fn random_row_update_direction() -> RowUpdateDirection {
-            match random_range(0..=1) {
-                0 => RowUpdateDirection::Forward,
-                _ => RowUpdateDirection::Reverse,
-            }
-        }
-
-        fn random_particle_seed_direction() -> u8 {
-            random_range(u8::MIN..=u8::MAX)
-        }
-
-        fn random_velocity_probability() -> u8 {
-            random_range(u8::MIN..=u8::MAX)
-        }
-
         Self {
             cells: (0..width * height).map(|_| Cell::empty()).collect(),
             width,
             height,
-            particle_direction: random_particle_direction,
-            row_update_direction: random_row_update_direction,
             cycle: 0,
             draw_cycle: 0,
-            particle_seed: random_particle_seed_direction,
-            velocity_probability: random_velocity_probability,
+            random: Random::new(),
         }
     }
 
-    fn particle_seed(&self) -> u8 {
-        ((self.particle_seed)() / 2) + (self.cycle as u8 / 2)
+    fn particle_seed(&mut self) -> u8 {
+        ((self.random.particle_seed)() / 2) + (self.cycle as u8 / 2)
     }
 
     pub fn spawn_particle(&mut self, (x, y): (usize, usize), particle: Particle) {
@@ -254,7 +267,7 @@ impl Grid {
     pub fn update_grid(&mut self) {
         self.cycle = self.cycle.wrapping_add(1);
         for y in (0..self.height).rev() {
-            let x_direction = (self.row_update_direction)();
+            let x_direction = (self.random.row_update_direction)();
             for x in 0..self.width {
                 let x = match x_direction {
                     RowUpdateDirection::Forward => x,
@@ -311,12 +324,15 @@ impl Grid {
     ) {
         for position in Self::circle_brush(position, size) {
             match kind {
-                Some(k) => self.spawn_particle(
-                    position,
-                    Particle::from(k.clone())
-                        .with_seed(self.particle_seed())
-                        .with_velocity(BRUSH_INITIAL_VELOCITY),
-                ),
+                Some(k) => {
+                    let seed = self.particle_seed();
+                    self.spawn_particle(
+                        position,
+                        Particle::from(k.clone())
+                            .with_seed(seed)
+                            .with_velocity(BRUSH_INITIAL_VELOCITY),
+                    )
+                }
                 None => self.despawn_particle(position),
             }
         }
@@ -343,12 +359,12 @@ impl Grid {
         row_update_direction: Option<fn() -> RowUpdateDirection>,
     ) -> Self {
         let mut g = Self::new(width, height);
-        g.particle_direction = match particle_direction {
+        g.random.particle_direction = match particle_direction {
             Some(f) => f,
             None => || ParticleHorizontalDirection::Right,
         };
 
-        g.row_update_direction = match row_update_direction {
+        g.random.row_update_direction = match row_update_direction {
             Some(f) => f,
             None => || RowUpdateDirection::Forward,
         };
@@ -358,7 +374,7 @@ impl Grid {
     #[allow(dead_code)]
     pub fn new_with_rand_seed(width: usize, height: usize, particle_seed: fn() -> u8) -> Self {
         let mut g = Self::new(width, height);
-        g.particle_seed = particle_seed;
+        g.random.particle_seed = particle_seed;
         g
     }
 
@@ -369,7 +385,7 @@ impl Grid {
         velocity_probability: fn() -> u8,
     ) -> Self {
         let mut g = Self::new(width, height);
-        g.velocity_probability = velocity_probability;
+        g.random.velocity_probability = velocity_probability;
         g
     }
 }
