@@ -552,48 +552,53 @@ mod tests {
     }
 
     #[test]
-    fn test_sand_should_sink_in_water_but_water_should_not_climb_sands() {
+    fn test_weighted_particle_should_sink_in_water_but_water_should_not_climb_on_the_weighted_particle()
+     {
         /*
          * s -> s -> w
          * s    w    s
          * w    s    s
          */
-        let mut g = Grid::new_with_rand(1, 3, Some(|| ParticleHorizontalDirection::Right), None);
+        for particle in weighted_particle() {
+            let particle = particle.with_velocity(0);
 
-        g.spawn_particle((0, 0), Particle::from(Sand::new()));
-        g.spawn_particle((0, 1), Particle::from(Sand::new()));
-        g.spawn_particle((0, 2), Particle::from(Water::new()));
+            let mut g = Grid::new_with_rand_velocity(1, 3, || 0);
 
-        assert_eq!(
-            vec![
-                Cell::new(Particle::from(Sand::new())),
-                Cell::new(Particle::from(Sand::new())),
-                Cell::new(Particle::from(Water::new())),
-            ],
-            *g.get_cells()
-        );
+            g.spawn_particle((0, 0), particle.clone());
+            g.spawn_particle((0, 1), particle.clone());
+            g.spawn_particle((0, 2), Particle::from(Water::with_capacity(0)));
 
-        g.update_grid();
+            assert_eq!(
+                vec![
+                    Cell::new(particle.clone()),
+                    Cell::new(particle.clone()),
+                    Cell::new(Particle::from(Water::with_capacity(0))),
+                ],
+                *g.get_cells()
+            );
 
-        assert_eq!(
-            vec![
-                Cell::new(Particle::from(Sand::new())),
-                Cell::new(Particle::from(Water::new())).with_cycle(1),
-                Cell::new(Particle::from(Sand::new())).with_cycle(1),
-            ],
-            *g.get_cells()
-        );
+            g.update_grid();
 
-        g.update_grid();
+            assert_eq!(
+                vec![
+                    Cell::new(particle.clone()),
+                    Cell::new(Particle::from(Water::with_capacity(0))).with_cycle(1),
+                    Cell::new(particle.clone().with_velocity(1)).with_cycle(1),
+                ],
+                *g.get_cells()
+            );
 
-        assert_eq!(
-            vec![
-                Cell::new(Particle::from(Water::new())).with_cycle(2),
-                Cell::new(Particle::from(Sand::new())).with_cycle(2),
-                Cell::new(Particle::from(Sand::new())).with_cycle(1),
-            ],
-            *g.get_cells()
-        );
+            g.update_grid();
+
+            assert_eq!(
+                vec![
+                    Cell::new(Particle::from(Water::with_capacity(0))).with_cycle(2),
+                    Cell::new(particle.clone().with_velocity(1)).with_cycle(2),
+                    Cell::new(particle.clone().with_velocity(1)).with_cycle(1),
+                ],
+                *g.get_cells()
+            );
+        }
     }
 
     #[test]
@@ -808,51 +813,6 @@ mod tests {
                 Cell::new(salt.clone().with_velocity(3)).with_cycle(6),
                 Cell::new(salt.clone().with_velocity(3)).with_cycle(5),
                 Cell::new(salt.clone().with_velocity(3)).with_cycle(4),
-            ],
-            *g.get_cells()
-        );
-    }
-
-    #[test]
-    fn test_salt_should_sink_in_water_but_water_should_not_climb_salts() {
-        /*
-         * S -> S -> w
-         * S    w    S
-         * w    S    S
-         */
-        let mut g = Grid::new_with_rand(1, 3, Some(|| ParticleHorizontalDirection::Right), None);
-
-        g.spawn_particle((0, 0), Particle::from(Salt::new()));
-        g.spawn_particle((0, 1), Particle::from(Salt::new()));
-        g.spawn_particle((0, 2), Particle::from(Water::with_capacity(0)));
-
-        assert_eq!(
-            vec![
-                Cell::new(Particle::from(Salt::new())),
-                Cell::new(Particle::from(Salt::new())),
-                Cell::new(Particle::from(Water::with_capacity(0))),
-            ],
-            *g.get_cells()
-        );
-
-        g.update_grid();
-
-        assert_eq!(
-            vec![
-                Cell::new(Particle::from(Salt::new())),
-                Cell::new(Particle::from(Water::with_capacity(0))).with_cycle(1),
-                Cell::new(Particle::from(Salt::new())).with_cycle(1),
-            ],
-            *g.get_cells()
-        );
-
-        g.update_grid();
-
-        assert_eq!(
-            vec![
-                Cell::new(Particle::from(Water::with_capacity(0))).with_cycle(2),
-                Cell::new(Particle::from(Salt::new())).with_cycle(2),
-                Cell::new(Particle::from(Salt::new())).with_cycle(1),
             ],
             *g.get_cells()
         );
