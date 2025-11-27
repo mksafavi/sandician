@@ -701,22 +701,25 @@ mod tests {
 
     #[test]
     fn test_update_grid_water_can_only_dissolve_three_salt_particles() {
-        let mut g = Grid::new(1, 9);
+        let mut g = Grid::new_with_rand_velocity(1, 9, || 0);
         g.spawn_particle((0, 8), Particle::from(Water::new()));
+
+        let salt = Particle::from(Salt::new()).with_velocity(0);
+
         for y in 0..8 {
-            g.spawn_particle((0, y), Particle::from(Salt::new()));
+            g.spawn_particle((0, y), salt.clone());
         }
 
         assert_eq!(
             vec![
-                Cell::new(Particle::from(Salt::new())),
-                Cell::new(Particle::from(Salt::new())),
-                Cell::new(Particle::from(Salt::new())),
-                Cell::new(Particle::from(Salt::new())),
-                Cell::new(Particle::from(Salt::new())),
-                Cell::new(Particle::from(Salt::new())),
-                Cell::new(Particle::from(Salt::new())),
-                Cell::new(Particle::from(Salt::new())),
+                Cell::new(salt.clone()),
+                Cell::new(salt.clone()),
+                Cell::new(salt.clone()),
+                Cell::new(salt.clone()),
+                Cell::new(salt.clone()),
+                Cell::new(salt.clone()),
+                Cell::new(salt.clone()),
+                Cell::new(salt.clone()),
                 Cell::new(Particle::from(Water::with_capacity(3))),
             ],
             *g.get_cells()
@@ -727,13 +730,13 @@ mod tests {
         assert_eq!(
             vec![
                 Cell::empty().with_cycle(1),
-                Cell::new(Particle::from(Salt::new())).with_cycle(1),
-                Cell::new(Particle::from(Salt::new())).with_cycle(1),
-                Cell::new(Particle::from(Salt::new())).with_cycle(1),
-                Cell::new(Particle::from(Salt::new())).with_cycle(1),
-                Cell::new(Particle::from(Salt::new())).with_cycle(1),
-                Cell::new(Particle::from(Salt::new())).with_cycle(1),
-                Cell::new(Particle::from(Salt::new())).with_cycle(1),
+                Cell::new(salt.clone().with_velocity(1)).with_cycle(1),
+                Cell::new(salt.clone().with_velocity(1)).with_cycle(1),
+                Cell::new(salt.clone().with_velocity(1)).with_cycle(1),
+                Cell::new(salt.clone().with_velocity(1)).with_cycle(1),
+                Cell::new(salt.clone().with_velocity(1)).with_cycle(1),
+                Cell::new(salt.clone().with_velocity(1)).with_cycle(1),
+                Cell::new(salt.clone().with_velocity(1)).with_cycle(1),
                 Cell::new(Particle::from(Water::with_capacity(2))).with_cycle(1),
             ],
             *g.get_cells()
@@ -745,12 +748,12 @@ mod tests {
             vec![
                 Cell::empty().with_cycle(1),
                 Cell::empty().with_cycle(2),
-                Cell::new(Particle::from(Salt::new())).with_cycle(2),
-                Cell::new(Particle::from(Salt::new())).with_cycle(2),
-                Cell::new(Particle::from(Salt::new())).with_cycle(2),
-                Cell::new(Particle::from(Salt::new())).with_cycle(2),
-                Cell::new(Particle::from(Salt::new())).with_cycle(2),
-                Cell::new(Particle::from(Salt::new())).with_cycle(2),
+                Cell::new(salt.clone().with_velocity(2)).with_cycle(2),
+                Cell::new(salt.clone().with_velocity(2)).with_cycle(2),
+                Cell::new(salt.clone().with_velocity(2)).with_cycle(2),
+                Cell::new(salt.clone().with_velocity(2)).with_cycle(2),
+                Cell::new(salt.clone().with_velocity(2)).with_cycle(2),
+                Cell::new(salt.clone().with_velocity(2)).with_cycle(2),
                 Cell::new(Particle::from(Water::with_capacity(1))).with_cycle(2),
             ],
             *g.get_cells()
@@ -763,11 +766,11 @@ mod tests {
                 Cell::empty().with_cycle(1),
                 Cell::empty().with_cycle(2),
                 Cell::empty().with_cycle(3),
-                Cell::new(Particle::from(Salt::new())).with_cycle(3),
-                Cell::new(Particle::from(Salt::new())).with_cycle(3),
-                Cell::new(Particle::from(Salt::new())).with_cycle(3),
-                Cell::new(Particle::from(Salt::new())).with_cycle(3),
-                Cell::new(Particle::from(Salt::new())).with_cycle(3),
+                Cell::new(salt.clone().with_velocity(3)).with_cycle(3),
+                Cell::new(salt.clone().with_velocity(3)).with_cycle(3),
+                Cell::new(salt.clone().with_velocity(3)).with_cycle(3),
+                Cell::new(salt.clone().with_velocity(3)).with_cycle(3),
+                Cell::new(salt.clone().with_velocity(3)).with_cycle(3),
                 Cell::new(Particle::from(Water::with_capacity(0))).with_cycle(3),
             ],
             *g.get_cells()
@@ -783,11 +786,11 @@ mod tests {
                 Cell::empty().with_cycle(2),
                 Cell::empty().with_cycle(3),
                 Cell::new(Particle::from(Water::with_capacity(0))).with_cycle(8),
-                Cell::new(Particle::from(Salt::new())).with_cycle(8),
-                Cell::new(Particle::from(Salt::new())).with_cycle(7),
-                Cell::new(Particle::from(Salt::new())).with_cycle(6),
-                Cell::new(Particle::from(Salt::new())).with_cycle(5),
-                Cell::new(Particle::from(Salt::new())).with_cycle(4),
+                Cell::new(salt.clone().with_velocity(3)).with_cycle(8),
+                Cell::new(salt.clone().with_velocity(3)).with_cycle(7),
+                Cell::new(salt.clone().with_velocity(3)).with_cycle(6),
+                Cell::new(salt.clone().with_velocity(3)).with_cycle(5),
+                Cell::new(salt.clone().with_velocity(3)).with_cycle(4),
             ],
             *g.get_cells()
         );
