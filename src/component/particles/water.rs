@@ -602,49 +602,59 @@ mod tests {
     }
 
     #[test]
-    fn test_allow_sand_to_sink_diagonally_even_if_the_destination_cell_is_simulated() {
+    fn test_weighted_particle_can_sink_to_left_in_water_even_if_the_destination_cell_is_simulated()
+    {
         /*
-         * sss -> wws
-         * sss -> wss
-         * www    sss
-         * www    www
+         * ws -> -s -> -w
+         * -r    wr    sr
          */
-        let mut g = Grid::new_with_rand(3, 4, Some(|| ParticleHorizontalDirection::Right), None);
 
-        g.spawn_particle((0, 0), Particle::from(Sand::new()));
-        g.spawn_particle((1, 0), Particle::from(Sand::new()));
-        g.spawn_particle((2, 0), Particle::from(Sand::new()));
+        for particle in weighted_particle() {
+            let mut g = Grid::new_with_rand(2, 2, None, Some(|| RowUpdateDirection::Forward));
 
-        g.spawn_particle((0, 1), Particle::from(Sand::new()));
-        g.spawn_particle((1, 1), Particle::from(Sand::new()));
-        g.spawn_particle((2, 1), Particle::from(Sand::new()));
+            g.spawn_particle((0, 0), Particle::from(Water::with_capacity(0)));
+            g.spawn_particle((1, 0), particle.clone());
+            g.spawn_particle((1, 1), Particle::from(Rock::new()));
 
-        g.spawn_particle((0, 2), Particle::from(Water::new()));
-        g.spawn_particle((1, 2), Particle::from(Water::new()));
-        g.spawn_particle((2, 2), Particle::from(Water::new()));
+            g.update_grid();
+            assert_eq!(
+                vec![
+                    Cell::empty().with_cycle(1),
+                    Cell::new(Particle::from(Water::with_capacity(0))).with_cycle(1),
+                    Cell::new(particle.clone()).with_cycle(1),
+                    Cell::new(Particle::from(Rock::new())),
+                ],
+                *g.get_cells()
+            );
+        }
+    }
 
-        g.spawn_particle((0, 3), Particle::from(Water::new()));
-        g.spawn_particle((1, 3), Particle::from(Water::new()));
-        g.spawn_particle((2, 3), Particle::from(Water::new()));
+    #[test]
+    fn test_weighted_particle_can_sink_to_right_in_water_even_if_the_destination_cell_is_simulated()
+    {
+        /*
+         * sw -> s- -> w-
+         * r-    rw    rs
+         */
 
-        g.update_grid();
-        assert_eq!(
-            vec![
-                Cell::new(Particle::from(Water::new())).with_cycle(1),
-                Cell::new(Particle::from(Water::new())).with_cycle(1),
-                Cell::new(Particle::from(Sand::new())),
-                Cell::new(Particle::from(Water::new())).with_cycle(1),
-                Cell::new(Particle::from(Sand::new())).with_cycle(1),
-                Cell::new(Particle::from(Sand::new())).with_cycle(1),
-                Cell::new(Particle::from(Sand::new())).with_cycle(1),
-                Cell::new(Particle::from(Sand::new())).with_cycle(1),
-                Cell::new(Particle::from(Sand::new())).with_cycle(1),
-                Cell::new(Particle::from(Water::new())),
-                Cell::new(Particle::from(Water::new())),
-                Cell::new(Particle::from(Water::new())),
-            ],
-            *g.get_cells()
-        );
+        for particle in weighted_particle() {
+            let mut g = Grid::new_with_rand(2, 2, None, Some(|| RowUpdateDirection::Reverse));
+
+            g.spawn_particle((0, 0), particle.clone());
+            g.spawn_particle((1, 0), Particle::from(Water::with_capacity(0)));
+            g.spawn_particle((0, 1), Particle::from(Rock::new()));
+
+            g.update_grid();
+            assert_eq!(
+                vec![
+                    Cell::new(Particle::from(Water::with_capacity(0))).with_cycle(1),
+                    Cell::empty().with_cycle(1),
+                    Cell::new(Particle::from(Rock::new())),
+                    Cell::new(particle.clone()).with_cycle(1),
+                ],
+                *g.get_cells()
+            );
+        }
     }
 
     #[test]
