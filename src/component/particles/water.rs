@@ -826,12 +826,21 @@ mod tests {
          * 2    1
          * 3    0
          */
-        let mut g = Grid::new(1, 4);
+        let mut g = Grid::new_with_rand_velocity(1, 4, || 0);
 
-        g.spawn_particle((0, 0), Particle::from(Water::with_capacity(0)));
-        g.spawn_particle((0, 1), Particle::from(Water::with_capacity(1)));
-        g.spawn_particle((0, 2), Particle::from(Water::with_capacity(2)));
-        g.spawn_particle((0, 3), Particle::from(Water::new()));
+        g.spawn_particle(
+            (0, 0),
+            Particle::from(Water::with_capacity(0)).with_velocity(0),
+        );
+        g.spawn_particle(
+            (0, 1),
+            Particle::from(Water::with_capacity(1)).with_velocity(0),
+        );
+        g.spawn_particle(
+            (0, 2),
+            Particle::from(Water::with_capacity(2)).with_velocity(0),
+        );
+        g.spawn_particle((0, 3), Particle::from(Water::new()).with_velocity(0));
 
         g.update_grid();
         g.update_grid();
@@ -840,10 +849,10 @@ mod tests {
 
         assert_eq!(
             vec![
-                Cell::new(Particle::from(Water::new())).with_cycle(3),
-                Cell::new(Particle::from(Water::with_capacity(2))).with_cycle(4),
-                Cell::new(Particle::from(Water::with_capacity(1))).with_cycle(4),
-                Cell::new(Particle::from(Water::with_capacity(0))).with_cycle(3),
+                Cell::new(Particle::from(Water::new()).with_velocity(0)).with_cycle(3),
+                Cell::new(Particle::from(Water::with_capacity(2)).with_velocity(1)).with_cycle(4),
+                Cell::new(Particle::from(Water::with_capacity(1)).with_velocity(1)).with_cycle(4),
+                Cell::new(Particle::from(Water::with_capacity(0)).with_velocity(1)).with_cycle(3),
             ],
             *g.get_cells()
         );
