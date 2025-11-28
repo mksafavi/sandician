@@ -1,7 +1,7 @@
 use core::fmt;
 
 use bevy::{
-    color::{ColorToPacked, Hsva},
+    color::{ColorToPacked, Hsva, Srgba},
     prelude::{Color, Saturation},
 };
 
@@ -108,6 +108,11 @@ impl Particle {
 
     pub fn with_seed(mut self, seed: u8) -> Self {
         self.seed = seed;
+        let color: Hsva = self.color().into();
+        let color: Srgba = color
+            .with_value(color.value + ((self.seed as f32) - 127.0) / (255.0 * 10.0))
+            .into();
+        self.color = color.to_u8_array_no_alpha();
         self
     }
 
@@ -117,10 +122,7 @@ impl Particle {
     }
 
     pub fn color(&self) -> Color {
-        let color: Hsva = (Color::srgb_u8(self.color[0], self.color[1], self.color[2])).into();
-        color
-            .with_value(color.value + ((self.seed as f32) - 127.0) / (255.0 * 10.0))
-            .into()
+        Color::srgb_u8(self.color[0], self.color[1], self.color[2])
     }
 }
 
