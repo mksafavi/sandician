@@ -410,7 +410,7 @@ mod tests {
     #[test]
     fn test_create_grid() {
         let g = Grid::new(2, 3);
-        assert_eq!(6, g.cells.len());
+        assert_eq!(6, g.get_cells().len());
         assert_eq!(2, g.width);
         assert_eq!(3, g.height);
     }
@@ -431,7 +431,7 @@ mod tests {
                 Cell::empty(),
                 Cell::empty(),
             ],
-            g.cells
+            *g.get_cells()
         );
     }
 
@@ -449,7 +449,7 @@ mod tests {
                 Cell::new(Particle::from(Sand::new())).with_cycle(1),
                 Cell::new(Particle::from(Sand::new())).with_cycle(1),
             ],
-            g.cells
+            *g.get_cells()
         );
     }
 
@@ -460,7 +460,7 @@ mod tests {
 
         g.spawn_particle((0, 0), Particle::from(Water::new()));
 
-        assert_eq!(Some(Particle::from(Sand::new())), g.cells[0].particle);
+        assert_eq!(Some(Particle::from(Sand::new())), g.get_cell(0).particle);
     }
 
     #[test]
@@ -478,7 +478,7 @@ mod tests {
                 Cell::empty(),
                 Cell::empty(),
             ],
-            g.cells
+            *g.get_cells()
         );
     }
 
@@ -486,10 +486,10 @@ mod tests {
     fn test_grid_despawn_particle_empties_the_cell_particle() {
         let mut g = Grid::new(1, 1);
         g.spawn_particle((0, 0), Particle::from(Sand::new()));
-        assert_eq!(Cell::new(Particle::from(Sand::new())), g.cells[0]);
+        assert_eq!(Cell::new(Particle::from(Sand::new())), *g.get_cell(0));
 
         g.despawn_particle((0, 0));
-        assert_eq!(Cell::empty(), g.cells[0]);
+        assert_eq!(Cell::empty(), *g.get_cell(0));
     }
 
     #[test]
@@ -514,7 +514,7 @@ mod tests {
                 Cell::new(Particle::from(Sand::new())),
                 Cell::new(Particle::from(Sand::new())),
             ],
-            g.cells
+            *g.get_cells()
         );
     }
 
@@ -523,13 +523,16 @@ mod tests {
         let mut g = Grid::new(1, 1);
         g.spawn_particle((0, 0), Particle::from(Sand::new()));
 
-        assert_eq!(vec![Cell::new(Particle::from(Sand::new())),], g.cells);
+        assert_eq!(
+            vec![Cell::new(Particle::from(Sand::new())),],
+            *g.get_cells()
+        );
 
         g.update_grid();
 
         g.despawn_particle((0, 0));
 
-        assert_eq!(vec![Cell::empty().with_cycle(1)], g.cells);
+        assert_eq!(vec![Cell::empty().with_cycle(1)], *g.get_cells());
     }
 
     #[test]
@@ -546,7 +549,7 @@ mod tests {
                 )
                 .with_cycle(255),
             ],
-            g.cells
+            *g.get_cells()
         );
     }
 
@@ -573,7 +576,7 @@ mod tests {
                 Cell::empty(),
                 Cell::empty(),
             ],
-            g.cells
+            *g.get_cells()
         );
     }
 
@@ -600,7 +603,7 @@ mod tests {
                 Cell::new(particle.clone()),
                 Cell::empty(),
             ],
-            g.cells
+            *g.get_cells()
         );
     }
 
@@ -645,7 +648,7 @@ mod tests {
                 Cell::empty(),
                 Cell::empty(),
             ],
-            g.cells
+            *g.get_cells()
         );
     }
 
@@ -673,7 +676,7 @@ mod tests {
                 Cell::new(particle.clone()),
                 Cell::empty(),
             ],
-            g.cells
+            *g.get_cells()
         );
 
         {
@@ -694,7 +697,7 @@ mod tests {
                 Cell::empty(),
                 Cell::empty(),
             ],
-            g.cells
+            *g.get_cells()
         );
     }
 
@@ -720,7 +723,7 @@ mod tests {
         assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(1, 1).unwrap());
 
         g.spawn_particle((1, 0), Particle::from(Water::new()));
-        g.cells[0].particle = None;
+        g.despawn_particle((0, 0));
         g.draw_grid(&mut image);
         assert_color_srgb_eq!(BACKGROUND_COLOR, image.get_color_at(0, 0).unwrap());
         assert_color_srgb_eq!(
@@ -914,7 +917,7 @@ mod tests {
                 Cell::new(Particle::from(Sand::new())),
                 Cell::new(Particle::from(Sand::new())),
             ],
-            g.cells
+            *g.get_cells()
         );
 
         g.update_grid();
@@ -927,7 +930,7 @@ mod tests {
                 Cell::empty().with_cycle(1),
                 Cell::empty().with_cycle(1)
             ],
-            g.cells
+            *g.get_cells()
         );
     }
 
