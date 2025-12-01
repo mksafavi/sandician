@@ -331,7 +331,12 @@ impl Grid {
             match kind {
                 Some(k) => {
                     let seed = self.particle_seed();
-                    self.spawn_particle(position, Particle::from(k.clone()).with_seed(seed))
+                    self.spawn_particle(
+                        position,
+                        Particle::from(k.clone())
+                            .with_seed(seed)
+                            .with_velocity(self.initial_particle_velocity),
+                    )
                 }
                 None => self.despawn_particle(position),
             }
@@ -546,6 +551,19 @@ mod tests {
         g.spawn_brush((0, 0), 1, Some(&ParticleKind::from(Sand::new())));
         assert_eq!(
             vec![Cell::new(Particle::from(Sand::new()).with_seed(254)).with_cycle(255),],
+            *g.get_cells()
+        );
+    }
+
+    #[test]
+    fn test_spawn_particles_brush_sets_initial_velocity_to_particles() {
+        let mut g = Grid::new_with_rand_seed(1, 1, |_| 255).with_initial_particle_velocity(111);
+
+        g.spawn_brush((0, 0), 1, Some(&ParticleKind::from(Sand::new())));
+
+        let particle = Particle::from(Sand::new());
+        assert_eq!(
+            vec![Cell::new(particle.clone().with_velocity(111))],
             *g.get_cells()
         );
     }
