@@ -377,14 +377,9 @@ impl Grid {
     }
 
     #[allow(dead_code)]
-    pub fn new_with_rand_seed(
-        width: usize,
-        height: usize,
-        particle_seed: fn(r: &mut Random) -> u8,
-    ) -> Self {
-        let mut g = Self::new(width, height);
-        g.random.particle_seed = particle_seed;
-        g
+    pub fn with_rand_seed(mut self, particle_seed: fn(r: &mut Random) -> u8) -> Self {
+        self.random.particle_seed = particle_seed;
+        self
     }
 
     #[allow(dead_code)]
@@ -546,7 +541,7 @@ mod tests {
 
     #[test]
     fn test_spawn_particles_brush_sets_a_random_seed_to_particles() {
-        let mut g = Grid::new_with_rand_seed(1, 1, |_| 255);
+        let mut g = Grid::new(1, 1).with_rand_seed(|_| 255);
         g.cycle = 255;
         g.spawn_brush((0, 0), 1, Some(&ParticleKind::from(Sand::new())));
         assert_eq!(
@@ -557,7 +552,7 @@ mod tests {
 
     #[test]
     fn test_spawn_particles_brush_sets_initial_velocity_to_particles() {
-        let mut g = Grid::new_with_rand_seed(1, 1, |_| 255).with_initial_particle_velocity(111);
+        let mut g = Grid::new(1, 1).with_rand_seed(|_| 255).with_initial_particle_velocity(111);
 
         g.spawn_brush((0, 0), 1, Some(&ParticleKind::from(Sand::new())));
 
@@ -575,7 +570,7 @@ mod tests {
          * -s-
          * ---
          */
-        let mut g = Grid::new_with_rand_seed(3, 3, |_| 255);
+        let mut g = Grid::new(3, 3).with_rand_seed(|_| 255);
         g.spawn_brush((1, 1), 1, Some(&ParticleKind::from(Sand::new())));
 
         let particle = Particle::from(Sand::new());
@@ -602,7 +597,7 @@ mod tests {
          * sss
          * -s-
          */
-        let mut g = Grid::new_with_rand_seed(3, 3, |_| 255);
+        let mut g = Grid::new(3, 3).with_rand_seed(|_| 255);
         g.spawn_brush((1, 1), 2, Some(&ParticleKind::from(Sand::new())));
 
         let particle = Particle::from(Sand::new());
@@ -631,7 +626,7 @@ mod tests {
          * -sss-
          * --s--
          */
-        let mut g = Grid::new_with_rand_seed(5, 5, |_| 255);
+        let mut g = Grid::new(5, 5).with_rand_seed(|_| 255);
         g.spawn_brush((2, 2), 4, Some(&ParticleKind::from(Sand::new())));
 
         let particle = Particle::from(Sand::new());
@@ -674,7 +669,7 @@ mod tests {
          * ---    sss    ---
          * ---    -s-    ---
          */
-        let mut g = Grid::new_with_rand_seed(3, 3, |_| 255);
+        let mut g = Grid::new(3, 3).with_rand_seed(|_| 255);
 
         g.spawn_brush((1, 1), 2, Some(&ParticleKind::from(Sand::new())));
 
@@ -892,23 +887,23 @@ mod tests {
 
     #[test]
     fn test_the_current_cycle_affects_half_of_the_particle_seed_value() {
-        let mut g = Grid::new_with_rand_seed(1, 1, |_| 0);
+        let mut g = Grid::new(1, 1).with_rand_seed(|_| 0);
         g.cycle = 0;
         assert_eq!(0, g.particle_seed());
 
-        let mut g = Grid::new_with_rand_seed(1, 1, |_| 255);
+        let mut g = Grid::new(1, 1).with_rand_seed(|_| 255);
         g.cycle = 0;
         assert_eq!(127, g.particle_seed());
 
-        let mut g = Grid::new_with_rand_seed(1, 1, |_| 0);
+        let mut g = Grid::new(1, 1).with_rand_seed(|_| 0);
         g.cycle = 255;
         assert_eq!(127, g.particle_seed());
 
-        let mut g = Grid::new_with_rand_seed(1, 1, |_| 255);
+        let mut g = Grid::new(1, 1).with_rand_seed(|_| 255);
         g.cycle = 255;
         assert_eq!(254, g.particle_seed());
 
-        let mut g = Grid::new_with_rand_seed(1, 1, |_| 0);
+        let mut g = Grid::new(1, 1).with_rand_seed(|_| 0);
         g.cycle = 256;
         assert_eq!(0, g.particle_seed(), "cycle is moduloed by 256");
     }
