@@ -76,7 +76,7 @@ pub struct Particle {
     color: [u8; 3],
     pub kind: ParticleKind,
     pub seed: u8,
-    velocity: u8,
+    pub velocity: u8,
 }
 
 impl Particle {
@@ -395,10 +395,13 @@ impl Particle {
             if velocity_probability <= velocity {
                 grid.swap_particles(grid.to_index(position), index_n);
             }
-            true
-        } else {
-            false
+            return true;
         }
+        let initial_velocity = grid.get_particle_initial_velocity();
+        if let Some(ref mut this) = grid.get_cell_mut(grid.to_index(position)).particle {
+            this.velocity = velocity.saturating_sub(1).max(initial_velocity);
+        };
+        false
     }
 }
 
@@ -920,6 +923,35 @@ mod tests {
                     Cell::empty(),
                     Cell::empty(),
                 ],
+                *g.get_cells()
+            );
+        }
+    }
+
+    #[test]
+    fn test_weighted_particle_should_lose_velocity_till_the_initial_velocity_if_they_do_not_move() {
+        /*
+         * S -> S
+         */
+        for particle in weighted_particle() {
+            let g = Grid::new_with_rand_velocity(1, 1, |_| 0);
+            let mut g = g.with_initial_particle_velocity(50);
+
+            g.spawn_particle((0, 0), particle.clone().with_velocity(60));
+
+            g.update_grid();
+
+            assert_eq!(
+                vec![Cell::new(particle.clone().with_velocity(59))],
+                *g.get_cells()
+            );
+
+            for _ in 0..20 {
+                g.update_grid();
+            }
+
+            assert_eq!(
+                vec![Cell::new(particle.clone().with_velocity(50))],
                 *g.get_cells()
             );
         }

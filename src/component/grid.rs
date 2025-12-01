@@ -9,9 +9,7 @@ use bevy::{
 };
 use rand::{Rng, SeedableRng};
 
-use crate::component::particles::particle::ParticleKind;
-
-use super::particles::particle::Particle;
+use super::particles::particle::{Particle, ParticleKind};
 
 pub enum GridError {
     OutOfBound,
@@ -73,6 +71,7 @@ pub struct Grid {
     cycle: u32,
     draw_cycle: u32,
     random: Random,
+    initial_particle_velocity: u8,
 }
 
 pub trait GridAccess {
@@ -92,6 +91,7 @@ pub trait GridAccess {
     fn is_empty(&self, position: (usize, usize), offset: (i32, i32)) -> Option<usize>;
     fn is_simulated(&self, c: &Cell) -> bool;
     fn cycle(&self) -> u32;
+    fn get_particle_initial_velocity(&self) -> u8;
 }
 
 impl fmt::Display for Cell {
@@ -197,6 +197,10 @@ impl GridAccess for Grid {
     fn is_simulated(&self, c: &Cell) -> bool {
         self.cycle() <= c.cycle
     }
+
+    fn get_particle_initial_velocity(&self) -> u8 {
+        self.initial_particle_velocity
+    }
 }
 
 impl Random {
@@ -241,6 +245,7 @@ impl Grid {
             cycle: 0,
             draw_cycle: 0,
             random: Random::new(),
+            initial_particle_velocity: u8::MAX,
         }
     }
 
@@ -386,6 +391,12 @@ impl Grid {
         let mut g = Self::new(width, height);
         g.random.velocity_probability = velocity_probability;
         g
+    }
+
+    #[allow(dead_code)]
+    pub fn with_initial_particle_velocity(mut self, initial_particle_velocity: u8) -> Self {
+        self.initial_particle_velocity = initial_particle_velocity;
+        self
     }
 }
 
