@@ -465,8 +465,9 @@ mod tests {
         for particle in weighted_particle() {
             let particle = particle.with_velocity(0);
 
-            let g = Grid::new_with_rand_velocity(3, 2, |_| 0);
-            let mut g = g.with_initial_particle_velocity(0);
+            let mut g = Grid::new(3, 2)
+                .with_rand_velocity(|_| 0)
+                .with_initial_particle_velocity(0);
 
             g.spawn_particle((1, 0), particle.clone());
             g.spawn_particle((0, 1), particle.clone());
@@ -481,7 +482,8 @@ mod tests {
             assert_eq!(
                 vec![
                     Cell::empty(),
-                    Cell::new(Particle::from(Water::with_capacity(0)).with_velocity(0)).with_cycle(1),
+                    Cell::new(Particle::from(Water::with_capacity(0)).with_velocity(0))
+                        .with_cycle(1),
                     Cell::empty(),
                     Cell::new(particle.clone()),
                     Cell::new(particle.clone().with_velocity(1)).with_cycle(1),
@@ -501,12 +503,15 @@ mod tests {
         for particle in weighted_particle() {
             let particle = particle.with_velocity(0);
 
-            let g = Grid::new_with_rand_velocity(3, 2, |_| 0);
-            let mut g = g.with_initial_particle_velocity(0);
-
+            let mut g = Grid::new(3, 2)
+                .with_rand_velocity(|_| 0)
+                .with_initial_particle_velocity(0);
 
             g.spawn_particle((1, 0), particle.clone());
-            g.spawn_particle((0, 1), Particle::from(Water::with_capacity(0)).with_velocity(0));
+            g.spawn_particle(
+                (0, 1),
+                Particle::from(Water::with_capacity(0)).with_velocity(0),
+            );
             g.spawn_particle((1, 1), particle.clone());
             g.spawn_particle((2, 1), particle.clone());
 
@@ -515,7 +520,8 @@ mod tests {
             assert_eq!(
                 vec![
                     Cell::empty(),
-                    Cell::new(Particle::from(Water::with_capacity(0)).with_velocity(0)).with_cycle(1),
+                    Cell::new(Particle::from(Water::with_capacity(0)).with_velocity(0))
+                        .with_cycle(1),
                     Cell::empty(),
                     Cell::new(particle.clone().with_velocity(1)).with_cycle(1),
                     Cell::new(particle.clone()),
@@ -536,20 +542,25 @@ mod tests {
         for particle in weighted_particle() {
             let particle = particle.with_velocity(0);
 
-            let g = Grid::new_with_rand_velocity(3, 2, |_| 0);
-            let mut g = g.with_initial_particle_velocity(0);
+            let mut g = Grid::new(3, 2)
+                .with_rand_velocity(|_| 0)
+                .with_initial_particle_velocity(0);
 
             g.spawn_particle((1, 0), particle.clone());
             g.spawn_particle((0, 1), particle.clone());
             g.spawn_particle((1, 1), particle.clone());
-            g.spawn_particle((2, 1), Particle::from(Water::with_capacity(0)).with_velocity(0));
+            g.spawn_particle(
+                (2, 1),
+                Particle::from(Water::with_capacity(0)).with_velocity(0),
+            );
 
             g.update_grid();
 
             assert_eq!(
                 vec![
                     Cell::empty(),
-                    Cell::new(Particle::from(Water::with_capacity(0)).with_velocity(0)).with_cycle(1),
+                    Cell::new(Particle::from(Water::with_capacity(0)).with_velocity(0))
+                        .with_cycle(1),
                     Cell::empty(),
                     Cell::new(particle.clone()),
                     Cell::new(particle.clone()),
@@ -571,12 +582,16 @@ mod tests {
         for particle in weighted_particle() {
             let particle = particle.with_velocity(0);
 
-            let g = Grid::new_with_rand_velocity(1, 3, |_| 0);
-            let mut g = g.with_initial_particle_velocity(0);
+            let mut g = Grid::new(1, 3)
+                .with_rand_velocity(|_| 0)
+                .with_initial_particle_velocity(0);
 
             g.spawn_particle((0, 0), particle.clone());
             g.spawn_particle((0, 1), particle.clone());
-            g.spawn_particle((0, 2), Particle::from(Water::with_capacity(0)).with_velocity(0));
+            g.spawn_particle(
+                (0, 2),
+                Particle::from(Water::with_capacity(0)).with_velocity(0),
+            );
 
             assert_eq!(
                 vec![
@@ -592,7 +607,8 @@ mod tests {
             assert_eq!(
                 vec![
                     Cell::new(particle.clone()),
-                    Cell::new(Particle::from(Water::with_capacity(0)).with_velocity(0)).with_cycle(1),
+                    Cell::new(Particle::from(Water::with_capacity(0)).with_velocity(0))
+                        .with_cycle(1),
                     Cell::new(particle.clone().with_velocity(1)).with_cycle(1),
                 ],
                 *g.get_cells()
@@ -602,7 +618,8 @@ mod tests {
 
             assert_eq!(
                 vec![
-                    Cell::new(Particle::from(Water::with_capacity(0)).with_velocity(0)).with_cycle(2),
+                    Cell::new(Particle::from(Water::with_capacity(0)).with_velocity(0))
+                        .with_cycle(2),
                     Cell::new(particle.clone().with_velocity(1)).with_cycle(2),
                     Cell::new(particle.clone().with_velocity(0)).with_cycle(1),
                 ],
@@ -743,7 +760,7 @@ mod tests {
 
     #[test]
     fn test_update_grid_water_can_only_dissolve_three_salt_particles() {
-        let mut g = Grid::new_with_rand_velocity(1, 9, |_| 0);
+        let mut g = Grid::new(1, 9).with_rand_velocity(|_| 0);
 
         let water = Particle::from(Water::new()).with_velocity(0);
         g.spawn_particle((0, 8), water.clone());
@@ -863,8 +880,9 @@ mod tests {
          * 2    1
          * 3    0
          */
-        let g = Grid::new_with_rand_velocity(1, 4, |_| 0);
-        let mut g = g.with_initial_particle_velocity(1);
+        let mut g = Grid::new(1, 4)
+            .with_rand_velocity(|_| 0)
+            .with_initial_particle_velocity(1);
 
         g.spawn_particle(
             (0, 0),

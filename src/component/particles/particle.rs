@@ -653,7 +653,7 @@ mod tests {
          * -    S
          */
         for particle in weighted_particle() {
-            let mut g = Grid::new_with_rand_velocity(1, 2, |_| 255);
+            let mut g = Grid::new(1, 2).with_rand_velocity(|_| 255);
 
             g.spawn_particle((0, 0), particle.clone());
 
@@ -676,7 +676,7 @@ mod tests {
          * -    -
          */
         for particle in weighted_particle() {
-            let mut g = Grid::new_with_rand_velocity(1, 2, |_| 255);
+            let mut g = Grid::new(1, 2).with_rand_velocity(|_| 255);
 
             g.spawn_particle((0, 0), particle.clone().with_velocity(0));
 
@@ -696,8 +696,9 @@ mod tests {
          * w    w
          */
         for particle in weighted_particle() {
-            let g = Grid::new_with_rand_velocity(1, 2, |_| 255);
-            let mut g = g.with_initial_particle_velocity(0);
+            let mut g = Grid::new(1, 2)
+                .with_rand_velocity(|_| 255)
+                .with_initial_particle_velocity(0);
 
             g.spawn_particle((0, 0), particle.clone().with_velocity(0));
             g.spawn_particle((0, 1), Particle::from(Water::with_capacity(0)));
@@ -721,7 +722,7 @@ mod tests {
          * w    S
          */
         for particle in weighted_particle() {
-            let mut g = Grid::new_with_rand_velocity(1, 2, |_| 0);
+            let mut g = Grid::new(1, 2).with_rand_velocity(|_| 0);
 
             g.spawn_particle((0, 0), particle.clone().with_velocity(100));
             g.spawn_particle((0, 1), Particle::from(Water::with_capacity(0)));
@@ -750,7 +751,7 @@ mod tests {
          * r-    r-
          */
         for particle in weighted_particle() {
-            let mut g = Grid::new_with_rand_velocity(2, 2, |_| 255);
+            let mut g = Grid::new(2, 2).with_rand_velocity(|_| 255);
 
             g.spawn_particle((0, 0), particle.clone().with_velocity(0));
             g.spawn_particle((0, 1), Particle::from(Rock::new()));
@@ -776,7 +777,7 @@ mod tests {
          * -r    -r
          */
         for particle in weighted_particle() {
-            let mut g = Grid::new_with_rand_velocity(2, 2, |_| 255);
+            let mut g = Grid::new(2, 2).with_rand_velocity(|_| 255);
 
             g.spawn_particle((1, 0), particle.clone().with_velocity(0));
             g.spawn_particle((1, 1), Particle::from(Rock::new()));
@@ -809,7 +810,7 @@ mod tests {
             V[idx]
         }
 
-        let mut g = Grid::new_with_rand_velocity(2, 2, velocity_probability);
+        let mut g = Grid::new(2, 2).with_rand_velocity(velocity_probability);
         let particle = Particle::from(Water::new()).with_velocity(0);
 
         g.spawn_particle((0, 0), particle.clone());
@@ -841,7 +842,7 @@ mod tests {
             V[idx]
         }
 
-        let mut g = Grid::new_with_rand_velocity(2, 2, velocity_probability);
+        let mut g = Grid::new(2, 2).with_rand_velocity(velocity_probability);
         let particle = Particle::from(Water::new()).with_velocity(0);
 
         g.spawn_particle((1, 0), particle.clone());
@@ -874,7 +875,7 @@ mod tests {
             V[idx]
         }
 
-        let mut g = Grid::new_with_rand_velocity(2, 2, velocity_probability);
+        let mut g = Grid::new(2, 2).with_rand_velocity(velocity_probability);
         let particle = Particle::from(Water::new()).with_velocity(0);
 
         g.spawn_particle((0, 0), particle.clone());
@@ -909,7 +910,7 @@ mod tests {
                 V[idx]
             }
 
-            let mut g = Grid::new_with_rand_velocity(3, 2, velocity_probability);
+            let mut g = Grid::new(3, 2).with_rand_velocity(velocity_probability);
 
             g.spawn_particle((1, 0), particle.clone().with_velocity(0));
 
@@ -935,8 +936,9 @@ mod tests {
          * S -> S
          */
         for particle in weighted_particle() {
-            let g = Grid::new_with_rand_velocity(1, 1, |_| 0);
-            let mut g = g.with_initial_particle_velocity(50);
+            let mut g = Grid::new(1, 1)
+                .with_rand_velocity(|_| 0)
+                .with_initial_particle_velocity(50);
 
             g.spawn_particle((0, 0), particle.clone().with_velocity(60));
 

@@ -383,14 +383,9 @@ impl Grid {
     }
 
     #[allow(dead_code)]
-    pub fn new_with_rand_velocity(
-        width: usize,
-        height: usize,
-        velocity_probability: fn(r: &mut Random) -> u8,
-    ) -> Self {
-        let mut g = Self::new(width, height);
-        g.random.velocity_probability = velocity_probability;
-        g
+    pub fn with_rand_velocity(mut self, velocity_probability: fn(r: &mut Random) -> u8) -> Self {
+        self.random.velocity_probability = velocity_probability;
+        self
     }
 
     #[allow(dead_code)]
@@ -552,7 +547,9 @@ mod tests {
 
     #[test]
     fn test_spawn_particles_brush_sets_initial_velocity_to_particles() {
-        let mut g = Grid::new(1, 1).with_rand_seed(|_| 255).with_initial_particle_velocity(111);
+        let mut g = Grid::new(1, 1)
+            .with_rand_seed(|_| 255)
+            .with_initial_particle_velocity(111);
 
         g.spawn_brush((0, 0), 1, Some(&ParticleKind::from(Sand::new())));
 
