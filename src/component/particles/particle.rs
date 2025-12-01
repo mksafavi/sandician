@@ -696,7 +696,8 @@ mod tests {
          * w    w
          */
         for particle in weighted_particle() {
-            let mut g = Grid::new_with_rand_velocity(1, 2, |_| 255);
+            let g = Grid::new_with_rand_velocity(1, 2, |_| 255);
+            let mut g = g.with_initial_particle_velocity(0);
 
             g.spawn_particle((0, 0), particle.clone().with_velocity(0));
             g.spawn_particle((0, 1), Particle::from(Water::with_capacity(0)));
@@ -705,8 +706,8 @@ mod tests {
 
             assert_eq!(
                 vec![
-                    Cell::new(particle.clone().with_velocity(1)),
-                    Cell::new(Particle::from(Water::with_capacity(0)))
+                    Cell::new(particle.clone().with_velocity(0)),
+                    Cell::new(Particle::from(Water::with_capacity(0)).with_velocity(254))
                 ],
                 *g.get_cells()
             );
