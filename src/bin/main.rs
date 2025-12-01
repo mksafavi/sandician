@@ -27,7 +27,7 @@ fn main() {
                 }),
         ))
         .add_plugins(GridPlugin {
-            config: ConfigResource::new(250, 360, 240.),
+            config: ConfigResource::new(250, 360, 240., 50),
         })
         .add_plugins(RenderSimPlugin)
         .run();

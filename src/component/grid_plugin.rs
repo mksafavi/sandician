@@ -111,14 +111,21 @@ pub struct ConfigResource {
     pub width: usize,
     pub height: usize,
     update_rate: f64,
+    initial_particle_velocity: u8,
 }
 
 impl ConfigResource {
-    pub fn new(width: usize, height: usize, update_rate: f64) -> Self {
+    pub fn new(
+        width: usize,
+        height: usize,
+        update_rate: f64,
+        initial_particle_velocity: u8,
+    ) -> Self {
         Self {
             width,
             height,
             update_rate,
+            initial_particle_velocity,
         }
     }
 }
@@ -146,7 +153,10 @@ fn init_grid_system(
     mut images: ResMut<Assets<Image>>,
     asset_server: Option<Res<AssetServer>>,
 ) {
-    commands.spawn(Grid::new(config.width, config.height));
+    commands.spawn(
+        Grid::new(config.width, config.height)
+            .with_initial_particle_velocity(config.initial_particle_velocity),
+    );
     let handle = images.add(Grid::create_output_frame(config.width, config.height));
     let font = match asset_server {
         Some(a) => a.load(ASSET_FONT_PATH),
@@ -422,12 +432,19 @@ mod tests {
         let mut app = App::new();
         app.init_resource::<Assets<Image>>();
         app.add_plugins(GridPlugin {
-            config: ConfigResource::new(2, 3, 100.),
+            config: ConfigResource::new(2, 3, 100., 50),
         });
 
         app.update();
 
-        assert_eq!(1, app.world_mut().query::<&Grid>().iter(app.world()).len());
+        assert_eq!(
+            50,
+            app.world_mut()
+                .query::<&Grid>()
+                .single(app.world())
+                .unwrap()
+                .get_particle_initial_velocity()
+        );
     }
 
     #[test]
@@ -435,7 +452,7 @@ mod tests {
         let mut app = App::new();
         app.init_resource::<Assets<Image>>();
         app.add_plugins(GridPlugin {
-            config: ConfigResource::new(2, 2, 100.),
+            config: ConfigResource::new(2, 2, 100., 50),
         });
 
         app.update();
@@ -473,7 +490,7 @@ mod tests {
         let mut app = App::new();
         app.init_resource::<Assets<Image>>();
         app.add_plugins(GridPlugin {
-            config: ConfigResource::new(2, 2, 100.),
+            config: ConfigResource::new(2, 2, 100., 50),
         });
 
         app.update();
@@ -527,7 +544,7 @@ mod tests {
         let mut app = App::new();
         app.init_resource::<Assets<Image>>();
         app.add_plugins(GridPlugin {
-            config: ConfigResource::new(2, 2, 100.),
+            config: ConfigResource::new(2, 2, 100., 50),
         });
 
         app.update();
@@ -583,7 +600,7 @@ mod tests {
             ..default()
         });
         app.add_plugins(GridPlugin {
-            config: ConfigResource::new(300, 200, 100.),
+            config: ConfigResource::new(300, 200, 100., 50),
         });
 
         app.update();
@@ -616,7 +633,7 @@ mod tests {
         });
 
         app.add_plugins(GridPlugin {
-            config: ConfigResource::new(300, 200, 100.),
+            config: ConfigResource::new(300, 200, 100., 50),
         });
 
         app.update();
@@ -655,7 +672,7 @@ mod tests {
             ..default()
         });
         app.add_plugins(GridPlugin {
-            config: ConfigResource::new(300, 200, 100.),
+            config: ConfigResource::new(300, 200, 100., 50),
         });
 
         app.update();
@@ -725,7 +742,7 @@ mod tests {
             ..default()
         });
         app.add_plugins(GridPlugin {
-            config: ConfigResource::new(300, 200, 100.),
+            config: ConfigResource::new(300, 200, 100., 50),
         });
 
         app.update();
@@ -768,7 +785,7 @@ mod tests {
             ..default()
         });
         app.add_plugins(GridPlugin {
-            config: ConfigResource::new(300, 200, 100.),
+            config: ConfigResource::new(300, 200, 100., 50),
         });
 
         app.update();
@@ -833,7 +850,7 @@ mod tests {
             ..default()
         });
         app.add_plugins(GridPlugin {
-            config: ConfigResource::new(2, 2, 100.),
+            config: ConfigResource::new(2, 2, 100., 50),
         });
 
         app.update();
