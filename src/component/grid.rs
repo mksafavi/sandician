@@ -76,6 +76,7 @@ pub struct Grid {
 
 pub trait GridAccess {
     fn particle_direction(&mut self) -> ParticleHorizontalDirection;
+    fn particle_seed(&mut self) -> u8;
     fn velocity_probability(&mut self) -> u8;
     fn get_neighbor_index(
         &self,
@@ -158,6 +159,10 @@ impl GridAccess for Grid {
 
     fn particle_direction(&mut self) -> ParticleHorizontalDirection {
         (self.random.particle_direction)(&mut self.random)
+    }
+
+    fn particle_seed(&mut self) -> u8 {
+        (self.random.particle_seed)(&mut self.random)
     }
 
     fn velocity_probability(&mut self) -> u8 {

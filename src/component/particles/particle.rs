@@ -624,8 +624,8 @@ mod tests {
          * -S-    -SS
          */
         for particle in weighted_particle() {
-            let mut g =
-                Grid::new(3, 2).with_rand_particle_direction(|_| ParticleHorizontalDirection::Right);
+            let mut g = Grid::new(3, 2)
+                .with_rand_particle_direction(|_| ParticleHorizontalDirection::Right);
 
             g.spawn_particle((1, 0), particle.clone());
             g.spawn_particle((1, 1), particle.clone());
