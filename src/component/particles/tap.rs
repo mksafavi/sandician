@@ -55,8 +55,12 @@ impl Tap {
                         && grid.get_cell_mut(i).particle.is_none()
                     {
                         let cycle = grid.cycle();
+                        let initial_velocity = grid.get_particle_initial_velocity();
                         let cell = grid.get_cell_mut(i);
-                        cell.particle = Some(Particle::from(*particle_kind.clone()));
+                        cell.particle = Some(
+                            Particle::from(*particle_kind.clone())
+                                .with_velocity(initial_velocity),
+                        );
                         cell.cycle = cycle;
                         grid.get_cell_mut(grid.to_index(position)).cycle = cycle;
                     };
@@ -278,6 +282,44 @@ mod tests {
                 ))))
                 .with_cycle(2),
                 Cell::new(Particle::from(Water::new())).with_cycle(2)
+            ],
+            *g.get_cells()
+        );
+    }
+
+    #[test]
+    fn test_tap_clones_a_new_particle_with_the_grid_initial_particle_velocity() {
+        let mut g = Grid::new(1, 2).with_initial_particle_velocity(111);
+
+        g.spawn_particle((0, 0), Particle::from(Tap::new()));
+        g.spawn_particle(
+            (0, 1),
+            Particle::from(Water::with_capacity(0)).with_velocity(255),
+        );
+
+        g.update_grid();
+
+        assert_eq!(
+            vec![
+                Cell::new(Particle::from(Tap::with_particle(&Particle::from(
+                    Water::new()
+                )))),
+                Cell::new(Particle::from(Water::with_capacity(0)).with_velocity(254)),
+            ],
+            *g.get_cells()
+        );
+
+        g.despawn_particle((0, 1));
+
+        g.update_grid();
+
+        assert_eq!(
+            vec![
+                Cell::new(Particle::from(Tap::with_particle(&Particle::from(
+                    Water::new()
+                ))))
+                .with_cycle(2),
+                Cell::new(Particle::from(Water::new()).with_velocity(111)).with_cycle(2)
             ],
             *g.get_cells()
         );
