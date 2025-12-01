@@ -194,7 +194,7 @@ mod tests {
          * -- -> -- -> --
          * td    td    -d
          */
-        let mut g = Grid::new_with_rand(2, 2, None, Some(|_| RowUpdateDirection::Forward));
+        let mut g = Grid::new(2, 2).with_rand_row_update_direction(|_| RowUpdateDirection::Forward);
 
         g.spawn_particle((0, 1), Particle::from(Tap::new()));
         g.spawn_particle((1, 1), Particle::from(Drain::new()));

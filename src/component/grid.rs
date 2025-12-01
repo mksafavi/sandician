@@ -357,23 +357,21 @@ impl Grid {
     }
 
     #[allow(dead_code)]
-    pub fn new_with_rand(
-        width: usize,
-        height: usize,
-        particle_direction: Option<fn(&mut Random) -> ParticleHorizontalDirection>,
-        row_update_direction: Option<fn(&mut Random) -> RowUpdateDirection>,
+    pub fn with_rand_particle_direction(
+        mut self,
+        particle_direction: fn(&mut Random) -> ParticleHorizontalDirection,
     ) -> Self {
-        let mut g = Self::new(width, height);
-        g.random.particle_direction = match particle_direction {
-            Some(f) => f,
-            None => |_| ParticleHorizontalDirection::Right,
-        };
+        self.random.particle_direction = particle_direction;
+        self
+    }
 
-        g.random.row_update_direction = match row_update_direction {
-            Some(f) => f,
-            None => |_| RowUpdateDirection::Forward,
-        };
-        g
+    #[allow(dead_code)]
+    pub fn with_rand_row_update_direction(
+        mut self,
+        row_update_direction: fn(&mut Random) -> RowUpdateDirection,
+    ) -> Self {
+        self.random.row_update_direction = row_update_direction;
+        self
     }
 
     #[allow(dead_code)]

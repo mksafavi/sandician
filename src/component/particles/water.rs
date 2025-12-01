@@ -153,7 +153,8 @@ mod tests {
          * --- -> ---
          * -w-    --w
          */
-        let mut g = Grid::new_with_rand(3, 2, Some(|_| ParticleHorizontalDirection::Right), None);
+        let mut g =
+            Grid::new(3, 2).with_rand_particle_direction(|_| ParticleHorizontalDirection::Right);
 
         g.spawn_particle((1, 1), Particle::from(Water::new()));
 
@@ -178,7 +179,8 @@ mod tests {
          * --- -> ---
          * -w-    w--
          */
-        let mut g = Grid::new_with_rand(3, 2, Some(|_| ParticleHorizontalDirection::Left), None);
+        let mut g =
+            Grid::new(3, 2).with_rand_particle_direction(|_| ParticleHorizontalDirection::Left);
 
         g.spawn_particle((1, 1), Particle::from(Water::new()));
 
@@ -203,7 +205,8 @@ mod tests {
          * --- -> ---
          * w--    --w
          */
-        let mut g = Grid::new_with_rand(3, 2, Some(|_| ParticleHorizontalDirection::Right), None);
+        let mut g =
+            Grid::new(3, 2).with_rand_particle_direction(|_| ParticleHorizontalDirection::Right);
 
         g.spawn_particle((0, 1), Particle::from(Water::new()));
 
@@ -228,7 +231,8 @@ mod tests {
          * --- -> ---
          * --w    w--
          */
-        let mut g = Grid::new_with_rand(3, 2, Some(|_| ParticleHorizontalDirection::Left), None);
+        let mut g =
+            Grid::new(3, 2).with_rand_particle_direction(|_| ParticleHorizontalDirection::Left);
 
         g.spawn_particle((2, 1), Particle::from(Water::new()));
 
@@ -304,7 +308,8 @@ mod tests {
          * -w- -> ---
          * -s-    ws-
          */
-        let mut g = Grid::new_with_rand(3, 2, Some(|_| ParticleHorizontalDirection::Left), None);
+        let mut g =
+            Grid::new(3, 2).with_rand_particle_direction(|_| ParticleHorizontalDirection::Left);
 
         g.spawn_particle((1, 0), Particle::from(Water::new()));
         g.spawn_particle((1, 1), Particle::from(Sand::new()));
@@ -331,7 +336,8 @@ mod tests {
          * -w- -> ---
          * -s-    -sw
          */
-        let mut g = Grid::new_with_rand(3, 2, Some(|_| ParticleHorizontalDirection::Right), None);
+        let mut g =
+            Grid::new(3, 2).with_rand_particle_direction(|_| ParticleHorizontalDirection::Right);
 
         g.spawn_particle((1, 0), Particle::from(Water::new()));
         g.spawn_particle((1, 1), Particle::from(Sand::new()));
@@ -356,12 +362,9 @@ mod tests {
         /*
          * -ww- => ww-- or w--w
          */
-        let mut g = Grid::new_with_rand(
-            4,
-            1,
-            Some(|_| ParticleHorizontalDirection::Left),
-            Some(|_| RowUpdateDirection::Forward),
-        );
+        let mut g = Grid::new(4, 1)
+            .with_rand_particle_direction(|_| ParticleHorizontalDirection::Left)
+            .with_rand_row_update_direction(|_| RowUpdateDirection::Forward);
 
         g.spawn_particle((1, 0), Particle::from(Water::new()));
         g.spawn_particle((2, 0), Particle::from(Water::new()));
@@ -378,12 +381,9 @@ mod tests {
             *g.get_cells()
         );
 
-        let mut g = Grid::new_with_rand(
-            4,
-            1,
-            Some(|_| ParticleHorizontalDirection::Right),
-            Some(|_| RowUpdateDirection::Forward),
-        );
+        let mut g = Grid::new(4, 1)
+            .with_rand_particle_direction(|_| ParticleHorizontalDirection::Right)
+            .with_rand_row_update_direction(|_| RowUpdateDirection::Forward);
 
         g.spawn_particle((1, 0), Particle::from(Water::new()));
         g.spawn_particle((2, 0), Particle::from(Water::new()));
@@ -406,12 +406,9 @@ mod tests {
         /*
          * -ww- => --ww or w--w
          */
-        let mut g = Grid::new_with_rand(
-            4,
-            1,
-            Some(|_| ParticleHorizontalDirection::Right),
-            Some(|_| RowUpdateDirection::Reverse),
-        );
+        let mut g = Grid::new(4, 1)
+            .with_rand_particle_direction(|_| ParticleHorizontalDirection::Right)
+            .with_rand_row_update_direction(|_| RowUpdateDirection::Reverse);
 
         g.spawn_particle((1, 0), Particle::from(Water::new()));
         g.spawn_particle((2, 0), Particle::from(Water::new()));
@@ -428,12 +425,9 @@ mod tests {
             *g.get_cells()
         );
 
-        let mut g = Grid::new_with_rand(
-            4,
-            1,
-            Some(|_| ParticleHorizontalDirection::Left),
-            Some(|_| RowUpdateDirection::Reverse),
-        );
+        let mut g = Grid::new(4, 1)
+            .with_rand_particle_direction(|_| ParticleHorizontalDirection::Left)
+            .with_rand_row_update_direction(|_| RowUpdateDirection::Reverse);
 
         g.spawn_particle((1, 0), Particle::from(Water::new()));
         g.spawn_particle((2, 0), Particle::from(Water::new()));
@@ -637,7 +631,8 @@ mod tests {
          */
 
         for particle in weighted_particle() {
-            let mut g = Grid::new_with_rand(2, 2, None, Some(|_| RowUpdateDirection::Forward));
+            let mut g =
+                Grid::new(2, 2).with_rand_row_update_direction(|_| RowUpdateDirection::Forward);
 
             g.spawn_particle((0, 0), Particle::from(Water::with_capacity(0)));
             g.spawn_particle((1, 0), particle.clone());
@@ -665,7 +660,8 @@ mod tests {
          */
 
         for particle in weighted_particle() {
-            let mut g = Grid::new_with_rand(2, 2, None, Some(|_| RowUpdateDirection::Reverse));
+            let mut g =
+                Grid::new(2, 2).with_rand_row_update_direction(|_| RowUpdateDirection::Reverse);
 
             g.spawn_particle((0, 0), particle.clone());
             g.spawn_particle((1, 0), Particle::from(Water::with_capacity(0)));
@@ -919,7 +915,8 @@ mod tests {
         /*
          * Ww -> wW
          */
-        let mut g = Grid::new_with_rand(2, 1, Some(|_| ParticleHorizontalDirection::Left), None);
+        let mut g =
+            Grid::new(2, 1).with_rand_particle_direction(|_| ParticleHorizontalDirection::Left);
 
         g.spawn_particle((0, 0), Particle::from(Water::with_capacity(1)));
         g.spawn_particle((1, 0), Particle::from(Water::new()));
@@ -940,7 +937,8 @@ mod tests {
         /*
          * wW -> Ww
          */
-        let mut g = Grid::new_with_rand(2, 1, Some(|_| ParticleHorizontalDirection::Right), None);
+        let mut g =
+            Grid::new(2, 1).with_rand_particle_direction(|_| ParticleHorizontalDirection::Right);
 
         g.spawn_particle((0, 0), Particle::from(Water::new()));
         g.spawn_particle((1, 0), Particle::from(Water::with_capacity(1)));

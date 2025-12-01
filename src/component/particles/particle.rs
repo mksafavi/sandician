@@ -595,7 +595,7 @@ mod tests {
          */
         for particle in weighted_particle() {
             let mut g =
-                Grid::new_with_rand(3, 2, Some(|_| ParticleHorizontalDirection::Left), None);
+                Grid::new(3, 2).with_rand_particle_direction(|_| ParticleHorizontalDirection::Left);
 
             g.spawn_particle((1, 0), particle.clone());
             g.spawn_particle((1, 1), particle.clone());
@@ -625,7 +625,7 @@ mod tests {
          */
         for particle in weighted_particle() {
             let mut g =
-                Grid::new_with_rand(3, 2, Some(|_| ParticleHorizontalDirection::Right), None);
+                Grid::new(3, 2).with_rand_particle_direction(|_| ParticleHorizontalDirection::Right);
 
             g.spawn_particle((1, 0), particle.clone());
             g.spawn_particle((1, 1), particle.clone());
