@@ -36,16 +36,19 @@ fn dissolve_salt<T: GridAccess>(grid: &mut T, capacity: u8, position: (usize, us
                 && let ParticleKind::Salt(..) = p.kind
                 && 0 < capacity
             {
-                let index = grid.to_index(position);
-                let cell = grid.get_cell_mut(index);
+                let cycle = grid.cycle();
+                let cell = grid.get_cell_mut(i);
+                cell.particle = None;
+                cell.cycle = cycle;
+                let cell = grid.get_cell_mut(grid.to_index(position));
                 if let Some(particle) = &cell.particle {
                     cell.particle = Some(
                         Particle::from(Water::with_capacity(capacity - 1))
                             .with_seed(particle.seed)
                             .with_velocity(particle.velocity),
                     );
+                    cell.cycle = cycle;
                 }
-                grid.dissolve_particles(index, i);
                 return true;
             }
         }

@@ -18,14 +18,18 @@ impl Drain {
 
     pub fn update<T: GridAccess>(&self, grid: &mut T, position: (usize, usize)) {
         for offset in [(0, -1), (-1, 0), (1, 0), (0, 1)] {
-            if let Ok(i) = grid.get_neighbor_index(position, offset)
-                && let Some(p) = &grid.get_cell(i).particle
+            if let Ok(index) = grid.get_neighbor_index(position, offset)
+                && let Some(p) = &grid.get_cell(index).particle
             {
                 match p.kind {
                     particle::ParticleKind::Drain(..) => (),
                     _ => {
-                        let index = grid.to_index(position);
-                        grid.dissolve_particles(index, i);
+                        let cycle = grid.cycle();
+                        let cell = grid.get_cell_mut(index);
+                        cell.particle = None;
+                        cell.cycle = cycle;
+                        let cell = grid.get_cell_mut(grid.to_index(position));
+                        cell.cycle = cycle;
                         return;
                     }
                 }
