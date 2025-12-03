@@ -3,7 +3,9 @@ use crate::component::grid::GridAccess;
 use super::particle;
 
 #[derive(Clone, PartialEq, Debug)]
-pub struct Drain;
+pub struct Drain {
+    rate: u8,
+}
 
 impl Default for Drain {
     fn default() -> Self {
@@ -13,7 +15,11 @@ impl Default for Drain {
 
 impl Drain {
     pub fn new() -> Self {
-        Self
+        Self::with_rate(40)
+    }
+
+    pub fn with_rate(rate: u8) -> Self {
+        Self { rate }
     }
 
     pub fn update<T: GridAccess>(&self, grid: &mut T, position: (usize, usize)) {
@@ -21,6 +27,7 @@ impl Drain {
             if let Ok(index) = grid.get_neighbor_index(position, offset)
                 && let Some(p) = &grid.get_cell(index).particle
                 && 0 < p.health
+                && 0 < self.rate
             {
                 match p.kind {
                     particle::ParticleKind::Drain(..) => (),
@@ -28,7 +35,7 @@ impl Drain {
                         let cycle = grid.cycle();
                         let cell = grid.get_cell_mut(index);
                         if let Some(particle) = &mut cell.particle {
-                            particle.health = particle.health.saturating_sub(40);
+                            particle.health = particle.health.saturating_sub(self.rate);
                             cell.cycle = cycle;
                         }
                         let cell = grid.get_cell_mut(grid.to_index(position));
@@ -78,6 +85,43 @@ mod tests {
                 Cell::new(Particle::from(Drain::new())),
                 Cell::new(Particle::from(Drain::new())),
                 Cell::new(Particle::from(Drain::new())),
+            ],
+            *g.get_cells()
+        );
+    }
+
+    #[test]
+    fn test_drain_with_rate_of_zero_doent_lower_the_neighbor_particles_health() {
+        /*
+         * rrr -> rrr
+         * rdr    rdr
+         * rrr    rrr
+         */
+        let mut g = Grid::new(3, 3);
+
+        g.spawn_particle((1, 1), Particle::from(Drain::with_rate(0)));
+        for y in 0..3 {
+            for x in 0..3 {
+                if (x, y) == (1, 1) {
+                    continue;
+                }
+                g.spawn_particle((x, y), Particle::from(Rock::new()));
+            }
+        }
+
+        g.update_grid();
+
+        assert_eq!(
+            vec![
+                Cell::new(Particle::from(Rock::new())),
+                Cell::new(Particle::from(Rock::new())),
+                Cell::new(Particle::from(Rock::new())),
+                Cell::new(Particle::from(Rock::new())),
+                Cell::new(Particle::from(Drain::with_rate(0))),
+                Cell::new(Particle::from(Rock::new())),
+                Cell::new(Particle::from(Rock::new())),
+                Cell::new(Particle::from(Rock::new())),
+                Cell::new(Particle::from(Rock::new())),
             ],
             *g.get_cells()
         );
