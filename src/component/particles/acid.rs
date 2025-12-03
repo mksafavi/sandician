@@ -25,6 +25,7 @@ impl Acid {
         for offset in [(0, 1)] {
             if let Ok(index) = grid.get_neighbor_index(position, offset)
                 && let Some(p) = &grid.get_cell(index).particle
+                && 0 < self.acidity
             {
                 match p.kind {
                     particle::ParticleKind::Acid(..) => (),
@@ -99,12 +100,11 @@ mod tests {
         for _ in 0..7 {
             g.update_grid();
         }
-        g.update_grid();
 
         assert_eq!(
             vec![
                 Cell::new(Particle::from(Acid::new())).with_cycle(7),
-                Cell::empty().with_cycle(8),
+                Cell::new(Particle::from(Rock::new()).with_health(0)).with_cycle(7),
             ],
             *g.get_cells()
         );

@@ -222,6 +222,8 @@ impl From<Acid> for Particle {
             Color::hsva(126.00, 1.0, 0.9, 1.00),
             ParticleKind::Acid(acid),
         )
+        .with_weight(1)
+        .with_viscosity(u8::MIN)
     }
 }
 

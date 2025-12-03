@@ -63,14 +63,17 @@ fn dissolve_salt<T: GridAccess>(grid: &mut T, capacity: u8, position: (usize, us
 mod tests_liquid {
     use crate::component::{
         grid::{Cell, Grid, ParticleHorizontalDirection, RowUpdateDirection},
-        particles::{particle::Particle, rock::Rock, salt::Salt, sand::Sand},
+        particles::{acid::Acid, particle::Particle, rock::Rock, salt::Salt, sand::Sand},
     };
     use pretty_assertions::assert_eq;
 
     use super::*;
 
     fn liquid_particle() -> Vec<Particle> {
-        vec![Particle::from(Water::with_capacity(0))]
+        vec![
+            Particle::from(Water::with_capacity(0)),
+            Particle::from(Acid::with_acidity(0)),
+        ]
     }
 
     fn weighted_particle() -> Vec<Particle> {
