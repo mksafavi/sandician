@@ -60,7 +60,7 @@ fn dissolve_salt<T: GridAccess>(grid: &mut T, capacity: u8, position: (usize, us
 }
 
 #[cfg(test)]
-mod tests {
+mod tests_liquid {
     use crate::component::{
         grid::{Cell, Grid, ParticleHorizontalDirection, RowUpdateDirection},
         particles::{particle::Particle, rock::Rock, salt::Salt, sand::Sand},
@@ -69,386 +69,8 @@ mod tests {
 
     use super::*;
 
-    #[test]
-    fn test_update_grid_water_falls_down_to_last_row_stays_there() {
-        /*
-         * w -> - -> -
-         * -    w    -
-         * -    -    w
-         */
-        let mut g = Grid::new(1, 3);
-        g.spawn_particle((0, 0), Particle::from(Water::new()));
-
-        g.update_grid();
-
-        assert_eq!(
-            vec![
-                Cell::empty().with_cycle(1),
-                Cell::new(Particle::from(Water::new())).with_cycle(1),
-                Cell::empty(),
-            ],
-            *g.get_cells()
-        );
-
-        g.update_grid();
-
-        assert_eq!(
-            vec![
-                Cell::empty().with_cycle(1),
-                Cell::empty().with_cycle(2),
-                Cell::new(Particle::from(Water::new())).with_cycle(2),
-            ],
-            *g.get_cells()
-        );
-    }
-
-    #[test]
-    fn test_update_grid_water_moves_right_when_bottom_cell_and_left_are_full() {
-        /*
-         * --- -> ---
-         * sw-    s-w
-         */
-        let mut g = Grid::new(3, 2);
-        g.spawn_particle((0, 1), Particle::from(Sand::new()));
-        g.spawn_particle((1, 1), Particle::from(Water::new()));
-
-        g.update_grid();
-
-        assert_eq!(
-            vec![
-                Cell::empty(),
-                Cell::empty(),
-                Cell::empty(),
-                Cell::new(Particle::from(Sand::new())),
-                Cell::empty().with_cycle(1),
-                Cell::new(Particle::from(Water::new())).with_cycle(1),
-            ],
-            *g.get_cells()
-        );
-    }
-
-    #[test]
-    fn test_update_grid_water_moves_left_when_bottom_cell_and_right_are_full() {
-        /*
-         * --- -> ---
-         * -ws    w-s
-         */
-        let mut g = Grid::new(3, 2);
-        g.spawn_particle((1, 1), Particle::from(Water::new()));
-        g.spawn_particle((2, 1), Particle::from(Sand::new()));
-
-        g.update_grid();
-
-        assert_eq!(
-            vec![
-                Cell::empty(),
-                Cell::empty(),
-                Cell::empty(),
-                Cell::new(Particle::from(Water::new())).with_cycle(1),
-                Cell::empty().with_cycle(1),
-                Cell::new(Particle::from(Sand::new())),
-            ],
-            *g.get_cells()
-        );
-    }
-
-    #[test]
-    fn test_update_grid_water_moves_left_or_right_when_both_right_and_left_are_empty_forced_right()
-    {
-        /*
-         * --- -> ---
-         * -w-    --w
-         */
-        let mut g =
-            Grid::new(3, 2).with_rand_particle_direction(|_| ParticleHorizontalDirection::Right);
-
-        g.spawn_particle((1, 1), Particle::from(Water::new()));
-
-        g.update_grid();
-
-        assert_eq!(
-            vec![
-                Cell::empty(),
-                Cell::empty(),
-                Cell::empty(),
-                Cell::empty(),
-                Cell::empty().with_cycle(1),
-                Cell::new(Particle::from(Water::new())).with_cycle(1),
-            ],
-            *g.get_cells()
-        );
-    }
-
-    #[test]
-    fn test_update_grid_water_moves_left_or_right_when_both_right_and_left_are_empty_forced_left() {
-        /*
-         * --- -> ---
-         * -w-    w--
-         */
-        let mut g =
-            Grid::new(3, 2).with_rand_particle_direction(|_| ParticleHorizontalDirection::Left);
-
-        g.spawn_particle((1, 1), Particle::from(Water::new()));
-
-        g.update_grid();
-
-        assert_eq!(
-            vec![
-                Cell::empty(),
-                Cell::empty(),
-                Cell::empty(),
-                Cell::new(Particle::from(Water::new())).with_cycle(1),
-                Cell::empty().with_cycle(1),
-                Cell::empty(),
-            ],
-            *g.get_cells()
-        );
-    }
-
-    #[test]
-    fn test_water_can_slide_two_cells_to_right() {
-        /*
-         * --- -> ---
-         * w--    --w
-         */
-        let mut g =
-            Grid::new(3, 2).with_rand_particle_direction(|_| ParticleHorizontalDirection::Right);
-
-        g.spawn_particle((0, 1), Particle::from(Water::new()));
-
-        g.update_grid();
-
-        assert_eq!(
-            vec![
-                Cell::empty(),
-                Cell::empty(),
-                Cell::empty(),
-                Cell::empty().with_cycle(1),
-                Cell::empty(),
-                Cell::new(Particle::from(Water::new())).with_cycle(1),
-            ],
-            *g.get_cells()
-        );
-    }
-
-    #[test]
-    fn test_water_can_slide_two_cells_to_left() {
-        /*
-         * --- -> ---
-         * --w    w--
-         */
-        let mut g =
-            Grid::new(3, 2).with_rand_particle_direction(|_| ParticleHorizontalDirection::Left);
-
-        g.spawn_particle((2, 1), Particle::from(Water::new()));
-
-        g.update_grid();
-
-        assert_eq!(
-            vec![
-                Cell::empty(),
-                Cell::empty(),
-                Cell::empty(),
-                Cell::new(Particle::from(Water::new())).with_cycle(1),
-                Cell::empty(),
-                Cell::empty().with_cycle(1),
-            ],
-            *g.get_cells()
-        );
-    }
-
-    #[test]
-    fn test_update_grid_water_falls_to_bottom_right_when_bottom_cell_and_bottom_left_are_full_and_bottom_right_is_empty()
-     {
-        /*
-         * w- -> --
-         * s-    sw
-         */
-        let mut g = Grid::new(2, 2);
-
-        g.spawn_particle((0, 0), Particle::from(Water::new()));
-        g.spawn_particle((0, 1), Particle::from(Sand::new()));
-
-        g.update_grid();
-
-        assert_eq!(
-            vec![
-                Cell::empty().with_cycle(1),
-                Cell::empty(),
-                Cell::new(Particle::from(Sand::new())),
-                Cell::new(Particle::from(Water::new())).with_cycle(1),
-            ],
-            *g.get_cells()
-        );
-    }
-
-    #[test]
-    fn test_update_grid_water_falls_bottom_left_when_bottom_cell_and_bottom_right_are_full_and_bottom_left_is_empty()
-     {
-        /*
-         * -w -> --
-         * -s    ws
-         */
-        let mut g = Grid::new(2, 2);
-
-        g.spawn_particle((1, 0), Particle::from(Water::new()));
-        g.spawn_particle((1, 1), Particle::from(Sand::new()));
-
-        g.update_grid();
-
-        assert_eq!(
-            vec![
-                Cell::empty(),
-                Cell::empty().with_cycle(1),
-                Cell::new(Particle::from(Water::new())).with_cycle(1),
-                Cell::new(Particle::from(Sand::new())),
-            ],
-            *g.get_cells()
-        );
-    }
-
-    #[test]
-    fn test_update_grid_water_falls_bottom_left_or_bottom_right_when_bottom_cell_is_full_and_both_bottom_right_and_bottom_left_are_empty_forced_left()
-     {
-        /*
-         * -w- -> ---
-         * -s-    ws-
-         */
-        let mut g =
-            Grid::new(3, 2).with_rand_particle_direction(|_| ParticleHorizontalDirection::Left);
-
-        g.spawn_particle((1, 0), Particle::from(Water::new()));
-        g.spawn_particle((1, 1), Particle::from(Sand::new()));
-
-        g.update_grid();
-
-        assert_eq!(
-            vec![
-                Cell::empty(),
-                Cell::empty().with_cycle(1),
-                Cell::empty(),
-                Cell::new(Particle::from(Water::new())).with_cycle(1),
-                Cell::new(Particle::from(Sand::new())),
-                Cell::empty(),
-            ],
-            *g.get_cells()
-        );
-    }
-
-    #[test]
-    fn test_update_grid_water_falls_bottom_left_or_bottom_right_when_bottom_cell_is_full_and_both_bottom_right_and_bottom_left_are_empty_forced_right()
-     {
-        /*
-         * -w- -> ---
-         * -s-    -sw
-         */
-        let mut g =
-            Grid::new(3, 2).with_rand_particle_direction(|_| ParticleHorizontalDirection::Right);
-
-        g.spawn_particle((1, 0), Particle::from(Water::new()));
-        g.spawn_particle((1, 1), Particle::from(Sand::new()));
-
-        g.update_grid();
-
-        assert_eq!(
-            vec![
-                Cell::empty(),
-                Cell::empty().with_cycle(1),
-                Cell::empty(),
-                Cell::empty(),
-                Cell::new(Particle::from(Sand::new())),
-                Cell::new(Particle::from(Water::new())).with_cycle(1),
-            ],
-            *g.get_cells()
-        );
-    }
-
-    #[test]
-    fn test_updating_rows_in_forward_order_creates_a_left_bias_on_water() {
-        /*
-         * -ww- => ww-- or w--w
-         */
-        let mut g = Grid::new(4, 1)
-            .with_rand_particle_direction(|_| ParticleHorizontalDirection::Left)
-            .with_rand_row_update_direction(|_| RowUpdateDirection::Forward);
-
-        g.spawn_particle((1, 0), Particle::from(Water::new()));
-        g.spawn_particle((2, 0), Particle::from(Water::new()));
-
-        g.update_grid();
-
-        assert_eq!(
-            vec![
-                Cell::new(Particle::from(Water::new())).with_cycle(1),
-                Cell::new(Particle::from(Water::new())).with_cycle(1),
-                Cell::empty().with_cycle(1),
-                Cell::empty(),
-            ],
-            *g.get_cells()
-        );
-
-        let mut g = Grid::new(4, 1)
-            .with_rand_particle_direction(|_| ParticleHorizontalDirection::Right)
-            .with_rand_row_update_direction(|_| RowUpdateDirection::Forward);
-
-        g.spawn_particle((1, 0), Particle::from(Water::new()));
-        g.spawn_particle((2, 0), Particle::from(Water::new()));
-
-        g.update_grid();
-
-        assert_eq!(
-            vec![
-                Cell::new(Particle::from(Water::new())).with_cycle(1),
-                Cell::empty().with_cycle(1),
-                Cell::empty().with_cycle(1),
-                Cell::new(Particle::from(Water::new())).with_cycle(1),
-            ],
-            *g.get_cells()
-        );
-    }
-
-    #[test]
-    fn test_updating_rows_in_reverse_order_creates_a_right_bias_on_water() {
-        /*
-         * -ww- => --ww or w--w
-         */
-        let mut g = Grid::new(4, 1)
-            .with_rand_particle_direction(|_| ParticleHorizontalDirection::Right)
-            .with_rand_row_update_direction(|_| RowUpdateDirection::Reverse);
-
-        g.spawn_particle((1, 0), Particle::from(Water::new()));
-        g.spawn_particle((2, 0), Particle::from(Water::new()));
-
-        g.update_grid();
-
-        assert_eq!(
-            vec![
-                Cell::empty(),
-                Cell::empty().with_cycle(1),
-                Cell::new(Particle::from(Water::new())).with_cycle(1),
-                Cell::new(Particle::from(Water::new())).with_cycle(1),
-            ],
-            *g.get_cells()
-        );
-
-        let mut g = Grid::new(4, 1)
-            .with_rand_particle_direction(|_| ParticleHorizontalDirection::Left)
-            .with_rand_row_update_direction(|_| RowUpdateDirection::Reverse);
-
-        g.spawn_particle((1, 0), Particle::from(Water::new()));
-        g.spawn_particle((2, 0), Particle::from(Water::new()));
-
-        g.update_grid();
-
-        assert_eq!(
-            vec![
-                Cell::new(Particle::from(Water::new())).with_cycle(1),
-                Cell::empty().with_cycle(1),
-                Cell::empty().with_cycle(1),
-                Cell::new(Particle::from(Water::new())).with_cycle(1),
-            ],
-            *g.get_cells()
-        );
+    fn liquid_particle() -> Vec<Particle> {
+        vec![Particle::from(Water::with_capacity(0))]
     }
 
     fn weighted_particle() -> Vec<Particle> {
@@ -456,235 +78,667 @@ mod tests {
     }
 
     #[test]
-    fn test_weighted_particle_should_sink_to_bottom_in_water() {
+    fn test_update_grid_liquid_particle_falls_down_to_last_row_stays_there() {
+        /*
+         * w -> - -> -
+         * -    w    -
+         * -    -    w
+         */
+
+        for liquid_particle in liquid_particle() {
+            let mut g = Grid::new(1, 3);
+            g.spawn_particle((0, 0), liquid_particle.clone());
+
+            g.update_grid();
+
+            assert_eq!(
+                vec![
+                    Cell::empty().with_cycle(1),
+                    Cell::new(liquid_particle.clone()).with_cycle(1),
+                    Cell::empty(),
+                ],
+                *g.get_cells()
+            );
+
+            g.update_grid();
+
+            assert_eq!(
+                vec![
+                    Cell::empty().with_cycle(1),
+                    Cell::empty().with_cycle(2),
+                    Cell::new(liquid_particle.clone()).with_cycle(2),
+                ],
+                *g.get_cells()
+            );
+        }
+    }
+
+    #[test]
+    fn test_update_grid_liquid_particle_moves_right_when_bottom_cell_and_left_are_full() {
+        /*
+         * --- -> ---
+         * sw-    s-w
+         */
+        for liquid_particle in liquid_particle() {
+            for particle in weighted_particle() {
+                let mut g = Grid::new(3, 2);
+                g.spawn_particle((0, 1), particle.clone());
+                g.spawn_particle((1, 1), liquid_particle.clone());
+
+                g.update_grid();
+
+                assert_eq!(
+                    vec![
+                        Cell::empty(),
+                        Cell::empty(),
+                        Cell::empty(),
+                        Cell::new(particle.clone()),
+                        Cell::empty().with_cycle(1),
+                        Cell::new(liquid_particle.clone()).with_cycle(1),
+                    ],
+                    *g.get_cells()
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn test_update_grid_liquid_particle_moves_left_when_bottom_cell_and_right_are_full() {
+        /*
+         * --- -> ---
+         * -ws    w-s
+         */
+        for liquid_particle in liquid_particle() {
+            for particle in weighted_particle() {
+                let mut g = Grid::new(3, 2);
+                g.spawn_particle((1, 1), liquid_particle.clone());
+                g.spawn_particle((2, 1), particle.clone());
+
+                g.update_grid();
+
+                assert_eq!(
+                    vec![
+                        Cell::empty(),
+                        Cell::empty(),
+                        Cell::empty(),
+                        Cell::new(liquid_particle.clone()).with_cycle(1),
+                        Cell::empty().with_cycle(1),
+                        Cell::new(particle.clone()),
+                    ],
+                    *g.get_cells()
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn test_update_grid_liquid_particle_moves_left_or_right_when_both_right_and_left_are_empty_forced_right()
+     {
+        /*
+         * --- -> ---
+         * -w-    --w
+         */
+        for liquid_particle in liquid_particle() {
+            let mut g = Grid::new(3, 2)
+                .with_rand_particle_direction(|_| ParticleHorizontalDirection::Right);
+
+            g.spawn_particle((1, 1), liquid_particle.clone());
+
+            g.update_grid();
+
+            assert_eq!(
+                vec![
+                    Cell::empty(),
+                    Cell::empty(),
+                    Cell::empty(),
+                    Cell::empty(),
+                    Cell::empty().with_cycle(1),
+                    Cell::new(liquid_particle.clone()).with_cycle(1),
+                ],
+                *g.get_cells()
+            );
+        }
+    }
+
+    #[test]
+    fn test_update_grid_liquid_particle_moves_left_or_right_when_both_right_and_left_are_empty_forced_left()
+     {
+        /*
+         * --- -> ---
+         * -w-    w--
+         */
+        for liquid_particle in liquid_particle() {
+            let mut g =
+                Grid::new(3, 2).with_rand_particle_direction(|_| ParticleHorizontalDirection::Left);
+
+            g.spawn_particle((1, 1), liquid_particle.clone());
+
+            g.update_grid();
+
+            assert_eq!(
+                vec![
+                    Cell::empty(),
+                    Cell::empty(),
+                    Cell::empty(),
+                    Cell::new(liquid_particle.clone()).with_cycle(1),
+                    Cell::empty().with_cycle(1),
+                    Cell::empty(),
+                ],
+                *g.get_cells()
+            );
+        }
+    }
+
+    #[test]
+    fn test_liquid_particle_can_slide_two_cells_to_right() {
+        /*
+         * --- -> ---
+         * w--    --w
+         */
+        for liquid_particle in liquid_particle() {
+            let mut g = Grid::new(3, 2)
+                .with_rand_particle_direction(|_| ParticleHorizontalDirection::Right);
+
+            g.spawn_particle((0, 1), liquid_particle.clone());
+
+            g.update_grid();
+
+            assert_eq!(
+                vec![
+                    Cell::empty(),
+                    Cell::empty(),
+                    Cell::empty(),
+                    Cell::empty().with_cycle(1),
+                    Cell::empty(),
+                    Cell::new(liquid_particle.clone()).with_cycle(1),
+                ],
+                *g.get_cells()
+            );
+        }
+    }
+
+    #[test]
+    fn test_liquid_particle_can_slide_two_cells_to_left() {
+        /*
+         * --- -> ---
+         * --w    w--
+         */
+        for liquid_particle in liquid_particle() {
+            let mut g =
+                Grid::new(3, 2).with_rand_particle_direction(|_| ParticleHorizontalDirection::Left);
+
+            g.spawn_particle((2, 1), liquid_particle.clone());
+
+            g.update_grid();
+
+            assert_eq!(
+                vec![
+                    Cell::empty(),
+                    Cell::empty(),
+                    Cell::empty(),
+                    Cell::new(liquid_particle.clone()).with_cycle(1),
+                    Cell::empty(),
+                    Cell::empty().with_cycle(1),
+                ],
+                *g.get_cells()
+            );
+        }
+    }
+
+    #[test]
+    fn test_update_grid_liquid_particle_falls_to_bottom_right_when_bottom_cell_and_bottom_left_are_full_and_bottom_right_is_empty()
+     {
+        /*
+         * w- -> --
+         * s-    sw
+         */
+        for liquid_particle in liquid_particle() {
+            for particle in weighted_particle() {
+                let mut g = Grid::new(2, 2);
+
+                g.spawn_particle((0, 0), liquid_particle.clone());
+                g.spawn_particle((0, 1), particle.clone());
+
+                g.update_grid();
+
+                assert_eq!(
+                    vec![
+                        Cell::empty().with_cycle(1),
+                        Cell::empty(),
+                        Cell::new(particle.clone()),
+                        Cell::new(liquid_particle.clone()).with_cycle(1),
+                    ],
+                    *g.get_cells()
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn test_update_grid_liquid_particle_falls_bottom_left_when_bottom_cell_and_bottom_right_are_full_and_bottom_left_is_empty()
+     {
+        /*
+         * -w -> --
+         * -s    ws
+         */
+        for liquid_particle in liquid_particle() {
+            for particle in weighted_particle() {
+                let mut g = Grid::new(2, 2);
+
+                g.spawn_particle((1, 0), liquid_particle.clone());
+                g.spawn_particle((1, 1), particle.clone());
+
+                g.update_grid();
+
+                assert_eq!(
+                    vec![
+                        Cell::empty(),
+                        Cell::empty().with_cycle(1),
+                        Cell::new(liquid_particle.clone()).with_cycle(1),
+                        Cell::new(particle.clone()),
+                    ],
+                    *g.get_cells()
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn test_update_grid_liquid_particle_falls_bottom_left_or_bottom_right_when_bottom_cell_is_full_and_both_bottom_right_and_bottom_left_are_empty_forced_left()
+     {
+        /*
+         * -w- -> ---
+         * -s-    ws-
+         */
+        for liquid_particle in liquid_particle() {
+            for particle in weighted_particle() {
+                let mut g = Grid::new(3, 2)
+                    .with_rand_particle_direction(|_| ParticleHorizontalDirection::Left);
+
+                g.spawn_particle((1, 0), liquid_particle.clone());
+                g.spawn_particle((1, 1), particle.clone());
+
+                g.update_grid();
+
+                assert_eq!(
+                    vec![
+                        Cell::empty(),
+                        Cell::empty().with_cycle(1),
+                        Cell::empty(),
+                        Cell::new(liquid_particle.clone()).with_cycle(1),
+                        Cell::new(particle.clone()),
+                        Cell::empty(),
+                    ],
+                    *g.get_cells()
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn test_update_grid_liquid_particle_falls_bottom_left_or_bottom_right_when_bottom_cell_is_full_and_both_bottom_right_and_bottom_left_are_empty_forced_right()
+     {
+        /*
+         * -w- -> ---
+         * -s-    -sw
+         */
+        for liquid_particle in liquid_particle() {
+            for particle in weighted_particle() {
+                let mut g = Grid::new(3, 2)
+                    .with_rand_particle_direction(|_| ParticleHorizontalDirection::Right);
+
+                g.spawn_particle((1, 0), liquid_particle.clone());
+                g.spawn_particle((1, 1), particle.clone());
+
+                g.update_grid();
+
+                assert_eq!(
+                    vec![
+                        Cell::empty(),
+                        Cell::empty().with_cycle(1),
+                        Cell::empty(),
+                        Cell::empty(),
+                        Cell::new(particle.clone()),
+                        Cell::new(liquid_particle.clone()).with_cycle(1),
+                    ],
+                    *g.get_cells()
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn test_updating_rows_in_forward_order_creates_a_left_bias_on_liquid_particles() {
+        /*
+         * -ww- => ww-- or w--w
+         */
+        for liquid_particle in liquid_particle() {
+            let mut g = Grid::new(4, 1)
+                .with_rand_particle_direction(|_| ParticleHorizontalDirection::Left)
+                .with_rand_row_update_direction(|_| RowUpdateDirection::Forward);
+
+            g.spawn_particle((1, 0), liquid_particle.clone());
+            g.spawn_particle((2, 0), liquid_particle.clone());
+
+            g.update_grid();
+
+            assert_eq!(
+                vec![
+                    Cell::new(liquid_particle.clone()).with_cycle(1),
+                    Cell::new(liquid_particle.clone()).with_cycle(1),
+                    Cell::empty().with_cycle(1),
+                    Cell::empty(),
+                ],
+                *g.get_cells()
+            );
+
+            let mut g = Grid::new(4, 1)
+                .with_rand_particle_direction(|_| ParticleHorizontalDirection::Right)
+                .with_rand_row_update_direction(|_| RowUpdateDirection::Forward);
+
+            g.spawn_particle((1, 0), liquid_particle.clone());
+            g.spawn_particle((2, 0), liquid_particle.clone());
+
+            g.update_grid();
+
+            assert_eq!(
+                vec![
+                    Cell::new(liquid_particle.clone()).with_cycle(1),
+                    Cell::empty().with_cycle(1),
+                    Cell::empty().with_cycle(1),
+                    Cell::new(liquid_particle.clone()).with_cycle(1),
+                ],
+                *g.get_cells()
+            );
+        }
+    }
+
+    #[test]
+    fn test_updating_rows_in_reverse_order_creates_a_right_bias_on_liquid_particles() {
+        /*
+         * -ww- => --ww or w--w
+         */
+        for liquid_particle in liquid_particle() {
+            let mut g = Grid::new(4, 1)
+                .with_rand_particle_direction(|_| ParticleHorizontalDirection::Right)
+                .with_rand_row_update_direction(|_| RowUpdateDirection::Reverse);
+
+            g.spawn_particle((1, 0), liquid_particle.clone());
+            g.spawn_particle((2, 0), liquid_particle.clone());
+
+            g.update_grid();
+
+            assert_eq!(
+                vec![
+                    Cell::empty(),
+                    Cell::empty().with_cycle(1),
+                    Cell::new(liquid_particle.clone()).with_cycle(1),
+                    Cell::new(liquid_particle.clone()).with_cycle(1),
+                ],
+                *g.get_cells()
+            );
+
+            let mut g = Grid::new(4, 1)
+                .with_rand_particle_direction(|_| ParticleHorizontalDirection::Left)
+                .with_rand_row_update_direction(|_| RowUpdateDirection::Reverse);
+
+            g.spawn_particle((1, 0), liquid_particle.clone());
+            g.spawn_particle((2, 0), liquid_particle.clone());
+
+            g.update_grid();
+
+            assert_eq!(
+                vec![
+                    Cell::new(liquid_particle.clone()).with_cycle(1),
+                    Cell::empty().with_cycle(1),
+                    Cell::empty().with_cycle(1),
+                    Cell::new(liquid_particle.clone()).with_cycle(1),
+                ],
+                *g.get_cells()
+            );
+        }
+    }
+
+    #[test]
+    fn test_weighted_particle_should_sink_to_bottom_in_liquid_particle() {
         /*
          * -s- -> -w-
          * sws    sss
          */
 
-        for particle in weighted_particle() {
-            let particle = particle.with_velocity(0);
+        for liquid_particle in liquid_particle() {
+            for particle in weighted_particle() {
+                let particle = particle.with_velocity(0);
 
-            let mut g = Grid::new(3, 2)
-                .with_rand_velocity(|_| 0)
-                .with_initial_particle_velocity(0);
+                let mut g = Grid::new(3, 2)
+                    .with_rand_velocity(|_| 0)
+                    .with_initial_particle_velocity(0);
 
-            g.spawn_particle((1, 0), particle.clone());
-            g.spawn_particle((0, 1), particle.clone());
-            g.spawn_particle(
-                (1, 1),
-                Particle::from(Water::with_capacity(0)).with_velocity(0),
-            );
-            g.spawn_particle((2, 1), particle.clone());
+                g.spawn_particle((1, 0), particle.clone());
+                g.spawn_particle((0, 1), particle.clone());
+                g.spawn_particle((1, 1), liquid_particle.clone().with_velocity(0));
+                g.spawn_particle((2, 1), particle.clone());
 
-            g.update_grid();
+                g.update_grid();
 
-            assert_eq!(
-                vec![
-                    Cell::empty(),
-                    Cell::new(Particle::from(Water::with_capacity(0)).with_velocity(0))
-                        .with_cycle(1),
-                    Cell::empty(),
-                    Cell::new(particle.clone()),
-                    Cell::new(particle.clone().with_velocity(1)).with_cycle(1),
-                    Cell::new(particle.clone()),
-                ],
-                *g.get_cells()
-            );
+                assert_eq!(
+                    vec![
+                        Cell::empty(),
+                        Cell::new(liquid_particle.clone().with_velocity(0)).with_cycle(1),
+                        Cell::empty(),
+                        Cell::new(particle.clone()),
+                        Cell::new(particle.clone().with_velocity(1)).with_cycle(1),
+                        Cell::new(particle.clone()),
+                    ],
+                    *g.get_cells()
+                );
+            }
         }
     }
 
     #[test]
-    fn test_weighted_particle_should_sink_to_bottom_left_in_water() {
+    fn test_weighted_particle_should_sink_to_bottom_left_in_liquid_particle() {
         /*
          * -s- -> -w-
          * wss    sss
          */
-        for particle in weighted_particle() {
-            let particle = particle.with_velocity(0);
+        for liquid_particle in liquid_particle() {
+            for particle in weighted_particle() {
+                let particle = particle.with_velocity(0);
 
-            let mut g = Grid::new(3, 2)
-                .with_rand_velocity(|_| 0)
-                .with_initial_particle_velocity(0);
+                let mut g = Grid::new(3, 2)
+                    .with_rand_velocity(|_| 0)
+                    .with_initial_particle_velocity(0);
 
-            g.spawn_particle((1, 0), particle.clone());
-            g.spawn_particle(
-                (0, 1),
-                Particle::from(Water::with_capacity(0)).with_velocity(0),
-            );
-            g.spawn_particle((1, 1), particle.clone());
-            g.spawn_particle((2, 1), particle.clone());
+                g.spawn_particle((1, 0), particle.clone());
+                g.spawn_particle((0, 1), liquid_particle.clone().with_velocity(0));
+                g.spawn_particle((1, 1), particle.clone());
+                g.spawn_particle((2, 1), particle.clone());
 
-            g.update_grid();
+                g.update_grid();
 
-            assert_eq!(
-                vec![
-                    Cell::empty(),
-                    Cell::new(Particle::from(Water::with_capacity(0)).with_velocity(0))
-                        .with_cycle(1),
-                    Cell::empty(),
-                    Cell::new(particle.clone().with_velocity(1)).with_cycle(1),
-                    Cell::new(particle.clone()),
-                    Cell::new(particle.clone()),
-                ],
-                *g.get_cells()
-            );
+                assert_eq!(
+                    vec![
+                        Cell::empty(),
+                        Cell::new(liquid_particle.clone().with_velocity(0)).with_cycle(1),
+                        Cell::empty(),
+                        Cell::new(particle.clone().with_velocity(1)).with_cycle(1),
+                        Cell::new(particle.clone()),
+                        Cell::new(particle.clone()),
+                    ],
+                    *g.get_cells()
+                );
+            }
         }
     }
 
     #[test]
-    fn test_weighted_particle_should_sink_to_bottom_right_in_water() {
+    fn test_weighted_particle_should_sink_to_bottom_right_in_liquid_particle() {
         /*
          * -s- -> -w-
          * ssw    sss
          */
 
-        for particle in weighted_particle() {
-            let particle = particle.with_velocity(0);
+        for liquid_particle in liquid_particle() {
+            for particle in weighted_particle() {
+                let particle = particle.with_velocity(0);
 
-            let mut g = Grid::new(3, 2)
-                .with_rand_velocity(|_| 0)
-                .with_initial_particle_velocity(0);
+                let mut g = Grid::new(3, 2)
+                    .with_rand_velocity(|_| 0)
+                    .with_initial_particle_velocity(0);
 
-            g.spawn_particle((1, 0), particle.clone());
-            g.spawn_particle((0, 1), particle.clone());
-            g.spawn_particle((1, 1), particle.clone());
-            g.spawn_particle(
-                (2, 1),
-                Particle::from(Water::with_capacity(0)).with_velocity(0),
-            );
+                g.spawn_particle((1, 0), particle.clone());
+                g.spawn_particle((0, 1), particle.clone());
+                g.spawn_particle((1, 1), particle.clone());
+                g.spawn_particle((2, 1), liquid_particle.clone().with_velocity(0));
 
-            g.update_grid();
+                g.update_grid();
 
-            assert_eq!(
-                vec![
-                    Cell::empty(),
-                    Cell::new(Particle::from(Water::with_capacity(0)).with_velocity(0))
-                        .with_cycle(1),
-                    Cell::empty(),
-                    Cell::new(particle.clone()),
-                    Cell::new(particle.clone()),
-                    Cell::new(particle.clone().with_velocity(1)).with_cycle(1),
-                ],
-                *g.get_cells()
-            );
+                assert_eq!(
+                    vec![
+                        Cell::empty(),
+                        Cell::new(liquid_particle.clone().with_velocity(0)).with_cycle(1),
+                        Cell::empty(),
+                        Cell::new(particle.clone()),
+                        Cell::new(particle.clone()),
+                        Cell::new(particle.clone().with_velocity(1)).with_cycle(1),
+                    ],
+                    *g.get_cells()
+                );
+            }
         }
     }
 
     #[test]
-    fn test_weighted_particle_should_sink_in_water_but_water_should_not_climb_on_the_weighted_particle()
+    fn test_weighted_particle_should_sink_in_liquid_particle_but_liquid_particle_should_not_climb_on_the_weighted_particle()
      {
         /*
          * s -> s -> w
          * s    w    s
          * w    s    s
          */
-        for particle in weighted_particle() {
-            let particle = particle.with_velocity(0);
+        for liquid_particle in liquid_particle() {
+            for particle in weighted_particle() {
+                let particle = particle.with_velocity(0);
 
-            let mut g = Grid::new(1, 3)
-                .with_rand_velocity(|_| 0)
-                .with_initial_particle_velocity(0);
+                let mut g = Grid::new(1, 3)
+                    .with_rand_velocity(|_| 0)
+                    .with_initial_particle_velocity(0);
 
-            g.spawn_particle((0, 0), particle.clone());
-            g.spawn_particle((0, 1), particle.clone());
-            g.spawn_particle(
-                (0, 2),
-                Particle::from(Water::with_capacity(0)).with_velocity(0),
-            );
+                g.spawn_particle((0, 0), particle.clone());
+                g.spawn_particle((0, 1), particle.clone());
+                g.spawn_particle((0, 2), liquid_particle.clone().with_velocity(0));
 
-            assert_eq!(
-                vec![
-                    Cell::new(particle.clone()),
-                    Cell::new(particle.clone()),
-                    Cell::new(Particle::from(Water::with_capacity(0)).with_velocity(0)),
-                ],
-                *g.get_cells()
-            );
+                assert_eq!(
+                    vec![
+                        Cell::new(particle.clone()),
+                        Cell::new(particle.clone()),
+                        Cell::new(liquid_particle.clone().with_velocity(0)),
+                    ],
+                    *g.get_cells()
+                );
 
-            g.update_grid();
+                g.update_grid();
 
-            assert_eq!(
-                vec![
-                    Cell::new(particle.clone()),
-                    Cell::new(Particle::from(Water::with_capacity(0)).with_velocity(0))
-                        .with_cycle(1),
-                    Cell::new(particle.clone().with_velocity(1)).with_cycle(1),
-                ],
-                *g.get_cells()
-            );
+                assert_eq!(
+                    vec![
+                        Cell::new(particle.clone()),
+                        Cell::new(liquid_particle.clone().with_velocity(0)).with_cycle(1),
+                        Cell::new(particle.clone().with_velocity(1)).with_cycle(1),
+                    ],
+                    *g.get_cells()
+                );
 
-            g.update_grid();
+                g.update_grid();
 
-            assert_eq!(
-                vec![
-                    Cell::new(Particle::from(Water::with_capacity(0)).with_velocity(0))
-                        .with_cycle(2),
-                    Cell::new(particle.clone().with_velocity(1)).with_cycle(2),
-                    Cell::new(particle.clone().with_velocity(0)).with_cycle(1),
-                ],
-                *g.get_cells()
-            );
+                assert_eq!(
+                    vec![
+                        Cell::new(liquid_particle.clone().with_velocity(0)).with_cycle(2),
+                        Cell::new(particle.clone().with_velocity(1)).with_cycle(2),
+                        Cell::new(particle.clone().with_velocity(0)).with_cycle(1),
+                    ],
+                    *g.get_cells()
+                );
+            }
         }
     }
 
     #[test]
-    fn test_weighted_particle_can_sink_to_left_in_water_even_if_the_destination_cell_is_simulated()
-    {
+    fn test_weighted_particle_can_sink_to_left_in_liquid_particle_even_if_the_destination_cell_is_simulated()
+     {
         /*
          * ws -> -s -> -w
          * -r    wr    sr
          */
 
-        for particle in weighted_particle() {
-            let mut g =
-                Grid::new(2, 2).with_rand_row_update_direction(|_| RowUpdateDirection::Forward);
+        for liquid_particle in liquid_particle() {
+            for particle in weighted_particle() {
+                let mut g =
+                    Grid::new(2, 2).with_rand_row_update_direction(|_| RowUpdateDirection::Forward);
 
-            g.spawn_particle((0, 0), Particle::from(Water::with_capacity(0)));
-            g.spawn_particle((1, 0), particle.clone());
-            g.spawn_particle((1, 1), Particle::from(Rock::new()));
+                g.spawn_particle((0, 0), liquid_particle.clone());
+                g.spawn_particle((1, 0), particle.clone());
+                g.spawn_particle((1, 1), Particle::from(Rock::new()));
 
-            g.update_grid();
-            assert_eq!(
-                vec![
-                    Cell::empty().with_cycle(1),
-                    Cell::new(Particle::from(Water::with_capacity(0))).with_cycle(1),
-                    Cell::new(particle.clone()).with_cycle(1),
-                    Cell::new(Particle::from(Rock::new())),
-                ],
-                *g.get_cells()
-            );
+                g.update_grid();
+                assert_eq!(
+                    vec![
+                        Cell::empty().with_cycle(1),
+                        Cell::new(liquid_particle.clone()).with_cycle(1),
+                        Cell::new(particle.clone()).with_cycle(1),
+                        Cell::new(Particle::from(Rock::new())),
+                    ],
+                    *g.get_cells()
+                );
+            }
         }
     }
 
     #[test]
-    fn test_weighted_particle_can_sink_to_right_in_water_even_if_the_destination_cell_is_simulated()
-    {
+    fn test_weighted_particle_can_sink_to_right_in_liquid_particle_even_if_the_destination_cell_is_simulated()
+     {
         /*
          * sw -> s- -> w-
          * r-    rw    rs
          */
 
-        for particle in weighted_particle() {
-            let mut g =
-                Grid::new(2, 2).with_rand_row_update_direction(|_| RowUpdateDirection::Reverse);
+        for liquid_particle in liquid_particle() {
+            for particle in weighted_particle() {
+                let mut g =
+                    Grid::new(2, 2).with_rand_row_update_direction(|_| RowUpdateDirection::Reverse);
 
-            g.spawn_particle((0, 0), particle.clone());
-            g.spawn_particle((1, 0), Particle::from(Water::with_capacity(0)));
-            g.spawn_particle((0, 1), Particle::from(Rock::new()));
+                g.spawn_particle((0, 0), particle.clone());
+                g.spawn_particle((1, 0), liquid_particle.clone());
+                g.spawn_particle((0, 1), Particle::from(Rock::new()));
 
-            g.update_grid();
-            assert_eq!(
-                vec![
-                    Cell::new(Particle::from(Water::with_capacity(0))).with_cycle(1),
-                    Cell::empty().with_cycle(1),
-                    Cell::new(Particle::from(Rock::new())),
-                    Cell::new(particle.clone()).with_cycle(1),
-                ],
-                *g.get_cells()
-            );
+                g.update_grid();
+                assert_eq!(
+                    vec![
+                        Cell::new(liquid_particle.clone()).with_cycle(1),
+                        Cell::empty().with_cycle(1),
+                        Cell::new(Particle::from(Rock::new())),
+                        Cell::new(particle.clone()).with_cycle(1),
+                    ],
+                    *g.get_cells()
+                );
+            }
         }
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::component::{
+        grid::{Cell, Grid, GridAccess, ParticleHorizontalDirection},
+        particles::{
+            particle::{Particle, ParticleKind},
+            rock::Rock,
+            salt::Salt,
+            sand::Sand,
+            water::Water,
+        },
+    };
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_dissolving_particle_counts_as_being_simulated() {
