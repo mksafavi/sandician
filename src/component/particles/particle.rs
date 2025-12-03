@@ -7,7 +7,7 @@ use bevy::{
 
 use crate::component::grid::{GridAccess, ParticleHorizontalDirection};
 
-use super::{drain::Drain, rock::Rock, salt::Salt, sand::Sand, tap::Tap, water::Water};
+use super::{acid::Acid, drain::Drain, rock::Rock, salt::Salt, sand::Sand, tap::Tap, water::Water};
 
 #[derive(Clone, PartialEq, Debug)]
 pub enum ParticleKind {
@@ -17,6 +17,7 @@ pub enum ParticleKind {
     Rock(Rock),
     Drain(Drain),
     Tap(Tap),
+    Acid(Acid),
 }
 
 impl ParticleKind {
@@ -28,6 +29,7 @@ impl ParticleKind {
             ParticleKind::Rock(..) => Self::from(Rock::new()),
             ParticleKind::Drain(..) => Self::from(Drain::new()),
             ParticleKind::Tap(..) => Self::from(Tap::new()),
+            ParticleKind::Acid(..) => Self::from(Acid::new()),
         }
     }
 }
@@ -65,6 +67,12 @@ impl From<Drain> for ParticleKind {
 impl From<Tap> for ParticleKind {
     fn from(tap: Tap) -> Self {
         Self::Tap(tap)
+    }
+}
+
+impl From<Acid> for ParticleKind {
+    fn from(acid: Acid) -> Self {
+        Self::Acid(acid)
     }
 }
 
@@ -142,6 +150,7 @@ impl From<ParticleKind> for Particle {
             ParticleKind::Rock(rock) => Self::from(rock),
             ParticleKind::Drain(drain) => Self::from(drain),
             ParticleKind::Tap(tap) => Self::from(tap),
+            ParticleKind::Acid(acid) => Self::from(acid),
         }
     }
 }
@@ -207,6 +216,15 @@ impl From<Tap> for Particle {
     }
 }
 
+impl From<Acid> for Particle {
+    fn from(acid: Acid) -> Self {
+        Self::new(
+            Color::hsva(126.00, 1.0, 0.9, 1.00),
+            ParticleKind::Acid(acid),
+        )
+    }
+}
+
 impl Particle {
     pub fn update<T: GridAccess>(grid: &mut T, position: (usize, usize)) {
         Self::kill(grid, position);
@@ -228,6 +246,7 @@ impl Particle {
                 ParticleKind::Rock(..) => (),
                 ParticleKind::Drain(drain) => drain.update(grid, position),
                 ParticleKind::Tap(tap) => tap.update(grid, position),
+                ParticleKind::Acid(acid) => acid.update(grid, position),
             };
         }
     }
@@ -437,6 +456,7 @@ impl fmt::Display for Particle {
             ParticleKind::Rock(..) => "rock",
             ParticleKind::Drain(..) => "drain",
             ParticleKind::Tap(..) => "tap",
+            ParticleKind::Acid(..) => "acid",
         };
         write!(f, "{s}")
     }
@@ -458,6 +478,7 @@ mod tests {
         assert_eq!("rock", Particle::from(Rock::new()).to_string());
         assert_eq!("drain", Particle::from(Drain::new()).to_string());
         assert_eq!("tap", Particle::from(Tap::new()).to_string());
+        assert_eq!("acid", Particle::from(Acid::new()).to_string());
     }
 
     #[test]

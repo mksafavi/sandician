@@ -106,6 +106,7 @@ impl fmt::Display for Cell {
                 ParticleKind::Rock(_) => write!(f, "r"),
                 ParticleKind::Drain(_) => write!(f, "d"),
                 ParticleKind::Tap(_) => write!(f, "t"),
+                ParticleKind::Acid(_) => write!(f, "a"),
             },
             None => write!(f, "-"),
         }
@@ -417,7 +418,9 @@ mod tests {
     use super::*;
     use crate::component::{
         macros::assert_color_srgb_eq,
-        particles::{drain::Drain, rock::Rock, salt::Salt, sand::Sand, tap::Tap, water::Water},
+        particles::{
+            acid::Acid, drain::Drain, rock::Rock, salt::Salt, sand::Sand, tap::Tap, water::Water,
+        },
     };
 
     #[test]
@@ -857,6 +860,11 @@ mod tests {
             Color::hsva(190.0, 0.40, 0.75, 1.00),
             Particle::from(Tap::new()).color()
         );
+
+        assert_color_srgb_eq!(
+            Color::hsva(126.00, 1.0, 0.9, 1.00),
+            Particle::from(Acid::new()).color()
+        );
     }
 
     #[test]
@@ -894,6 +902,7 @@ mod tests {
         assert_eq!("r", Cell::new(Particle::from(Rock::new())).to_string());
         assert_eq!("d", Cell::new(Particle::from(Drain::new())).to_string());
         assert_eq!("t", Cell::new(Particle::from(Tap::new())).to_string());
+        assert_eq!("a", Cell::new(Particle::from(Acid::new())).to_string());
     }
 
     #[test]

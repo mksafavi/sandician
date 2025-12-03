@@ -1,3 +1,4 @@
+pub mod acid;
 pub mod drain;
 pub mod particle;
 pub mod rock;
