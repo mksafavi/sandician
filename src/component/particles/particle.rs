@@ -77,6 +77,7 @@ pub struct Particle {
     pub kind: ParticleKind,
     pub seed: u8,
     pub velocity: u8,
+    health: u8,
 }
 
 impl Particle {
@@ -89,6 +90,7 @@ impl Particle {
             kind,
             seed: 127,
             velocity: u8::MAX,
+            health: u8::MAX,
         }
     }
 
@@ -118,6 +120,11 @@ impl Particle {
 
     pub fn with_velocity(mut self, velocity: u8) -> Self {
         self.velocity = velocity;
+        self
+    }
+
+    fn with_health(mut self, health: u8) -> Self {
+        self.health = health;
         self
     }
 
@@ -202,6 +209,8 @@ impl From<Tap> for Particle {
 
 impl Particle {
     pub fn update<T: GridAccess>(grid: &mut T, position: (usize, usize)) {
+        Self::kill(grid, position);
+
         if Self::gravity(grid, position) {
             return;
         }
@@ -402,6 +411,20 @@ impl Particle {
             this.velocity = velocity.saturating_sub(1).max(initial_velocity);
         };
         false
+    }
+
+    fn kill<T: GridAccess>(grid: &mut T, position: (usize, usize)) -> bool {
+        let cycle = grid.cycle();
+        let c = grid.get_cell_mut(grid.to_index(position));
+        let Some(particle) = &mut c.particle else {
+            return false;
+        };
+        if particle.health == 0 {
+            c.particle = None;
+            c.cycle = cycle;
+            return true;
+        }
+        return false;
     }
 }
 
@@ -957,6 +980,22 @@ mod tests {
                 vec![Cell::new(particle.clone().with_velocity(50))],
                 *g.get_cells()
             );
+        }
+    }
+
+    #[test]
+    fn test_weighted_particle_dies_when_their_health_is_zero() {
+        for particle in weighted_particle() {
+            let mut g = Grid::new(1, 1);
+
+            let particle = particle.clone().with_health(0);
+            g.spawn_particle((0, 0), particle.clone());
+
+            assert_eq!(vec![Cell::new(particle)], *g.get_cells());
+
+            g.update_grid();
+
+            assert_eq!(vec![Cell::empty().with_cycle(1)], *g.get_cells());
         }
     }
 }
