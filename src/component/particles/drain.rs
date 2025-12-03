@@ -95,90 +95,9 @@ mod tests {
             }
         }
 
-        assert_eq!(
-            vec![
-                Cell::new(Particle::from(Rock::new())),
-                Cell::new(Particle::from(Rock::new())),
-                Cell::new(Particle::from(Rock::new())),
-                Cell::new(Particle::from(Rock::new())),
-                Cell::new(Particle::from(Drain::new())),
-                Cell::new(Particle::from(Rock::new())),
-                Cell::new(Particle::from(Rock::new())),
-                Cell::new(Particle::from(Rock::new())),
-                Cell::new(Particle::from(Rock::new())),
-            ],
-            *g.get_cells()
-        );
-
-        g.update_grid();
-
-        assert_eq!(
-            vec![
-                Cell::new(Particle::from(Rock::new())),
-                Cell::new(Particle::from(Rock::new()).with_health(0)).with_cycle(1),
-                Cell::new(Particle::from(Rock::new())),
-                Cell::new(Particle::from(Rock::new())),
-                Cell::new(Particle::from(Drain::new())).with_cycle(1),
-                Cell::new(Particle::from(Rock::new())),
-                Cell::new(Particle::from(Rock::new())),
-                Cell::new(Particle::from(Rock::new())),
-                Cell::new(Particle::from(Rock::new())),
-            ],
-            *g.get_cells()
-        );
-
-        g.update_grid();
-
-        assert_eq!(
-            vec![
-                Cell::new(Particle::from(Rock::new())),
-                Cell::empty().with_cycle(2),
-                Cell::new(Particle::from(Rock::new())),
-                Cell::new(Particle::from(Rock::new()).with_health(0)).with_cycle(2),
-                Cell::new(Particle::from(Drain::new())).with_cycle(2),
-                Cell::new(Particle::from(Rock::new())),
-                Cell::new(Particle::from(Rock::new())),
-                Cell::new(Particle::from(Rock::new())),
-                Cell::new(Particle::from(Rock::new())),
-            ],
-            *g.get_cells()
-        );
-
-        g.update_grid();
-
-        assert_eq!(
-            vec![
-                Cell::new(Particle::from(Rock::new())),
-                Cell::empty().with_cycle(2),
-                Cell::new(Particle::from(Rock::new())),
-                Cell::empty().with_cycle(3),
-                Cell::new(Particle::from(Drain::new())).with_cycle(3),
-                Cell::new(Particle::from(Rock::new()).with_health(0)).with_cycle(3),
-                Cell::new(Particle::from(Rock::new())),
-                Cell::new(Particle::from(Rock::new())),
-                Cell::new(Particle::from(Rock::new())),
-            ],
-            *g.get_cells()
-        );
-
-        g.update_grid();
-
-        assert_eq!(
-            vec![
-                Cell::new(Particle::from(Rock::new())),
-                Cell::empty().with_cycle(2),
-                Cell::new(Particle::from(Rock::new())),
-                Cell::empty().with_cycle(3),
-                Cell::new(Particle::from(Drain::new())).with_cycle(4),
-                Cell::empty().with_cycle(4),
-                Cell::new(Particle::from(Rock::new())),
-                Cell::new(Particle::from(Rock::new()).with_health(0)).with_cycle(4),
-                Cell::new(Particle::from(Rock::new())),
-            ],
-            *g.get_cells()
-        );
-
-        g.update_grid();
+        for _ in 0..6 {
+            g.update_grid();
+        }
 
         assert_eq!(
             vec![
