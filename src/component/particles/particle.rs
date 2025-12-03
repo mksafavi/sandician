@@ -116,7 +116,7 @@ impl Particle {
         self
     }
 
-    pub fn with_velocity(mut self, velocity: u8) -> Particle {
+    pub fn with_velocity(mut self, velocity: u8) -> Self {
         self.velocity = velocity;
         self
     }
