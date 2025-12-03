@@ -68,6 +68,22 @@ fn criterion_benchmark(c: &mut Criterion) {
         });
     });
 
+    c.bench_function("update grid salt and water", |b| {
+        let mut g = Grid::new(x, y);
+        for y in 0..y / 2 {
+            for x in 0..x {
+                g.spawn_particle((x, y), Particle::from(Salt::new()));
+            }
+        }
+        for y in y / 2..y {
+            for x in 0..x {
+                g.spawn_particle((x, y), Particle::from(Water::new()));
+            }
+        }
+        b.iter(|| {
+            g.update_grid();
+        });
+    });
     c.bench_function("update grid rock", |b| {
         let mut g = Grid::new(x, y);
         for y in 0..y {
