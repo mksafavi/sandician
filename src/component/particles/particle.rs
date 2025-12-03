@@ -424,7 +424,7 @@ impl Particle {
             c.cycle = cycle;
             return true;
         }
-        return false;
+        false
     }
 }
 
