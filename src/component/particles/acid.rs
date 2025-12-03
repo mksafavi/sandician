@@ -29,6 +29,8 @@ impl Acid {
             {
                 match p.kind {
                     particle::ParticleKind::Acid(..) => (),
+                    particle::ParticleKind::Drain(..) => (),
+                    particle::ParticleKind::Tap(..) => (),
                     _ => {
                         let cycle = grid.cycle();
                         let cell = grid.get_cell_mut(index);
@@ -49,9 +51,44 @@ impl Acid {
 mod tests {
     use crate::component::{
         grid::{Cell, Grid, GridAccess},
-        particles::{acid::Acid, particle::Particle, rock::Rock},
+        particles::{acid::Acid, drain::Drain, particle::Particle, rock::Rock, tap::Tap},
     };
     use pretty_assertions::assert_eq;
+
+    fn corrosion_resistant_particle() -> Vec<Particle> {
+        vec![
+            Particle::from(Drain::with_rate(0)),
+            Particle::from(Tap::new()),
+        ]
+    }
+
+    #[test]
+    fn test_update_grid_acid_shouldnt_damage_corrosion_resistant_particles() {
+        /*
+         * a -> a
+         * c    c
+         */
+
+        for particle in corrosion_resistant_particle() {
+            let mut g = Grid::new(1, 2);
+
+            g.spawn_particle((0, 0), Particle::from(Acid::new()));
+            g.spawn_particle((0, 1), particle.clone());
+
+            g.update_grid();
+
+            assert_eq!(
+                vec![
+                    Some(Particle::from(Acid::new()).health),
+                    Some(particle.clone().health)
+                ],
+                g.get_cells()
+                    .iter()
+                    .map(|c| c.particle.as_ref().map(|p| p.health))
+                    .collect::<Vec<_>>()
+            );
+        }
+    }
 
     #[test]
     fn test_update_grid_acid_shouldnt_remove_other_acid_particles() {
