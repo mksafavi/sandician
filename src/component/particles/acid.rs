@@ -2,7 +2,9 @@ use super::particle;
 use crate::component::grid::GridAccess;
 
 #[derive(Clone, PartialEq, Debug)]
-pub struct Acid;
+pub struct Acid {
+    acidity: u8,
+}
 
 impl Default for Acid {
     fn default() -> Self {
@@ -12,7 +14,11 @@ impl Default for Acid {
 
 impl Acid {
     pub fn new() -> Self {
-        Self
+        Self::with_acidity(40)
+    }
+
+    pub fn with_acidity(acidity: u8) -> Self {
+        Self { acidity }
     }
 
     pub fn update<T: GridAccess>(&self, grid: &mut T, position: (usize, usize)) {
@@ -26,7 +32,7 @@ impl Acid {
                         let cycle = grid.cycle();
                         let cell = grid.get_cell_mut(index);
                         if let Some(particle) = &mut cell.particle {
-                            particle.health = particle.health.saturating_sub(40);
+                            particle.health = particle.health.saturating_sub(self.acidity);
                             cell.cycle = cycle;
                         }
                         let cell = grid.get_cell_mut(grid.to_index(position));
