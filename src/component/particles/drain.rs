@@ -52,21 +52,28 @@ mod tests {
     #[test]
     fn test_update_grid_drain_shouldnt_remove_other_drain_particles() {
         /*
-         * dd -> dd
-         * dd    dd
+         * ddd -> ddd
+         * ddd    ddd
+         * ddd    ddd
          */
 
-        let mut g = Grid::new(2, 2);
+        let mut g = Grid::new(3, 3);
 
-        g.spawn_particle((0, 0), Particle::from(Drain::new()));
-        g.spawn_particle((1, 0), Particle::from(Drain::new()));
-        g.spawn_particle((0, 1), Particle::from(Drain::new()));
-        g.spawn_particle((1, 1), Particle::from(Drain::new()));
+        for y in 0..3 {
+            for x in 0..3 {
+                g.spawn_particle((x, y), Particle::from(Drain::new()));
+            }
+        }
 
         g.update_grid();
 
         assert_eq!(
             vec![
+                Cell::new(Particle::from(Drain::new())),
+                Cell::new(Particle::from(Drain::new())),
+                Cell::new(Particle::from(Drain::new())),
+                Cell::new(Particle::from(Drain::new())),
+                Cell::new(Particle::from(Drain::new())),
                 Cell::new(Particle::from(Drain::new())),
                 Cell::new(Particle::from(Drain::new())),
                 Cell::new(Particle::from(Drain::new())),
