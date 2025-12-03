@@ -77,7 +77,7 @@ pub struct Particle {
     pub kind: ParticleKind,
     pub seed: u8,
     pub velocity: u8,
-    health: u8,
+    pub health: u8,
 }
 
 impl Particle {
@@ -123,7 +123,7 @@ impl Particle {
         self
     }
 
-    fn with_health(mut self, health: u8) -> Self {
+    pub fn with_health(mut self, health: u8) -> Self {
         self.health = health;
         self
     }

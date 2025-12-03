@@ -35,11 +35,14 @@ fn dissolve_salt<T: GridAccess>(grid: &mut T, capacity: u8, position: (usize, us
                 && let Some(p) = &grid.get_cell(i).particle
                 && let ParticleKind::Salt(..) = p.kind
                 && 0 < capacity
+                && 0 < p.health
             {
                 let cycle = grid.cycle();
                 let cell = grid.get_cell_mut(i);
-                cell.particle = None;
-                cell.cycle = cycle;
+                if let Some(particle) = &mut cell.particle {
+                    particle.health = 0;
+                    cell.cycle = cycle;
+                }
                 let cell = grid.get_cell_mut(grid.to_index(position));
                 if let Some(particle) = &cell.particle {
                     cell.particle = Some(
@@ -702,7 +705,7 @@ mod tests {
             vec![
                 Cell::new(Particle::from(Sand::new())),
                 Cell::new(Particle::from(Water::with_capacity(2))).with_cycle(1),
-                Cell::empty().with_cycle(1),
+                Cell::new(Particle::from(Salt::new()).with_health(0)).with_cycle(1),
             ],
             *g.get_cells()
         );
@@ -744,7 +747,10 @@ mod tests {
                                 g.get_cell(g.to_index((xr, yr))).clone().particle
                             );
                         } else if (xr, yr) == (x, y) {
-                            assert_eq!(None, g.get_cell(g.to_index((xr, yr))).clone().particle);
+                            assert_eq!(
+                                Some(Particle::from(Salt::new()).with_health(0)),
+                                g.get_cell(g.to_index((xr, yr))).clone().particle
+                            );
                         } else {
                             assert_eq!(
                                 Some(Particle::from(Rock::new())),
@@ -789,6 +795,7 @@ mod tests {
         );
 
         g.update_grid();
+        g.update_grid();
 
         assert_eq!(
             vec![
@@ -809,6 +816,7 @@ mod tests {
         );
 
         g.update_grid();
+        g.update_grid();
 
         assert_eq!(
             vec![
@@ -828,6 +836,7 @@ mod tests {
                 .collect::<Vec<_>>()
         );
 
+        g.update_grid();
         g.update_grid();
 
         assert_eq!(
@@ -969,7 +978,7 @@ mod tests {
         assert_eq!(
             vec![
                 Cell::new(Particle::from(Water::with_capacity(2)).with_seed(111)).with_cycle(1),
-                Cell::empty().with_cycle(1)
+                Cell::new(Particle::from(Salt::new()).with_health(0)).with_cycle(1)
             ],
             *g.get_cells()
         );
