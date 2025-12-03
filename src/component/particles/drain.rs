@@ -20,14 +20,17 @@ impl Drain {
         for offset in [(0, -1), (-1, 0), (1, 0), (0, 1)] {
             if let Ok(index) = grid.get_neighbor_index(position, offset)
                 && let Some(p) = &grid.get_cell(index).particle
+                && 0 < p.health
             {
                 match p.kind {
                     particle::ParticleKind::Drain(..) => (),
                     _ => {
                         let cycle = grid.cycle();
                         let cell = grid.get_cell_mut(index);
-                        cell.particle = None;
-                        cell.cycle = cycle;
+                        if let Some(particle) = &mut cell.particle {
+                            particle.health = 0;
+                            cell.cycle = cycle;
+                        }
                         let cell = grid.get_cell_mut(grid.to_index(position));
                         cell.cycle = cycle;
                         return;
@@ -74,7 +77,7 @@ mod tests {
     }
 
     #[test]
-    fn test_update_grid_drain_removes_particles_around_it() {
+    fn test_update_grid_drain_lowers_the_neighbor_particles_health_to_zero() {
         /*
          * rrr -> r-r
          * rdr    -d-
@@ -112,7 +115,7 @@ mod tests {
         assert_eq!(
             vec![
                 Cell::new(Particle::from(Rock::new())),
-                Cell::empty().with_cycle(1),
+                Cell::new(Particle::from(Rock::new()).with_health(0)).with_cycle(1),
                 Cell::new(Particle::from(Rock::new())),
                 Cell::new(Particle::from(Rock::new())),
                 Cell::new(Particle::from(Drain::new())).with_cycle(1),
@@ -129,9 +132,9 @@ mod tests {
         assert_eq!(
             vec![
                 Cell::new(Particle::from(Rock::new())),
-                Cell::empty().with_cycle(1),
-                Cell::new(Particle::from(Rock::new())),
                 Cell::empty().with_cycle(2),
+                Cell::new(Particle::from(Rock::new())),
+                Cell::new(Particle::from(Rock::new()).with_health(0)).with_cycle(2),
                 Cell::new(Particle::from(Drain::new())).with_cycle(2),
                 Cell::new(Particle::from(Rock::new())),
                 Cell::new(Particle::from(Rock::new())),
@@ -146,11 +149,11 @@ mod tests {
         assert_eq!(
             vec![
                 Cell::new(Particle::from(Rock::new())),
-                Cell::empty().with_cycle(1),
-                Cell::new(Particle::from(Rock::new())),
                 Cell::empty().with_cycle(2),
-                Cell::new(Particle::from(Drain::new())).with_cycle(3),
+                Cell::new(Particle::from(Rock::new())),
                 Cell::empty().with_cycle(3),
+                Cell::new(Particle::from(Drain::new())).with_cycle(3),
+                Cell::new(Particle::from(Rock::new()).with_health(0)).with_cycle(3),
                 Cell::new(Particle::from(Rock::new())),
                 Cell::new(Particle::from(Rock::new())),
                 Cell::new(Particle::from(Rock::new())),
@@ -163,13 +166,30 @@ mod tests {
         assert_eq!(
             vec![
                 Cell::new(Particle::from(Rock::new())),
-                Cell::empty().with_cycle(1),
+                Cell::empty().with_cycle(2),
+                Cell::new(Particle::from(Rock::new())),
+                Cell::empty().with_cycle(3),
+                Cell::new(Particle::from(Drain::new())).with_cycle(4),
+                Cell::empty().with_cycle(4),
+                Cell::new(Particle::from(Rock::new())),
+                Cell::new(Particle::from(Rock::new()).with_health(0)).with_cycle(4),
+                Cell::new(Particle::from(Rock::new())),
+            ],
+            *g.get_cells()
+        );
+
+        g.update_grid();
+
+        assert_eq!(
+            vec![
                 Cell::new(Particle::from(Rock::new())),
                 Cell::empty().with_cycle(2),
-                Cell::new(Particle::from(Drain::new())).with_cycle(4),
-                Cell::empty().with_cycle(3),
                 Cell::new(Particle::from(Rock::new())),
+                Cell::empty().with_cycle(3),
+                Cell::new(Particle::from(Drain::new())).with_cycle(4),
                 Cell::empty().with_cycle(4),
+                Cell::new(Particle::from(Rock::new())),
+                Cell::empty().with_cycle(5),
                 Cell::new(Particle::from(Rock::new())),
             ],
             *g.get_cells()
