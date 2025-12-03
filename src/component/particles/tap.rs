@@ -208,7 +208,7 @@ mod tests {
             vec![
                 Cell::empty(),
                 Cell::empty(),
-                Cell::new(Particle::from(Tap::new()).with_health(0)).with_cycle(1),
+                Cell::new(Particle::from(Tap::new()).with_health(215)).with_cycle(1),
                 Cell::new(Particle::from(Drain::new())).with_cycle(1),
             ],
             *g.get_cells()

@@ -28,7 +28,7 @@ impl Drain {
                         let cycle = grid.cycle();
                         let cell = grid.get_cell_mut(index);
                         if let Some(particle) = &mut cell.particle {
-                            particle.health = 0;
+                            particle.health = particle.health.saturating_sub(40);
                             cell.cycle = cycle;
                         }
                         let cell = grid.get_cell_mut(grid.to_index(position));
@@ -77,7 +77,7 @@ mod tests {
     }
 
     #[test]
-    fn test_update_grid_drain_lowers_the_neighbor_particles_health_to_zero() {
+    fn test_update_grid_drain_gradually_lowers_the_neighbor_particles_health_to_zero() {
         /*
          * rrr -> r-r
          * rdr    -d-
@@ -95,20 +95,23 @@ mod tests {
             }
         }
 
-        for _ in 0..6 {
+        for _ in 0..4 {
+            for _ in 0..7 {
+                g.update_grid();
+            }
             g.update_grid();
         }
 
         assert_eq!(
             vec![
                 Cell::new(Particle::from(Rock::new())),
-                Cell::empty().with_cycle(2),
+                Cell::empty().with_cycle(8),
                 Cell::new(Particle::from(Rock::new())),
-                Cell::empty().with_cycle(3),
-                Cell::new(Particle::from(Drain::new())).with_cycle(4),
-                Cell::empty().with_cycle(4),
+                Cell::empty().with_cycle(15),
+                Cell::new(Particle::from(Drain::new())).with_cycle(28),
+                Cell::empty().with_cycle(22),
                 Cell::new(Particle::from(Rock::new())),
-                Cell::empty().with_cycle(5),
+                Cell::empty().with_cycle(29),
                 Cell::new(Particle::from(Rock::new())),
             ],
             *g.get_cells()
