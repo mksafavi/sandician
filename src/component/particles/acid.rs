@@ -14,7 +14,7 @@ impl Default for Acid {
 
 impl Acid {
     pub fn new() -> Self {
-        Self::with_acidity(40)
+        Self::with_acidity(15)
     }
 
     pub fn with_acidity(acidity: u8) -> Self {
@@ -137,14 +137,14 @@ mod tests {
         g.spawn_particle((0, 0), Particle::from(Acid::new()));
         g.spawn_particle((0, 1), Particle::from(Rock::new()));
 
-        for _ in 0..7 {
+        for _ in 0..17 {
             g.update_grid();
         }
 
         assert_eq!(
             vec![
-                Cell::new(Particle::from(Acid::new()).with_health(0)).with_cycle(7),
-                Cell::new(Particle::from(Rock::new()).with_health(0)).with_cycle(7),
+                Cell::new(Particle::from(Acid::new()).with_health(0)).with_cycle(17),
+                Cell::new(Particle::from(Rock::new()).with_health(0)).with_cycle(17),
             ],
             *g.get_cells()
         );
@@ -160,14 +160,14 @@ mod tests {
         g.spawn_particle((0, 0), Particle::from(Rock::new()));
         g.spawn_particle((0, 1), Particle::from(Acid::new()));
 
-        for _ in 0..7 {
+        for _ in 0..17 {
             g.update_grid();
         }
 
         assert_eq!(
             vec![
-                Cell::new(Particle::from(Rock::new()).with_health(0)).with_cycle(7),
-                Cell::new(Particle::from(Acid::new()).with_health(0)).with_cycle(7),
+                Cell::new(Particle::from(Rock::new()).with_health(0)).with_cycle(17),
+                Cell::new(Particle::from(Acid::new()).with_health(0)).with_cycle(17),
             ],
             *g.get_cells()
         );
