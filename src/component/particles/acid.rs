@@ -22,7 +22,7 @@ impl Acid {
     }
 
     pub fn update<T: GridAccess>(&self, grid: &mut T, position: (usize, usize)) {
-        for offset in [(0,-1), (0, 1)] {
+        for offset in [(0, -1), (0, 1)] {
             if let Ok(index) = grid.get_neighbor_index(position, offset)
                 && let Some(p) = &grid.get_cell(index).particle
                 && 0 < self.acidity
