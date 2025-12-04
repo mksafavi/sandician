@@ -120,6 +120,25 @@ fn criterion_benchmark(c: &mut Criterion) {
         });
     });
 
+    /*
+    c.bench_function("update grid acid and sand", |b| {
+        let mut g = Grid::new(x, y);
+        for y in 0..y / 2 {
+            for x in 0..x {
+                g.spawn_particle((x, y), Particle::from(Acid::new()));
+            }
+        }
+        for y in y / 2..y {
+            for x in 0..x {
+                g.spawn_particle((x, y), Particle::from(Sand::new()));
+            }
+        }
+        b.iter(|| {
+            g.update_grid();
+        });
+    });
+     */
+
     c.bench_function("update grid", |b| {
         let mut g = Grid::new(x, y);
         fill_grid_mixed(&mut g, (x, y));
