@@ -35,8 +35,8 @@ use crate::component::{grid::BACKGROUND_COLOR, particles::rock::Rock};
 use super::{
     grid::Grid,
     particles::{
-        drain::Drain, particle::Particle, particle::ParticleKind, salt::Salt, sand::Sand, tap::Tap,
-        water::Water,
+        acid::Acid, drain::Drain, particle::Particle, particle::ParticleKind, salt::Salt,
+        sand::Sand, tap::Tap, water::Water,
     },
 };
 
@@ -305,6 +305,7 @@ fn brush_node(font: Handle<Font>) -> impl Bundle {
             radio(Some(Particle::from(Sand::new())), font.clone()),
             radio(Some(Particle::from(Salt::new())), font.clone()),
             radio(Some(Particle::from(Water::new())), font.clone()),
+            radio(Some(Particle::from(Acid::new())), font.clone()),
             radio(Some(Particle::from(Rock::new())), font.clone()),
             radio(Some(Particle::from(Drain::new())), font.clone()),
             radio(Some(Particle::from(Tap::new())), font.clone()),
@@ -811,6 +812,12 @@ mod tests {
         trigger_particle_button_click_event(&mut app, Some(Particle::from(Water::new())));
         assert_eq!(
             Some(ParticleKind::from(Water::new())),
+            query_particle_brush(&mut app).particle_kind
+        );
+
+        trigger_particle_button_click_event(&mut app, Some(Particle::from(Acid::new())));
+        assert_eq!(
+            Some(ParticleKind::from(Acid::new())),
             query_particle_brush(&mut app).particle_kind
         );
 
