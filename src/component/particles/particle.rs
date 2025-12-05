@@ -1004,8 +1004,7 @@ mod liquid {
     }
 
     #[test]
-    fn test_liquid_particle_moves_left_or_right_when_both_right_and_left_are_empty_forced_right()
-     {
+    fn test_liquid_particle_moves_left_or_right_when_both_right_and_left_are_empty_forced_right() {
         /*
          * --- -> ---
          * -w-    --w
@@ -1033,8 +1032,7 @@ mod liquid {
     }
 
     #[test]
-    fn test_liquid_particle_moves_left_or_right_when_both_right_and_left_are_empty_forced_left()
-     {
+    fn test_liquid_particle_moves_left_or_right_when_both_right_and_left_are_empty_forced_left() {
         /*
          * --- -> ---
          * -w-    w--
@@ -1715,4 +1713,3 @@ mod liquid {
         }
     }
 }
-
