@@ -466,11 +466,8 @@ impl fmt::Display for Particle {
 
 #[cfg(test)]
 mod tests {
-    use crate::component::grid::{Cell, Grid, Random};
-    use pretty_assertions::assert_eq;
-    use std::sync::atomic::{AtomicUsize, Ordering};
-
     use super::*;
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_particle_string_names() {
@@ -500,10 +497,13 @@ mod tests {
             ParticleKind::from(Acid::with_acidity(200)).to_default()
         );
     }
+}
 
-    fn weighted_particle() -> Vec<Particle> {
-        vec![Particle::from(Sand::new()), Particle::from(Salt::new())]
-    }
+#[cfg(test)]
+mod weightless {
+    use super::*;
+    use crate::component::grid::{Cell, Grid};
+    use pretty_assertions::assert_eq;
 
     fn weightless_particle() -> Vec<Particle> {
         vec![
@@ -546,6 +546,18 @@ mod tests {
                 *g.get_cells()
             );
         }
+    }
+}
+
+#[cfg(test)]
+mod powder {
+    use super::*;
+    use crate::component::grid::{Cell, Grid, Random};
+    use pretty_assertions::assert_eq;
+    use std::sync::atomic::{AtomicUsize, Ordering};
+
+    fn weighted_particle() -> Vec<Particle> {
+        vec![Particle::from(Sand::new()), Particle::from(Salt::new())]
     }
 
     #[test]
@@ -791,6 +803,7 @@ mod tests {
             );
         }
     }
+
     #[test]
     fn test_weighted_particle_should_use_the_same_velocity_probability_for_all_direction_checks_so_that_it_spreads_less()
      {
