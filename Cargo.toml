@@ -14,6 +14,7 @@ wasm-bindgen = "=0.2.104"
 version = "0.17"
 default-features = false
 features = [
+"bevy_log",
 "bevy_sprite_render",
 "bevy_sprite",
 "bevy_sprite_picking_backend",
