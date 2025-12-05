@@ -251,8 +251,7 @@ mod tests {
     }
 
     #[test]
-    fn test_tap_clones_a_new_particle_with_the_selected_kind_instead_of_the_exact_particle()
-     {
+    fn test_tap_clones_a_new_particle_with_the_selected_kind_instead_of_the_exact_particle() {
         let mut g = Grid::new(1, 2).with_rand_seed_with_cycle(|_| 127);
 
         g.spawn_particle((0, 0), Particle::from(Tap::new()));
