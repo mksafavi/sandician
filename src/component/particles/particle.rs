@@ -494,6 +494,11 @@ mod tests {
             ParticleKind::from(Tap::new()),
             ParticleKind::from(Tap::with_particle(&Particle::from(Rock))).to_default()
         );
+
+        assert_eq!(
+            ParticleKind::from(Acid::new()),
+            ParticleKind::from(Acid::with_acidity(200)).to_default()
+        );
     }
 
     fn weighted_particle() -> Vec<Particle> {
