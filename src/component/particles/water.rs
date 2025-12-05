@@ -29,31 +29,29 @@ impl Water {
 }
 
 fn dissolve_salt<T: GridAccess>(grid: &mut T, capacity: u8, position: (usize, usize)) -> bool {
-    for y in -1..=1 {
-        for x in -1..=1 {
-            if let Ok(i) = grid.get_neighbor_index(position, (x, y))
-                && let Some(p) = &grid.get_cell(i).particle
-                && let ParticleKind::Salt(..) = p.kind
-                && 0 < capacity
-                && 0 < p.health
-            {
-                let cycle = grid.cycle();
-                let cell = grid.get_cell_mut(i);
-                if let Some(particle) = &mut cell.particle {
-                    particle.health = 0;
-                    cell.cycle = cycle;
-                }
-                let cell = grid.get_cell_mut(grid.to_index(position));
-                if let Some(particle) = &cell.particle {
-                    cell.particle = Some(
-                        Particle::from(Water::with_capacity(capacity - 1))
-                            .with_seed(particle.seed)
-                            .with_velocity(particle.velocity),
-                    );
-                    cell.cycle = cycle;
-                }
-                return true;
+    for offset in [(0, -1), (-1, 0), (1, 0), (0, 1)] {
+        if let Ok(i) = grid.get_neighbor_index(position, offset)
+            && let Some(p) = &grid.get_cell(i).particle
+            && let ParticleKind::Salt(..) = p.kind
+            && 0 < capacity
+            && 0 < p.health
+        {
+            let cycle = grid.cycle();
+            let cell = grid.get_cell_mut(i);
+            if let Some(particle) = &mut cell.particle {
+                particle.health = 0;
+                cell.cycle = cycle;
             }
+            let cell = grid.get_cell_mut(grid.to_index(position));
+            if let Some(particle) = &cell.particle {
+                cell.particle = Some(
+                    Particle::from(Water::with_capacity(capacity - 1))
+                        .with_seed(particle.seed)
+                        .with_velocity(particle.velocity),
+                );
+                cell.cycle = cycle;
+            }
+            return true;
         }
     }
     false
@@ -102,48 +100,43 @@ mod tests {
     fn test_water_dissolve_neighboring_salts() {
         /*
          * for each neighbor:
-         * Srr -> -rr
+         * rSr -> rSr
          * rwr    rwr
          * rrr    rrr
          */
-        for y in 0..3 {
-            for x in 0..3 {
-                if (x, y) == (1, 1) {
-                    continue;
-                }
-                let mut g = Grid::new(3, 3);
-                g.spawn_particle((1, 1), Particle::from(Water::new()));
-                g.spawn_particle((x, y), Particle::from(Salt::new()));
+        for (x, y) in [(1, 0), (0, 1), (2, 1), (1, 2)] {
+            let mut g = Grid::new(3, 3);
+            g.spawn_particle((1, 1), Particle::from(Water::new()));
+            g.spawn_particle((x, y), Particle::from(Salt::new()));
 
-                for yr in 0..3 {
-                    for xr in 0..3 {
-                        if (xr, yr) == (1, 1) || (xr, yr) == (x, y) {
-                            continue;
-                        }
-                        g.spawn_particle((xr, yr), Particle::from(Rock::new()));
+            for yr in 0..3 {
+                for xr in 0..3 {
+                    if (xr, yr) == (1, 1) || (xr, yr) == (x, y) {
+                        continue;
                     }
+                    g.spawn_particle((xr, yr), Particle::from(Rock::new()));
                 }
+            }
 
-                g.update_grid();
+            g.update_grid();
 
-                for yr in 0..3 {
-                    for xr in 0..3 {
-                        if (xr, yr) == (1, 1) {
-                            assert_eq!(
-                                Some(Particle::from(Water::with_capacity(2))),
-                                g.get_cell(g.to_index((xr, yr))).clone().particle
-                            );
-                        } else if (xr, yr) == (x, y) {
-                            assert_eq!(
-                                Some(Particle::from(Salt::new()).with_health(0)),
-                                g.get_cell(g.to_index((xr, yr))).clone().particle
-                            );
-                        } else {
-                            assert_eq!(
-                                Some(Particle::from(Rock::new())),
-                                g.get_cell(g.to_index((xr, yr))).clone().particle
-                            );
-                        }
+            for yr in 0..3 {
+                for xr in 0..3 {
+                    if (xr, yr) == (1, 1) {
+                        assert_eq!(
+                            Some(Particle::from(Water::with_capacity(2))),
+                            g.get_cell(g.to_index((xr, yr))).clone().particle
+                        );
+                    } else if (xr, yr) == (x, y) {
+                        assert_eq!(
+                            Some(Particle::from(Salt::new()).with_health(0)),
+                            g.get_cell(g.to_index((xr, yr))).clone().particle
+                        );
+                    } else {
+                        assert_eq!(
+                            Some(Particle::from(Rock::new())),
+                            g.get_cell(g.to_index((xr, yr))).clone().particle
+                        );
                     }
                 }
             }
@@ -152,23 +145,19 @@ mod tests {
 
     #[test]
     fn test_water_can_only_dissolve_three_salt_particles() {
-        let mut g = Grid::new(1, 9).with_rand_velocity(|_| 0);
+        let mut g = Grid::new(1, 5).with_rand_velocity(|_| 0);
 
         let water = Particle::from(Water::new()).with_velocity(0);
-        g.spawn_particle((0, 8), water.clone());
-
         let salt = Particle::from(Salt::new()).with_velocity(0);
 
-        for y in 0..8 {
-            g.spawn_particle((0, y), salt.clone());
-        }
+        g.spawn_particle((0, 0), salt.clone());
+        g.spawn_particle((0, 1), salt.clone());
+        g.spawn_particle((0, 2), salt.clone());
+        g.spawn_particle((0, 3), salt.clone());
+        g.spawn_particle((0, 4), water.clone());
 
         assert_eq!(
             vec![
-                Some(ParticleKind::from(Salt::new())),
-                Some(ParticleKind::from(Salt::new())),
-                Some(ParticleKind::from(Salt::new())),
-                Some(ParticleKind::from(Salt::new())),
                 Some(ParticleKind::from(Salt::new())),
                 Some(ParticleKind::from(Salt::new())),
                 Some(ParticleKind::from(Salt::new())),
@@ -190,10 +179,6 @@ mod tests {
                 Some(ParticleKind::from(Salt::new())),
                 Some(ParticleKind::from(Salt::new())),
                 Some(ParticleKind::from(Salt::new())),
-                Some(ParticleKind::from(Salt::new())),
-                Some(ParticleKind::from(Salt::new())),
-                Some(ParticleKind::from(Salt::new())),
-                Some(ParticleKind::from(Salt::new())),
                 Some(ParticleKind::from(Water::with_capacity(2))),
             ],
             g.get_cells()
@@ -209,10 +194,6 @@ mod tests {
             vec![
                 None,
                 None,
-                Some(ParticleKind::from(Salt::new())),
-                Some(ParticleKind::from(Salt::new())),
-                Some(ParticleKind::from(Salt::new())),
-                Some(ParticleKind::from(Salt::new())),
                 Some(ParticleKind::from(Salt::new())),
                 Some(ParticleKind::from(Salt::new())),
                 Some(ParticleKind::from(Water::with_capacity(1))),
@@ -232,10 +213,6 @@ mod tests {
                 None,
                 None,
                 Some(ParticleKind::from(Salt::new())),
-                Some(ParticleKind::from(Salt::new())),
-                Some(ParticleKind::from(Salt::new())),
-                Some(ParticleKind::from(Salt::new())),
-                Some(ParticleKind::from(Salt::new())),
                 Some(ParticleKind::from(Water::with_capacity(0))),
             ],
             g.get_cells()
@@ -244,9 +221,7 @@ mod tests {
                 .collect::<Vec<_>>()
         );
 
-        for _ in 0..6 {
-            g.update_grid();
-        }
+        g.update_grid();
 
         assert_eq!(
             vec![
@@ -254,10 +229,6 @@ mod tests {
                 None,
                 None,
                 Some(ParticleKind::from(Water::with_capacity(0))),
-                Some(ParticleKind::from(Salt::new())),
-                Some(ParticleKind::from(Salt::new())),
-                Some(ParticleKind::from(Salt::new())),
-                Some(ParticleKind::from(Salt::new())),
                 Some(ParticleKind::from(Salt::new())),
             ],
             g.get_cells()
