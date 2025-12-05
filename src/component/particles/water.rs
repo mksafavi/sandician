@@ -832,6 +832,60 @@ mod tests_liquid {
             );
         }
     }
+
+    #[test]
+    fn test_weighted_particle_does_not_sink_into_liquid_particles_when_velocity_is_zero() {
+        /*
+         * S -> S
+         * w    w
+         */
+        for liquid_particle in liquid_particle() {
+            for particle in weighted_particle() {
+                let mut g = Grid::new(1, 2)
+                    .with_rand_velocity(|_| 255)
+                    .with_initial_particle_velocity(0);
+
+                g.spawn_particle((0, 0), particle.clone().with_velocity(0));
+                g.spawn_particle((0, 1), liquid_particle.clone());
+
+                g.update_grid();
+
+                assert_eq!(
+                    vec![
+                        Cell::new(particle.clone().with_velocity(0)),
+                        Cell::new(liquid_particle.clone().with_velocity(254))
+                    ],
+                    *g.get_cells()
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn test_weighted_particle_loses_10_percent_of_its_velocity_when_sinking_in_liquid_particles() {
+        /*
+         * S -> w
+         * w    S
+         */
+        for liquid_particle in liquid_particle() {
+            for particle in weighted_particle() {
+                let mut g = Grid::new(1, 2).with_rand_velocity(|_| 0);
+
+                g.spawn_particle((0, 0), particle.clone().with_velocity(100));
+                g.spawn_particle((0, 1), liquid_particle.clone());
+
+                g.update_grid();
+
+                assert_eq!(
+                    vec![
+                        Cell::new(liquid_particle.clone()).with_cycle(1),
+                        Cell::new(particle.clone().with_velocity(91)).with_cycle(1),
+                    ],
+                    *g.get_cells()
+                );
+            }
+        }
+    }
 }
 
 #[cfg(test)]
@@ -1111,6 +1165,7 @@ mod tests {
         /*
          * wW -> Ww
          */
+        // TODO: this should be generalized around liquids with different viscosities
         let mut g =
             Grid::new(2, 1).with_rand_particle_direction(|_| ParticleHorizontalDirection::Right);
 
