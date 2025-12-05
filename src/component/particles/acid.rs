@@ -22,7 +22,7 @@ impl Acid {
     }
 
     pub fn update<T: GridAccess>(&self, grid: &mut T, position: (usize, usize)) {
-        for offset in [(0, -1), (0, 1)] {
+        for offset in [(0, -1), (0, 1), (-1, 0), (1, 0)] {
             if let Ok(index) = grid.get_neighbor_index(position, offset)
                 && let Some(p) = &grid.get_cell(index).particle
                 && 0 < self.acidity
@@ -159,6 +159,50 @@ mod tests {
 
         g.spawn_particle((0, 0), Particle::from(Rock::new()));
         g.spawn_particle((0, 1), Particle::from(Acid::new()));
+
+        for _ in 0..17 {
+            g.update_grid();
+        }
+
+        assert_eq!(
+            vec![
+                Cell::new(Particle::from(Rock::new()).with_health(0)).with_cycle(17),
+                Cell::new(Particle::from(Acid::new()).with_health(0)).with_cycle(17),
+            ],
+            *g.get_cells()
+        );
+    }
+
+    #[test]
+    fn test_acid_gradually_lowers_the_right_neighbor_health_to_zero() {
+        /* ar -> a-
+         */
+        let mut g = Grid::new(2, 1);
+
+        g.spawn_particle((0, 0), Particle::from(Acid::new()));
+        g.spawn_particle((1, 0), Particle::from(Rock::new()));
+
+        for _ in 0..17 {
+            g.update_grid();
+        }
+
+        assert_eq!(
+            vec![
+                Cell::new(Particle::from(Acid::new()).with_health(0)).with_cycle(17),
+                Cell::new(Particle::from(Rock::new()).with_health(0)).with_cycle(17),
+            ],
+            *g.get_cells()
+        );
+    }
+
+    #[test]
+    fn test_acid_gradually_lowers_the_left_neighbor_health_to_zero() {
+        /* ra -> -a
+         */
+        let mut g = Grid::new(2, 1);
+
+        g.spawn_particle((0, 0), Particle::from(Rock::new()));
+        g.spawn_particle((1, 0), Particle::from(Acid::new()));
 
         for _ in 0..17 {
             g.update_grid();
