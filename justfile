@@ -38,5 +38,6 @@ ci-build-pages BIN:
     cp ./target/wasm-bind/* ./target/pages
     sed --in-place 's/binary.js/{{BIN}}.js/' ./target/pages/index.html
 
-clippy:
+lint:
+    RUSTFLAGS='-Dwarnings' cargo fmt --check
     RUSTFLAGS='-Dwarnings' cargo clippy --release --all-targets --all-features

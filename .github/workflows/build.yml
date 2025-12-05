@@ -13,8 +13,7 @@ jobs:
           lfs: 'true'
       - uses: DeterminateSystems/nix-installer-action@main
       - uses: rrbutani/use-nix-shell-action@v1
-      - run: cargo fmt --check
-      - run: just clippy
+      - run: just lint
 
   test:
     runs-on: ubuntu-latest
