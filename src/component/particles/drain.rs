@@ -57,7 +57,7 @@ mod tests {
     use pretty_assertions::assert_eq;
 
     #[test]
-    fn test_update_grid_drain_shouldnt_remove_other_drain_particles() {
+    fn test_drain_shouldnt_remove_other_drain_particles() {
         /*
          * ddd -> ddd
          * ddd    ddd
@@ -128,7 +128,7 @@ mod tests {
     }
 
     #[test]
-    fn test_update_grid_drain_gradually_lowers_the_neighbor_particles_health_to_zero() {
+    fn test_drain_gradually_lowers_the_neighbor_particles_health_to_zero() {
         /*
          * rrr -> r-r
          * rdr    -d-

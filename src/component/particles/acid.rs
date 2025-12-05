@@ -66,7 +66,7 @@ mod tests {
     }
 
     #[test]
-    fn test_update_grid_acid_shouldnt_damage_corrosion_resistant_particles() {
+    fn test_acid_shouldnt_damage_corrosion_resistant_particles() {
         /*
          * a -> a
          * c    c
@@ -94,7 +94,7 @@ mod tests {
     }
 
     #[test]
-    fn test_update_grid_acid_shouldnt_remove_other_acid_particles() {
+    fn test_acid_shouldnt_remove_other_acid_particles() {
         /*
          * aaa -> aaa
          * aaa    aaa

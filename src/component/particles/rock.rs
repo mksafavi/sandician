@@ -22,7 +22,7 @@ mod tests {
     use pretty_assertions::assert_eq;
 
     #[test]
-    fn test_update_grid_particles_should_not_swap_with_rock() {
+    fn test_particles_should_not_swap_with_rock() {
         /*
          * -s- -> -s-
          * rrr    rrr
@@ -69,7 +69,7 @@ mod tests {
     }
 
     #[test]
-    fn test_update_grid_particles_move_past_rock() {
+    fn test_particles_move_past_rock() {
         /*
          * s- -> --
          * r-    rs

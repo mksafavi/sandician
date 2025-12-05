@@ -99,7 +99,7 @@ mod tests {
     }
 
     #[test]
-    fn test_update_grid_water_dissolve_neighboring_salts() {
+    fn test_water_dissolve_neighboring_salts() {
         /*
          * for each neighbor:
          * Srr -> -rr
@@ -151,7 +151,7 @@ mod tests {
     }
 
     #[test]
-    fn test_update_grid_water_can_only_dissolve_three_salt_particles() {
+    fn test_water_can_only_dissolve_three_salt_particles() {
         let mut g = Grid::new(1, 9).with_rand_velocity(|_| 0);
 
         let water = Particle::from(Water::new()).with_velocity(0);
@@ -355,7 +355,7 @@ mod tests {
     }
 
     #[test]
-    fn test_update_grid_water_particle_keeps_its_seed_after_dissolving_salts() {
+    fn test_water_particle_keeps_its_seed_after_dissolving_salts() {
         let mut g = Grid::new(2, 1);
 
         g.spawn_particle((0, 0), Particle::from(Water::new()).with_seed(111));

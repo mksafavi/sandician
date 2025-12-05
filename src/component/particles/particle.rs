@@ -910,7 +910,7 @@ mod liquid {
     }
 
     #[test]
-    fn test_update_grid_liquid_particle_falls_down_to_last_row_stays_there() {
+    fn test_liquid_particle_falls_down_to_last_row_stays_there() {
         /*
          * w -> - -> -
          * -    w    -
@@ -946,7 +946,7 @@ mod liquid {
     }
 
     #[test]
-    fn test_update_grid_liquid_particle_moves_right_when_bottom_cell_and_left_are_full() {
+    fn test_liquid_particle_moves_right_when_bottom_cell_and_left_are_full() {
         /*
          * --- -> ---
          * sw-    s-w
@@ -975,7 +975,7 @@ mod liquid {
     }
 
     #[test]
-    fn test_update_grid_liquid_particle_moves_left_when_bottom_cell_and_right_are_full() {
+    fn test_liquid_particle_moves_left_when_bottom_cell_and_right_are_full() {
         /*
          * --- -> ---
          * -ws    w-s
@@ -1004,7 +1004,7 @@ mod liquid {
     }
 
     #[test]
-    fn test_update_grid_liquid_particle_moves_left_or_right_when_both_right_and_left_are_empty_forced_right()
+    fn test_liquid_particle_moves_left_or_right_when_both_right_and_left_are_empty_forced_right()
      {
         /*
          * --- -> ---
@@ -1033,7 +1033,7 @@ mod liquid {
     }
 
     #[test]
-    fn test_update_grid_liquid_particle_moves_left_or_right_when_both_right_and_left_are_empty_forced_left()
+    fn test_liquid_particle_moves_left_or_right_when_both_right_and_left_are_empty_forced_left()
      {
         /*
          * --- -> ---
@@ -1118,7 +1118,7 @@ mod liquid {
     }
 
     #[test]
-    fn test_update_grid_liquid_particle_falls_to_bottom_right_when_bottom_cell_and_bottom_left_are_full_and_bottom_right_is_empty()
+    fn test_liquid_particle_falls_to_bottom_right_when_bottom_cell_and_bottom_left_are_full_and_bottom_right_is_empty()
      {
         /*
          * w- -> --
@@ -1147,7 +1147,7 @@ mod liquid {
     }
 
     #[test]
-    fn test_update_grid_liquid_particle_falls_bottom_left_when_bottom_cell_and_bottom_right_are_full_and_bottom_left_is_empty()
+    fn test_liquid_particle_falls_bottom_left_when_bottom_cell_and_bottom_right_are_full_and_bottom_left_is_empty()
      {
         /*
          * -w -> --
@@ -1176,7 +1176,7 @@ mod liquid {
     }
 
     #[test]
-    fn test_update_grid_liquid_particle_falls_bottom_left_or_bottom_right_when_bottom_cell_is_full_and_both_bottom_right_and_bottom_left_are_empty_forced_left()
+    fn test_liquid_particle_falls_bottom_left_or_bottom_right_when_bottom_cell_is_full_and_both_bottom_right_and_bottom_left_are_empty_forced_left()
      {
         /*
          * -w- -> ---
@@ -1208,7 +1208,7 @@ mod liquid {
     }
 
     #[test]
-    fn test_update_grid_liquid_particle_falls_bottom_left_or_bottom_right_when_bottom_cell_is_full_and_both_bottom_right_and_bottom_left_are_empty_forced_right()
+    fn test_liquid_particle_falls_bottom_left_or_bottom_right_when_bottom_cell_is_full_and_both_bottom_right_and_bottom_left_are_empty_forced_right()
      {
         /*
          * -w- -> ---

@@ -81,7 +81,7 @@ mod tests {
     use pretty_assertions::assert_eq;
 
     #[test]
-    fn test_update_grid_tap_should_not_emit_tap_particles() {
+    fn test_tap_should_not_emit_tap_particles() {
         /*
          * --- -> ---
          * -tt    -tt
@@ -126,7 +126,7 @@ mod tests {
     }
 
     #[test]
-    fn test_update_grid_tap_emits_particle_on_every_neighbor_if_touched_by_a_particle() {
+    fn test_tap_emits_particle_on_every_neighbor_if_touched_by_a_particle() {
         /*
          * --- -> rrr
          * -tr    rtr
@@ -161,7 +161,7 @@ mod tests {
     }
 
     #[test]
-    fn test_update_grid_tap_emits_any_particle_type_it_touches() {
+    fn test_tap_emits_any_particle_type_it_touches() {
         /*
          * -- -> pp
          * tp    tp
@@ -192,7 +192,7 @@ mod tests {
     }
 
     #[test]
-    fn test_update_grid_tap_should_not_emit_drain_particles() {
+    fn test_tap_should_not_emit_drain_particles() {
         /*
          * -- -> -- -> --
          * td    td    -d
@@ -216,7 +216,7 @@ mod tests {
     }
 
     #[test]
-    fn test_update_grid_tap_selects_and_remembers_neighbor_cell_particle() {
+    fn test_tap_selects_and_remembers_neighbor_cell_particle() {
         let mut g = Grid::new(1, 2);
 
         g.spawn_particle((0, 0), Particle::from(Tap::new()));
@@ -251,7 +251,7 @@ mod tests {
     }
 
     #[test]
-    fn test_update_grid_tap_clones_a_new_particle_with_the_selected_kind_instead_of_the_exact_particle()
+    fn test_tap_clones_a_new_particle_with_the_selected_kind_instead_of_the_exact_particle()
      {
         let mut g = Grid::new(1, 2).with_rand_seed_with_cycle(|_| 127);
 
