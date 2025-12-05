@@ -2,7 +2,7 @@ use criterion::{Criterion, criterion_group, criterion_main};
 use sandsim::component::{
     grid::Grid,
     particles::{
-        drain::Drain, particle::Particle, rock::Rock, salt::Salt, sand::Sand, tap::Tap,
+        acid::Acid, drain::Drain, particle::Particle, rock::Rock, salt::Salt, sand::Sand, tap::Tap,
         water::Water,
     },
 };
@@ -120,7 +120,6 @@ fn criterion_benchmark(c: &mut Criterion) {
         });
     });
 
-    /*
     c.bench_function("update grid acid and sand", |b| {
         let mut g = Grid::new(x, y);
         for y in 0..y / 2 {
@@ -137,7 +136,6 @@ fn criterion_benchmark(c: &mut Criterion) {
             g.update_grid();
         });
     });
-     */
 
     c.bench_function("update grid", |b| {
         let mut g = Grid::new(x, y);
