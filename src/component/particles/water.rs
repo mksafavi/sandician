@@ -62,10 +62,11 @@ fn dissolve_salt<T: GridAccess>(grid: &mut T, capacity: u8, position: (usize, us
 #[cfg(test)]
 mod tests_liquid {
     use crate::component::{
-        grid::{Cell, Grid, ParticleHorizontalDirection, RowUpdateDirection},
+        grid::{Cell, Grid, ParticleHorizontalDirection, Random, RowUpdateDirection},
         particles::{acid::Acid, particle::Particle, rock::Rock, salt::Salt, sand::Sand},
     };
     use pretty_assertions::assert_eq;
+    use std::sync::atomic::{AtomicUsize, Ordering};
 
     use super::*;
 
@@ -725,6 +726,110 @@ mod tests_liquid {
                     *g.get_cells()
                 );
             }
+        }
+    }
+
+    #[test]
+    fn test_if_liquid_particle_did_not_fall_due_to_probability_should_not_flow_either() {
+        /*
+         * w- -> w-
+         * --    --
+         */
+        for liquid_particle in liquid_particle() {
+            static V: &[u8] = &[255]; /*255 won't swap*/
+            static V_INDEX: AtomicUsize = AtomicUsize::new(0);
+            V_INDEX.store(0, Ordering::SeqCst);
+            fn velocity_probability(_: &mut Random) -> u8 {
+                let idx = V_INDEX.fetch_add(1, Ordering::SeqCst);
+                V[idx]
+            }
+
+            let mut g = Grid::new(2, 2).with_rand_velocity(velocity_probability);
+            let particle = liquid_particle.clone().with_velocity(0);
+
+            g.spawn_particle((0, 0), particle.clone());
+
+            g.update_grid();
+
+            assert_eq!(
+                vec![
+                    Cell::new(particle.clone().with_velocity(1)),
+                    Cell::empty(),
+                    Cell::empty(),
+                    Cell::empty(),
+                ],
+                *g.get_cells()
+            );
+        }
+    }
+
+    #[test]
+    fn test_if_liquid_particle_did_not_fall_left_due_to_probability_should_not_flow_either() {
+        /*
+         * -w -> -w
+         * -r    -r
+         */
+        for liquid_particle in liquid_particle() {
+            static V: &[u8] = &[255]; /*255 won't swap*/
+            static V_INDEX: AtomicUsize = AtomicUsize::new(0);
+            V_INDEX.store(0, Ordering::SeqCst);
+            fn velocity_probability(_: &mut Random) -> u8 {
+                let idx = V_INDEX.fetch_add(1, Ordering::SeqCst);
+                V[idx]
+            }
+
+            let mut g = Grid::new(2, 2).with_rand_velocity(velocity_probability);
+            let particle = liquid_particle.clone().with_velocity(0);
+
+            g.spawn_particle((1, 0), particle.clone());
+            g.spawn_particle((1, 1), Particle::from(Rock::new()));
+
+            g.update_grid();
+
+            assert_eq!(
+                vec![
+                    Cell::empty(),
+                    Cell::new(particle.clone().with_velocity(1)),
+                    Cell::empty(),
+                    Cell::new(Particle::from(Rock::new())),
+                ],
+                *g.get_cells()
+            );
+        }
+    }
+
+    #[test]
+    fn test_if_liquid_particle_did_not_fall_right_due_to_probability_should_not_flow_either() {
+        /*
+         * w- -> w-
+         * r-    r-
+         */
+        for liquid_particle in liquid_particle() {
+            static V: &[u8] = &[255]; /*255 won't swap*/
+            static V_INDEX: AtomicUsize = AtomicUsize::new(0);
+            V_INDEX.store(0, Ordering::SeqCst);
+            fn velocity_probability(_: &mut Random) -> u8 {
+                let idx = V_INDEX.fetch_add(1, Ordering::SeqCst);
+                V[idx]
+            }
+
+            let mut g = Grid::new(2, 2).with_rand_velocity(velocity_probability);
+            let particle = liquid_particle.clone().with_velocity(0);
+
+            g.spawn_particle((0, 0), particle.clone());
+            g.spawn_particle((0, 1), Particle::from(Rock::new()));
+
+            g.update_grid();
+
+            assert_eq!(
+                vec![
+                    Cell::new(particle.clone().with_velocity(1)),
+                    Cell::empty(),
+                    Cell::new(Particle::from(Rock::new())),
+                    Cell::empty(),
+                ],
+                *g.get_cells()
+            );
         }
     }
 }
