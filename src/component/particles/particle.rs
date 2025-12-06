@@ -1,7 +1,7 @@
 use core::fmt;
 
 use bevy::{
-    color::{ColorToPacked, Hsva, Srgba},
+    color::Hsva,
     prelude::{Color, Saturation},
 };
 
@@ -67,7 +67,6 @@ pub struct Particle {
     pub weight: u8,
     viscosity: u8,
     pub cloneable: bool,
-    color: [u8; 3],
     pub kind: ParticleKind,
     pub seed: u8,
     pub velocity: u8,
@@ -75,12 +74,11 @@ pub struct Particle {
 }
 
 impl Particle {
-    pub fn new(color: Color, kind: ParticleKind) -> Self {
+    pub fn new(kind: ParticleKind) -> Self {
         Self {
             weight: u8::MIN,
             viscosity: u8::MAX,
             cloneable: true,
-            color: color.to_srgba().to_u8_array_no_alpha(),
             kind,
             seed: 127,
             velocity: u8::MAX,
@@ -104,11 +102,6 @@ impl Particle {
 
     pub fn with_seed(mut self, seed: u8) -> Self {
         self.seed = seed;
-        let color: Hsva = self.color().into();
-        let color: Srgba = color
-            .with_value(color.value + ((self.seed as f32) - 127.0) / (255.0 * 10.0))
-            .into();
-        self.color = color.to_u8_array_no_alpha();
         self
     }
 
@@ -123,7 +116,21 @@ impl Particle {
     }
 
     pub fn color(&self) -> Color {
-        Color::srgb_u8(self.color[0], self.color[1], self.color[2])
+        let color: Hsva = match &self.kind {
+            ParticleKind::Sand(..) => Color::hsva(43.20, 0.34, 0.76, 1.00),
+            ParticleKind::Water(water) => Color::hsva(201.60, 1.0, 0.80, 1.00)
+                .with_saturation(1.0 - (3 - water.solvant_capacity) as f32 * 0.1),
+            ParticleKind::Salt(..) => Color::hsva(0.00, 0.00, 1.00, 1.00),
+
+            ParticleKind::Rock(..) => Color::hsva(28.0, 0.25, 0.30, 1.00),
+            ParticleKind::Drain(..) => Color::hsva(0.0, 0.0, 0.10, 1.00),
+            ParticleKind::Tap(..) => Color::hsva(190.00, 0.40, 0.75, 1.00),
+            ParticleKind::Acid(..) => Color::hsva(126.00, 1.0, 0.9, 1.00),
+        }
+        .into();
+        color
+            .with_value(color.value + ((self.seed as f32) - 127.0) / (255.0 * 10.0))
+            .into()
     }
 }
 
@@ -143,21 +150,13 @@ impl From<ParticleKind> for Particle {
 
 impl From<Sand> for Particle {
     fn from(sand: Sand) -> Self {
-        Self::new(
-            Color::hsva(43.20, 0.34, 0.76, 1.00),
-            ParticleKind::Sand(sand),
-        )
-        .with_weight(5)
+        Self::new(ParticleKind::Sand(sand)).with_weight(5)
     }
 }
 
 impl From<Salt> for Particle {
     fn from(salt: Salt) -> Self {
-        Self::new(
-            Color::hsva(0.00, 0.00, 1.00, 1.00),
-            ParticleKind::Salt(salt),
-        )
-        .with_weight(5)
+        Self::new(ParticleKind::Salt(salt)).with_weight(5)
     }
 }
 
@@ -165,9 +164,7 @@ impl From<Water> for Particle {
     fn from(water: Water) -> Self {
         let weight = 1 + 3 - water.solvant_capacity;
         let viscosity = u8::MIN + 3 - water.solvant_capacity;
-        let color = Color::hsva(201.60, 1.0, 0.80, 1.00)
-            .with_saturation(1.0 - (3 - water.solvant_capacity) as f32 * 0.1);
-        Self::new(color, ParticleKind::Water(water))
+        Self::new(ParticleKind::Water(water))
             .with_weight(weight)
             .with_viscosity(viscosity)
     }
@@ -175,47 +172,36 @@ impl From<Water> for Particle {
 
 impl From<Rock> for Particle {
     fn from(rock: Rock) -> Self {
-        Self::new(
-            Color::hsva(28.0, 0.25, 0.30, 1.00),
-            ParticleKind::Rock(rock),
-        )
+        Self::new(ParticleKind::Rock(rock))
     }
 }
 
 impl From<Drain> for Particle {
     fn from(drain: Drain) -> Self {
-        Self::new(
-            Color::hsva(0.0, 0.0, 0.10, 1.00),
-            ParticleKind::Drain(drain),
-        )
-        .with_cloneable(false)
+        Self::new(ParticleKind::Drain(drain)).with_cloneable(false)
     }
 }
 
 impl From<Tap> for Particle {
     fn from(tap: Tap) -> Self {
-        Self::new(
-            Color::hsva(190.00, 0.40, 0.75, 1.00),
-            ParticleKind::Tap(tap),
-        )
-        .with_cloneable(false)
+        Self::new(ParticleKind::Tap(tap)).with_cloneable(false)
     }
 }
 
 impl From<Acid> for Particle {
     fn from(acid: Acid) -> Self {
-        Self::new(
-            Color::hsva(126.00, 1.0, 0.9, 1.00),
-            ParticleKind::Acid(acid),
-        )
-        .with_weight(1)
-        .with_viscosity(u8::MIN)
+        Self::new(ParticleKind::Acid(acid))
+            .with_weight(1)
+            .with_viscosity(u8::MIN)
     }
 }
 
 impl Particle {
+    // TODO: research on neighborhood partitioning and how we can apply it to here.
+    // if it helps with access performance or not.
+    // try implementing some sort of neighborhood so that we omit duplicate reads
     pub fn update<T: GridAccess>(grid: &mut T, position: (usize, usize)) {
-        Self::kill(grid, position);
+        Self::kill(grid, position); // TODO; test this and return bool
 
         if Self::gravity(grid, position) {
             return;
