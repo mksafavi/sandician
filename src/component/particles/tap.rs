@@ -1,14 +1,6 @@
 use crate::component::grid::GridAccess;
 
-use super::{
-    acid::Acid,
-    drain::Drain,
-    particle::{Particle, ParticleKind},
-    rock::Rock,
-    salt::Salt,
-    sand::Sand,
-    water::Water,
-};
+use super::particle::{Particle, ParticleKind};
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct Tap {
@@ -30,7 +22,7 @@ impl Tap {
 
     pub fn with_particle(particle: &Particle) -> Self {
         Self {
-            particle_kind_id: Some(Self::kind_to_id(&particle.kind)),
+            particle_kind_id: Some(particle.kind.id()),
         }
     }
 
@@ -51,13 +43,13 @@ impl Tap {
 
             if let Some(p) = particle_to_clone {
                 let cell = grid.get_cell_mut(grid.to_index(position));
-                particle.particle_kind_id = Some(Self::kind_to_id(&p.kind));
+                particle.particle_kind_id = Some(p.kind.id());
                 cell.particle = Some(Particle::from(particle.clone()));
             }
         }
 
         if let Some(particle_kind_id) = particle.particle_kind_id
-            && let Some(particle_kind) = Self::id_to_kind(particle_kind_id)
+            && let Some(particle_kind) = ParticleKind::with_id(particle_kind_id)
         {
             for y in -1..=1 {
                 for x in -1..=1 {
@@ -77,31 +69,6 @@ impl Tap {
             }
         }
     }
-
-    fn kind_to_id(pk: &ParticleKind) -> u8 {
-        match pk {
-            ParticleKind::Sand(..) => 0,
-            ParticleKind::Water(..) => 1,
-            ParticleKind::Salt(..) => 2,
-            ParticleKind::Rock(..) => 3,
-            ParticleKind::Drain(..) => 4,
-            ParticleKind::Tap(..) => 5,
-            ParticleKind::Acid(..) => 6,
-        }
-    }
-
-    fn id_to_kind(id: u8) -> Option<ParticleKind> {
-        match id {
-            0 => Some(ParticleKind::from(Sand::new())),
-            1 => Some(ParticleKind::from(Water::new())),
-            2 => Some(ParticleKind::from(Salt::new())),
-            3 => Some(ParticleKind::from(Rock::new())),
-            4 => Some(ParticleKind::from(Drain::new())),
-            5 => Some(ParticleKind::from(Tap::new())),
-            6 => Some(ParticleKind::from(Acid::new())),
-            _ => None,
-        }
-    }
 }
 
 #[cfg(test)]
@@ -109,14 +76,8 @@ mod tests {
     use crate::component::{
         grid::{Cell, Grid, GridAccess, RowUpdateDirection},
         particles::{
-            acid::Acid,
-            drain::Drain,
-            particle::{Particle, ParticleKind},
-            rock::Rock,
-            salt::Salt,
-            sand::Sand,
-            tap::Tap,
-            water::Water,
+            acid::Acid, drain::Drain, particle::Particle, rock::Rock, salt::Salt, sand::Sand,
+            tap::Tap, water::Water,
         },
     };
     use pretty_assertions::assert_eq;
@@ -391,20 +352,5 @@ mod tests {
         g.update_grid();
 
         assert_eq!(33, g.get_cell(1).particle.as_ref().map(|p| p.seed).unwrap());
-    }
-
-    #[test]
-    fn test_kind_to_id_id_to_kind() {
-        for pk in [
-            ParticleKind::from(Sand::new()),
-            ParticleKind::from(Water::new()),
-            ParticleKind::from(Salt::new()),
-            ParticleKind::from(Rock::new()),
-            ParticleKind::from(Drain::new()),
-            ParticleKind::from(Tap::new()),
-            ParticleKind::from(Acid::new()),
-        ] {
-            assert_eq!(Some(pk.clone()), Tap::id_to_kind(Tap::kind_to_id(&pk)));
-        }
     }
 }

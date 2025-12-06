@@ -20,6 +20,33 @@ pub enum ParticleKind {
     Acid(Acid),
 }
 
+impl ParticleKind {
+    pub fn id(&self) -> u8 {
+        match self {
+            ParticleKind::Sand(..) => 0,
+            ParticleKind::Water(..) => 1,
+            ParticleKind::Salt(..) => 2,
+            ParticleKind::Rock(..) => 3,
+            ParticleKind::Drain(..) => 4,
+            ParticleKind::Tap(..) => 5,
+            ParticleKind::Acid(..) => 6,
+        }
+    }
+
+    pub fn with_id(id: u8) -> Option<ParticleKind> {
+        match id {
+            0 => Some(ParticleKind::from(Sand::new())),
+            1 => Some(ParticleKind::from(Water::new())),
+            2 => Some(ParticleKind::from(Salt::new())),
+            3 => Some(ParticleKind::from(Rock::new())),
+            4 => Some(ParticleKind::from(Drain::new())),
+            5 => Some(ParticleKind::from(Tap::new())),
+            6 => Some(ParticleKind::from(Acid::new())),
+            _ => None,
+        }
+    }
+}
+
 impl From<Sand> for ParticleKind {
     fn from(sand: Sand) -> Self {
         Self::Sand(sand)
@@ -450,6 +477,21 @@ mod tests {
         assert_eq!("drain", Particle::from(Drain::new()).to_string());
         assert_eq!("tap", Particle::from(Tap::new()).to_string());
         assert_eq!("acid", Particle::from(Acid::new()).to_string());
+    }
+
+    #[test]
+    fn test_convert_particle_kind_to_id_and_back_to_particle_kind() {
+        for pk in [
+            ParticleKind::from(Sand::new()),
+            ParticleKind::from(Water::new()),
+            ParticleKind::from(Salt::new()),
+            ParticleKind::from(Rock::new()),
+            ParticleKind::from(Drain::new()),
+            ParticleKind::from(Tap::new()),
+            ParticleKind::from(Acid::new()),
+        ] {
+            assert_eq!(Some(pk.clone()), ParticleKind::with_id(pk.id()));
+        }
     }
 }
 
