@@ -15,6 +15,7 @@
             rustc
             just
             wasm-bindgen-cli
+            perf
             binaryen
             lld
             cargo
