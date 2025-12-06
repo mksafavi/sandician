@@ -202,7 +202,7 @@ mod tests {
     }
 
     #[test]
-    fn test_tap_emits_any_particle_type_it_touches() {
+    fn test_tap_emits_any_cloneable_particle_it_touches() {
         /*
          * -- -> pp
          * tp    tp
@@ -212,6 +212,7 @@ mod tests {
             Particle::from(Salt::new()),
             Particle::from(Water::new()),
             Particle::from(Rock::new()),
+            Particle::from(Acid::new()),
         ] {
             let mut g = Grid::new(2, 2).with_rand_seed_with_cycle(|_| 127);
 
