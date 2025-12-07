@@ -1,13 +1,10 @@
-use bevy::DefaultPlugins;
-use bevy::app::App;
-use bevy::image::ImagePlugin;
-use bevy::prelude::PluginGroup;
-use bevy::utils::default;
 use bevy::window::{Window, WindowPlugin, WindowResolution};
-use bevy_embedded_assets::EmbeddedAssetPlugin;
-use bevy_embedded_assets::PluginMode;
-use sandsim::component::grid_plugin::{ConfigResource, GridPlugin};
-use sandsim::component::render::RenderSimPlugin;
+use bevy::{DefaultPlugins, app::App, image::ImagePlugin, prelude::PluginGroup, utils::default};
+use bevy_embedded_assets::{EmbeddedAssetPlugin, PluginMode};
+use sandsim::component::{
+    grid_plugin::{ConfigResource, GridPlugin},
+    render::RenderSimPlugin,
+};
 
 fn main() {
     App::new()
@@ -25,10 +22,10 @@ fn main() {
                     }),
                     ..default()
                 }),
+            GridPlugin {
+                config: ConfigResource::new(250, 360, 240., 50),
+            },
+            RenderSimPlugin,
         ))
-        .add_plugins(GridPlugin {
-            config: ConfigResource::new(250, 360, 240., 50),
-        })
-        .add_plugins(RenderSimPlugin)
         .run();
 }
