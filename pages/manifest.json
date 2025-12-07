@@ -1,0 +1,28 @@
+{
+  "background_color": "#161a1b",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "Sandician",
+  "orientation": "portrait",
+  "scope": "/",
+  "short_name": "sandician",
+  "start_url": "/",
+  "theme_color": "#161a1b",
+  "icons": [
+    {
+      "purpose": "any",
+      "src": "/favicon_512.jpeg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    },
+    {
+      "purpose": "any",
+      "src": "/favicon_192.jpeg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    }
+  ],
+  "categories": [
+    "games"
+  ]
+}

@@ -30,6 +30,7 @@ ci-build-pages BIN:
     cp -r assets/ ./target/pages/
     cp ./target/wasm-bind/* ./target/pages
     sed --in-place 's/binary.js/{{BIN}}.js/' ./target/pages/index.html
+    magick ./target/pages/favicon.jpeg -resize 192x192 ./target/pages/favicon_192.jpeg
     magick ./target/pages/favicon.jpeg -resize 512x512 ./target/pages/favicon_512.jpeg
 
 lint:
