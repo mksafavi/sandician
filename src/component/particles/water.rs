@@ -296,7 +296,7 @@ mod tests {
         assert_eq!(
             vec![
                 Cell::new(Particle::from(Water::new())).with_cycle(1),
-                Cell::new(Particle::from(Water::with_capacity(1))).with_cycle(1),
+                Cell::new(Particle::from(Water::with_capacity(1)).with_velocityx(1)).with_cycle(1),
             ],
             *g.get_cells()
         );
@@ -318,7 +318,7 @@ mod tests {
 
         assert_eq!(
             vec![
-                Cell::new(Particle::from(Water::with_capacity(1))).with_cycle(1),
+                Cell::new(Particle::from(Water::with_capacity(1)).with_velocityx(-1)).with_cycle(1),
                 Cell::new(Particle::from(Water::new())).with_cycle(1),
             ],
             *g.get_cells()
