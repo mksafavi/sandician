@@ -333,7 +333,14 @@ impl Particle {
                 };
 
                 match dir {
-                    ParticleHorizontalDirection::Left => Some(l),
+                    ParticleHorizontalDirection::Left => {
+                        if let Some(ref mut this) =
+                            grid.get_cell_mut(grid.to_index(position)).particle
+                        {
+                            this.velocityx = this.velocityx.saturating_sub(1);
+                        };
+                        Some(l)
+                    }
                     ParticleHorizontalDirection::Right => {
                         if let Some(ref mut this) =
                             grid.get_cell_mut(grid.to_index(position)).particle
@@ -1068,7 +1075,7 @@ mod liquid {
                     Cell::empty(),
                     Cell::empty(),
                     Cell::empty(),
-                    Cell::new(liquid_particle.clone()).with_cycle(1),
+                    Cell::new(liquid_particle.clone().with_velocityx(-1)).with_cycle(1),
                     Cell::empty().with_cycle(1),
                     Cell::empty(),
                 ],
@@ -1194,6 +1201,69 @@ mod liquid {
             );
         }
     }
+
+    #[test]
+    fn test_liquid_particle_sliding_to_left_should_keep_the_sliding_direction() {
+        /*
+         * ----w- -> --w--- -> w-----
+         */
+        for liquid_particle in liquid_particle() {
+            static V: &[ParticleHorizontalDirection] = &[
+                ParticleHorizontalDirection::Left,
+                ParticleHorizontalDirection::Right,
+            ];
+            static V_INDEX: AtomicUsize = AtomicUsize::new(0);
+            V_INDEX.store(0, Ordering::SeqCst);
+            fn particle_direction(_: &mut Random) -> ParticleHorizontalDirection {
+                let idx = V_INDEX.fetch_add(1, Ordering::SeqCst);
+                V[idx].clone()
+            }
+            let mut g = Grid::new(6, 1).with_rand_particle_direction(particle_direction);
+
+            g.spawn_particle((4, 0), liquid_particle.clone());
+
+            assert_eq!(
+                vec![
+                    Cell::empty(),
+                    Cell::empty(),
+                    Cell::empty(),
+                    Cell::empty(),
+                    Cell::new(liquid_particle.clone()),
+                    Cell::empty(),
+                ],
+                *g.get_cells()
+            );
+
+            g.update_grid();
+
+            assert_eq!(
+                vec![
+                    Cell::empty(),
+                    Cell::empty(),
+                    Cell::new(liquid_particle.clone().with_velocityx(-1)).with_cycle(1),
+                    Cell::empty(),
+                    Cell::empty().with_cycle(1),
+                    Cell::empty(),
+                ],
+                *g.get_cells()
+            );
+
+            g.update_grid();
+
+            assert_eq!(
+                vec![
+                    Cell::new(liquid_particle.clone().with_velocityx(-2)).with_cycle(2),
+                    Cell::empty(),
+                    Cell::empty().with_cycle(2),
+                    Cell::empty(),
+                    Cell::empty().with_cycle(1),
+                    Cell::empty(),
+                ],
+                *g.get_cells()
+            );
+        }
+    }
+
     #[test]
     fn test_liquid_particle_falls_to_bottom_right_when_bottom_cell_and_bottom_left_are_full_and_bottom_right_is_empty()
      {
@@ -1334,7 +1404,7 @@ mod liquid {
             assert_eq!(
                 vec![
                     Cell::new(liquid_particle.clone()).with_cycle(1),
-                    Cell::new(liquid_particle.clone()).with_cycle(1),
+                    Cell::new(liquid_particle.clone().with_velocityx(-1)).with_cycle(1),
                     Cell::empty().with_cycle(1),
                     Cell::empty(),
                 ],
@@ -1398,7 +1468,7 @@ mod liquid {
 
             assert_eq!(
                 vec![
-                    Cell::new(liquid_particle.clone()).with_cycle(1),
+                    Cell::new(liquid_particle.clone().with_velocityx(-1)).with_cycle(1),
                     Cell::empty().with_cycle(1),
                     Cell::empty().with_cycle(1),
                     Cell::new(liquid_particle.clone()).with_cycle(1),
