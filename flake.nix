@@ -16,6 +16,7 @@
             just
             wasm-bindgen-cli
             perf
+            imagemagick
             binaryen
             lld
             cargo
