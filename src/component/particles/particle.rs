@@ -325,12 +325,14 @@ impl Particle {
             (None, None) => None,
             (None, Some(i)) => {
                 if let Some(ref mut this) = grid.get_cell_mut(grid.to_index(position)).particle {
+                    this.velocityx = 0;
                     this.velocityx = this.velocityx.saturating_add(1);
                 };
                 Some(i)
             }
             (Some(i), None) => {
                 if let Some(ref mut this) = grid.get_cell_mut(grid.to_index(position)).particle {
+                    this.velocityx = 0;
                     this.velocityx = this.velocityx.saturating_sub(1);
                 };
                 Some(i)
@@ -1144,6 +1146,80 @@ mod liquid {
                     Cell::new(liquid_particle.clone().with_velocityx(-1)).with_cycle(1),
                     Cell::empty(),
                     Cell::empty().with_cycle(1),
+                ],
+                *g.get_cells()
+            );
+        }
+    }
+
+    #[test]
+    fn test_liquid_particle_velocity_x_resets_to_zero_when_right_side_blocked() {
+        /*
+         * -w-- -> ---w -> -w--
+         */
+        for liquid_particle in liquid_particle() {
+            let mut g = Grid::new(4, 1)
+                .with_rand_particle_direction(|_| ParticleHorizontalDirection::Right);
+
+            g.spawn_particle((1, 0), liquid_particle.clone());
+
+            g.update_grid();
+
+            assert_eq!(
+                vec![
+                    Cell::empty(),
+                    Cell::empty().with_cycle(1),
+                    Cell::empty(),
+                    Cell::new(liquid_particle.clone().with_velocityx(1)).with_cycle(1),
+                ],
+                *g.get_cells()
+            );
+
+            g.update_grid();
+
+            assert_eq!(
+                vec![
+                    Cell::empty(),
+                    Cell::new(liquid_particle.clone().with_velocityx(-1)).with_cycle(2),
+                    Cell::empty(),
+                    Cell::empty().with_cycle(2),
+                ],
+                *g.get_cells()
+            );
+        }
+    }
+
+    #[test]
+    fn test_liquid_particle_velocity_x_resets_to_zero_when_left_side_blocked() {
+        /*
+         * --w- -> w--- -> --w-
+         */
+        for liquid_particle in liquid_particle() {
+            let mut g =
+                Grid::new(4, 1).with_rand_particle_direction(|_| ParticleHorizontalDirection::Left);
+
+            g.spawn_particle((2, 0), liquid_particle.clone());
+
+            g.update_grid();
+
+            assert_eq!(
+                vec![
+                    Cell::new(liquid_particle.clone().with_velocityx(-1)).with_cycle(1),
+                    Cell::empty(),
+                    Cell::empty().with_cycle(1),
+                    Cell::empty(),
+                ],
+                *g.get_cells()
+            );
+
+            g.update_grid();
+
+            assert_eq!(
+                vec![
+                    Cell::empty().with_cycle(2),
+                    Cell::empty(),
+                    Cell::new(liquid_particle.clone().with_velocityx(1)).with_cycle(2),
+                    Cell::empty(),
                 ],
                 *g.get_cells()
             );
