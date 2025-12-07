@@ -17,6 +17,7 @@ pub enum GridError {
 
 pub const BACKGROUND_COLOR: bevy::prelude::Color = Color::srgb(0.82, 0.93, 1.);
 
+#[derive(Clone)]
 pub enum ParticleHorizontalDirection {
     Left = -1,
     Right = 1,
