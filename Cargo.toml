@@ -43,7 +43,7 @@ opt-level = 1
 opt-level = 3
 
 [dev-dependencies]
-criterion = "0.8.0"
+criterion = "0.8.1"
 pretty_assertions = "1.4.1"
 
 [[bench]]
