@@ -34,6 +34,10 @@ name = "sandsim"
 path = "src/lib.rs"
 bench = false
 
+[profile.release]
+opt-level = 3
+lto = "thin"
+
 # Enable a small amount of optimization in the dev profile.
 [profile.dev]
 opt-level = 1
