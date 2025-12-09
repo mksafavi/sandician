@@ -32,6 +32,7 @@ ci-build-pages BIN:
     sed --in-place 's/binary.js/{{BIN}}.js/' ./target/pages/index.html
     magick ./target/pages/favicon.jpeg -resize 192x192 ./target/pages/favicon_192.jpeg
     magick ./target/pages/favicon.jpeg -resize 512x512 ./target/pages/favicon_512.jpeg
+    brotli --best --rm target/pages/main_bg.wasm -o target/pages/main_bg.wasm.br
 
 lint:
     RUSTFLAGS='-Dwarnings' cargo fmt --check

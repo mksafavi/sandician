@@ -12,6 +12,7 @@
         with pkgs;
         mkShell {
           buildInputs = [
+            brotli
             rustc
             just
             wasm-bindgen-cli
