@@ -45,7 +45,7 @@ jobs:
       - uses: rrbutani/use-nix-shell-action@v1
       - run: just ci-build-wasm "main"
       - run: just ci-build-pages "main"
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: pages
           path: ./target/pages
