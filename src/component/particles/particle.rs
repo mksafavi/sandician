@@ -96,7 +96,7 @@ pub struct Particle {
     pub cloneable: bool,
     pub kind: ParticleKind,
     pub seed: u8,
-    pub velocityy: u8,
+    pub velocityy: i16,
     pub velocityx: i8,
     pub health: u8,
 }
@@ -109,7 +109,7 @@ impl Particle {
             cloneable: true,
             kind,
             seed: 127,
-            velocityy: u8::MAX,
+            velocityy: i16::MAX,
             velocityx: 0,
             health: u8::MAX,
         }
@@ -134,7 +134,7 @@ impl Particle {
         self
     }
 
-    pub fn with_velocityy(mut self, velocity: u8) -> Self {
+    pub fn with_velocityy(mut self, velocity: i16) -> Self {
         self.velocityy = velocity;
         self
     }
@@ -397,11 +397,11 @@ impl Particle {
                             grid.get_cell_mut(grid.to_index(position)).particle
                         {
                             let velocityy = if neighbor_viscosity < this.viscosity {
-                                ((velocityy as u16) * 9 / 10) as u8
+                                ((velocityy as i32) * 9 / 10) as i16
                             } else {
                                 velocityy
                             };
-                            this.velocityy = velocityy.saturating_add(1);
+                            this.velocityy = velocityy.saturating_add(128);
                         };
                         if velocityy_probability <= velocityy {
                             grid.swap_particles(grid.to_index(position), index_n);
@@ -412,7 +412,7 @@ impl Particle {
                 None => {
                     if let Some(ref mut this) = grid.get_cell_mut(grid.to_index(position)).particle
                     {
-                        this.velocityy = velocityy.saturating_add(1);
+                        this.velocityy = velocityy.saturating_add(128);
                     };
                     if velocityy_probability <= velocityy {
                         grid.swap_particles(grid.to_index(position), index_n);
@@ -460,7 +460,7 @@ impl Particle {
             },
         } {
             if let Some(ref mut this) = grid.get_cell_mut(grid.to_index(position)).particle {
-                this.velocityy = velocityy.saturating_add(1);
+                this.velocityy = velocityy.saturating_add(128);
             };
             if velocityy_probability <= velocityy {
                 grid.swap_particles(grid.to_index(position), index_n);
@@ -469,7 +469,7 @@ impl Particle {
         }
         let initial_velocityy = grid.get_particle_initial_velocity();
         if let Some(ref mut this) = grid.get_cell_mut(grid.to_index(position)).particle {
-            this.velocityy = velocityy.saturating_sub(1).max(initial_velocityy);
+            this.velocityy = velocityy.saturating_sub(128).max(initial_velocityy);
         };
         false
     }
@@ -753,7 +753,7 @@ mod powder {
          * -    S
          */
         for particle in weighted_particle() {
-            let mut g = Grid::new(1, 2).with_rand_velocityy(|_| u8::MAX);
+            let mut g = Grid::new(1, 2).with_rand_velocityy(|_| i16::MAX);
 
             g.spawn_particle((0, 0), particle.clone());
 
@@ -762,7 +762,7 @@ mod powder {
             assert_eq!(
                 vec![
                     Cell::empty().with_cycle(1),
-                    Cell::new(particle.clone().with_velocityy(u8::MAX)).with_cycle(1),
+                    Cell::new(particle.clone().with_velocityy(i16::MAX)).with_cycle(1),
                 ],
                 *g.get_cells()
             );
@@ -770,33 +770,38 @@ mod powder {
     }
 
     #[test]
-    fn test_weighted_particle_does_not_fall_when_vertical_velocity_is_zero_but_increase_the_chance_of_falling() {
+    fn test_weighted_particle_does_not_fall_when_vertical_velocity_is_zero_but_increase_the_chance_of_falling()
+     {
         /*
          * S -> S
          * -    -
          */
         for particle in weighted_particle() {
-            let mut g = Grid::new(1, 2).with_rand_velocityy(|_| u8::MAX);
+            let mut g = Grid::new(1, 2).with_rand_velocityy(|_| i16::MAX);
 
             g.spawn_particle((0, 0), particle.clone().with_velocityy(0));
 
             g.update_grid();
 
             assert_eq!(
-                vec![Cell::new(particle.clone().with_velocityy(1)), Cell::empty(),],
+                vec![
+                    Cell::new(particle.clone().with_velocityy(128)),
+                    Cell::empty(),
+                ],
                 *g.get_cells()
             );
         }
     }
 
     #[test]
-    fn test_weighted_particle_does_not_fall_to_right_when_vertical_velocity_is_zero_but_increase_the_chance_of_falling() {
+    fn test_weighted_particle_does_not_fall_to_right_when_vertical_velocity_is_zero_but_increase_the_chance_of_falling()
+     {
         /*
          * S- -> S-
          * r-    r-
          */
         for particle in weighted_particle() {
-            let mut g = Grid::new(2, 2).with_rand_velocityy(|_| u8::MAX);
+            let mut g = Grid::new(2, 2).with_rand_velocityy(|_| i16::MAX);
 
             g.spawn_particle((0, 0), particle.clone().with_velocityy(0));
             g.spawn_particle((0, 1), Particle::from(Rock::new()));
@@ -805,7 +810,7 @@ mod powder {
 
             assert_eq!(
                 vec![
-                    Cell::new(particle.clone().with_velocityy(1)),
+                    Cell::new(particle.clone().with_velocityy(128)),
                     Cell::empty(),
                     Cell::new(Particle::from(Rock::new())),
                     Cell::empty(),
@@ -816,13 +821,14 @@ mod powder {
     }
 
     #[test]
-    fn test_weighted_particle_does_not_fall_to_left_when_veritical_velocity_is_zero_but_increase_the_chance_of_falling() {
+    fn test_weighted_particle_does_not_fall_to_left_when_veritical_velocity_is_zero_but_increase_the_chance_of_falling()
+     {
         /*
          * -S -> -S
          * -r    -r
          */
         for particle in weighted_particle() {
-            let mut g = Grid::new(2, 2).with_rand_velocityy(|_| u8::MAX);
+            let mut g = Grid::new(2, 2).with_rand_velocityy(|_| i16::MAX);
 
             g.spawn_particle((1, 0), particle.clone().with_velocityy(0));
             g.spawn_particle((1, 1), Particle::from(Rock::new()));
@@ -832,7 +838,7 @@ mod powder {
             assert_eq!(
                 vec![
                     Cell::empty(),
-                    Cell::new(particle.clone().with_velocityy(1)),
+                    Cell::new(particle.clone().with_velocityy(128)),
                     Cell::empty(),
                     Cell::new(Particle::from(Rock::new())),
                 ],
@@ -849,10 +855,10 @@ mod powder {
          * ---    ---
          */
         for particle in weighted_particle() {
-            static V: &[u8] = &[u8::MAX, 0]; /*u8::MAX won't swap but 0 will*/
+            static V: &[i16] = &[i16::MAX, 0]; /*max won't swap but 0 will*/
             static V_INDEX: AtomicUsize = AtomicUsize::new(0);
             V_INDEX.store(0, Ordering::SeqCst);
-            fn velocityy_probability(_: &mut Random) -> u8 {
+            fn velocityy_probability(_: &mut Random) -> i16 {
                 let idx = V_INDEX.fetch_add(1, Ordering::SeqCst);
                 V[idx]
             }
@@ -866,7 +872,7 @@ mod powder {
             assert_eq!(
                 vec![
                     Cell::empty(),
-                    Cell::new(particle.clone().with_velocityy(1)),
+                    Cell::new(particle.clone().with_velocityy(128)),
                     Cell::empty(),
                     Cell::empty(),
                     Cell::empty(),
@@ -878,7 +884,8 @@ mod powder {
     }
 
     #[test]
-    fn test_weighted_particle_should_lose_vertical_velocity_till_the_initial_velocity_if_they_do_not_move() {
+    fn test_weighted_particle_should_lose_vertical_velocity_till_the_initial_velocity_if_they_do_not_move()
+     {
         /*
          * S -> S
          */
@@ -887,12 +894,12 @@ mod powder {
                 .with_rand_velocityy(|_| 0)
                 .with_initial_particle_velocity(50);
 
-            g.spawn_particle((0, 0), particle.clone().with_velocityy(60));
+            g.spawn_particle((0, 0), particle.clone().with_velocityy(255));
 
             g.update_grid();
 
             assert_eq!(
-                vec![Cell::new(particle.clone().with_velocityy(59))],
+                vec![Cell::new(particle.clone().with_velocityy(127))],
                 *g.get_cells()
             );
 
@@ -1592,7 +1599,7 @@ mod liquid {
                         Cell::new(liquid_particle.clone().with_velocityy(0)).with_cycle(1),
                         Cell::empty(),
                         Cell::new(particle.clone()),
-                        Cell::new(particle.clone().with_velocityy(1)).with_cycle(1),
+                        Cell::new(particle.clone().with_velocityy(128)).with_cycle(1),
                         Cell::new(particle.clone()),
                     ],
                     *g.get_cells()
@@ -1627,7 +1634,7 @@ mod liquid {
                         Cell::empty(),
                         Cell::new(liquid_particle.clone().with_velocityy(0)).with_cycle(1),
                         Cell::empty(),
-                        Cell::new(particle.clone().with_velocityy(1)).with_cycle(1),
+                        Cell::new(particle.clone().with_velocityy(128)).with_cycle(1),
                         Cell::new(particle.clone()),
                         Cell::new(particle.clone()),
                     ],
@@ -1666,7 +1673,7 @@ mod liquid {
                         Cell::empty(),
                         Cell::new(particle.clone()),
                         Cell::new(particle.clone()),
-                        Cell::new(particle.clone().with_velocityy(1)).with_cycle(1),
+                        Cell::new(particle.clone().with_velocityy(128)).with_cycle(1),
                     ],
                     *g.get_cells()
                 );
@@ -1709,7 +1716,7 @@ mod liquid {
                     vec![
                         Cell::new(particle.clone()),
                         Cell::new(liquid_particle.clone().with_velocityy(0)).with_cycle(1),
-                        Cell::new(particle.clone().with_velocityy(1)).with_cycle(1),
+                        Cell::new(particle.clone().with_velocityy(128)).with_cycle(1),
                     ],
                     *g.get_cells()
                 );
@@ -1719,7 +1726,7 @@ mod liquid {
                 assert_eq!(
                     vec![
                         Cell::new(liquid_particle.clone().with_velocityy(0)).with_cycle(2),
-                        Cell::new(particle.clone().with_velocityy(1)).with_cycle(2),
+                        Cell::new(particle.clone().with_velocityy(128)).with_cycle(2),
                         Cell::new(particle.clone().with_velocityy(0)).with_cycle(1),
                     ],
                     *g.get_cells()
@@ -1797,10 +1804,10 @@ mod liquid {
          * --    --
          */
         for liquid_particle in liquid_particle() {
-            static V: &[u8] = &[u8::MAX]; /*u8::MAX won't swap*/
+            static V: &[i16] = &[i16::MAX]; /*max won't swap*/
             static V_INDEX: AtomicUsize = AtomicUsize::new(0);
             V_INDEX.store(0, Ordering::SeqCst);
-            fn velocityy_probability(_: &mut Random) -> u8 {
+            fn velocityy_probability(_: &mut Random) -> i16 {
                 let idx = V_INDEX.fetch_add(1, Ordering::SeqCst);
                 V[idx]
             }
@@ -1814,7 +1821,7 @@ mod liquid {
 
             assert_eq!(
                 vec![
-                    Cell::new(particle.clone().with_velocityy(1)),
+                    Cell::new(particle.clone().with_velocityy(128)),
                     Cell::empty(),
                     Cell::empty(),
                     Cell::empty(),
@@ -1831,10 +1838,10 @@ mod liquid {
          * -r    -r
          */
         for liquid_particle in liquid_particle() {
-            static V: &[u8] = &[u8::MAX]; /*u8::MAX won't swap*/
+            static V: &[i16] = &[i16::MAX]; /*max won't swap*/
             static V_INDEX: AtomicUsize = AtomicUsize::new(0);
             V_INDEX.store(0, Ordering::SeqCst);
-            fn velocityy_probability(_: &mut Random) -> u8 {
+            fn velocityy_probability(_: &mut Random) -> i16 {
                 let idx = V_INDEX.fetch_add(1, Ordering::SeqCst);
                 V[idx]
             }
@@ -1850,7 +1857,7 @@ mod liquid {
             assert_eq!(
                 vec![
                     Cell::empty(),
-                    Cell::new(particle.clone().with_velocityy(1)),
+                    Cell::new(particle.clone().with_velocityy(128)),
                     Cell::empty(),
                     Cell::new(Particle::from(Rock::new())),
                 ],
@@ -1866,10 +1873,10 @@ mod liquid {
          * r-    r-
          */
         for liquid_particle in liquid_particle() {
-            static V: &[u8] = &[u8::MAX]; /*u8::MAX won't swap*/
+            static V: &[i16] = &[i16::MAX]; /*max won't swap*/
             static V_INDEX: AtomicUsize = AtomicUsize::new(0);
             V_INDEX.store(0, Ordering::SeqCst);
-            fn velocityy_probability(_: &mut Random) -> u8 {
+            fn velocityy_probability(_: &mut Random) -> i16 {
                 let idx = V_INDEX.fetch_add(1, Ordering::SeqCst);
                 V[idx]
             }
@@ -1884,7 +1891,7 @@ mod liquid {
 
             assert_eq!(
                 vec![
-                    Cell::new(particle.clone().with_velocityy(1)),
+                    Cell::new(particle.clone().with_velocityy(128)),
                     Cell::empty(),
                     Cell::new(Particle::from(Rock::new())),
                     Cell::empty(),
@@ -1903,18 +1910,18 @@ mod liquid {
         for liquid_particle in liquid_particle() {
             for particle in weighted_particle() {
                 let mut g = Grid::new(1, 2)
-                    .with_rand_velocityy(|_| u8::MAX)
+                    .with_rand_velocityy(|_| i16::MAX)
                     .with_initial_particle_velocity(0);
 
                 g.spawn_particle((0, 0), particle.clone().with_velocityy(0));
-                g.spawn_particle((0, 1), liquid_particle.clone());
+                g.spawn_particle((0, 1), liquid_particle.clone().with_velocityy(255));
 
                 g.update_grid();
 
                 assert_eq!(
                     vec![
                         Cell::new(particle.clone().with_velocityy(0)),
-                        Cell::new(liquid_particle.clone().with_velocityy(254))
+                        Cell::new(liquid_particle.clone().with_velocityy(127))
                     ],
                     *g.get_cells()
                 );
@@ -1923,7 +1930,8 @@ mod liquid {
     }
 
     #[test]
-    fn test_weighted_particle_loses_10_percent_of_its_vertical_velocity_when_sinking_in_liquid_particles() {
+    fn test_weighted_particle_loses_10_percent_of_its_vertical_velocity_when_sinking_in_liquid_particles()
+     {
         /*
          * S -> w
          * w    S
@@ -1932,7 +1940,7 @@ mod liquid {
             for particle in weighted_particle() {
                 let mut g = Grid::new(1, 2).with_rand_velocityy(|_| 0);
 
-                g.spawn_particle((0, 0), particle.clone().with_velocityy(100));
+                g.spawn_particle((0, 0), particle.clone().with_velocityy(2000));
                 g.spawn_particle((0, 1), liquid_particle.clone());
 
                 g.update_grid();
@@ -1940,7 +1948,7 @@ mod liquid {
                 assert_eq!(
                     vec![
                         Cell::new(liquid_particle.clone()).with_cycle(1),
-                        Cell::new(particle.clone().with_velocityy(91)).with_cycle(1),
+                        Cell::new(particle.clone().with_velocityy(1928)).with_cycle(1),
                     ],
                     *g.get_cells()
                 );

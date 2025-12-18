@@ -62,7 +62,7 @@ pub struct Random {
     row_update_direction: fn(r: &mut Random) -> RowUpdateDirection,
     particle_seed: fn(r: &mut Random) -> u8,
     particle_seed_with_cycle: fn(&mut Random) -> u8,
-    velocity_probability: fn(r: &mut Random) -> u8,
+    velocity_probability: fn(r: &mut Random) -> i16,
     rng: rand::prelude::SmallRng,
     cycle: u32,
 }
@@ -75,13 +75,13 @@ pub struct Grid {
     cycle: u32,
     draw_cycle: u32,
     random: Random,
-    initial_particle_velocity: u8,
+    initial_particle_velocity: i16,
 }
 
 pub trait GridAccess {
     fn particle_direction(&mut self) -> ParticleHorizontalDirection;
     fn particle_seed(&mut self) -> u8;
-    fn velocity_probability(&mut self) -> u8;
+    fn velocity_probability(&mut self) -> i16;
     fn get_neighbor_index(
         &self,
         position: (usize, usize),
@@ -95,7 +95,7 @@ pub trait GridAccess {
     fn is_empty(&self, position: (usize, usize), offset: (i32, i32)) -> Option<usize>;
     fn is_simulated(&self, c: &Cell) -> bool;
     fn cycle(&self) -> u32;
-    fn get_particle_initial_velocity(&self) -> u8;
+    fn get_particle_initial_velocity(&self) -> i16;
 }
 
 impl fmt::Display for Cell {
@@ -169,7 +169,7 @@ impl GridAccess for Grid {
         (self.random.particle_seed_with_cycle)(&mut self.random)
     }
 
-    fn velocity_probability(&mut self) -> u8 {
+    fn velocity_probability(&mut self) -> i16 {
         (self.random.velocity_probability)(&mut self.random)
     }
 
@@ -201,7 +201,7 @@ impl GridAccess for Grid {
         self.cycle() <= c.cycle
     }
 
-    fn get_particle_initial_velocity(&self) -> u8 {
+    fn get_particle_initial_velocity(&self) -> i16 {
         self.initial_particle_velocity
     }
 }
@@ -240,8 +240,8 @@ impl Random {
         ((r.particle_seed)(r) / 2) + (r.cycle as u8 / 2)
     }
 
-    fn random_velocity_probability(r: &mut Random) -> u8 {
-        r.rng.random::<u8>()
+    fn random_velocity_probability(r: &mut Random) -> i16 {
+        r.rng.random::<i16>().abs()
     }
 }
 
@@ -254,7 +254,7 @@ impl Grid {
             cycle: 0,
             draw_cycle: 0,
             random: Random::new(),
-            initial_particle_velocity: u8::MAX,
+            initial_particle_velocity: i16::MAX,
         }
     }
 
@@ -400,13 +400,13 @@ impl Grid {
     }
 
     #[allow(dead_code)]
-    pub fn with_rand_velocityy(mut self, velocity_probability: fn(r: &mut Random) -> u8) -> Self {
+    pub fn with_rand_velocityy(mut self, velocity_probability: fn(r: &mut Random) -> i16) -> Self {
         self.random.velocity_probability = velocity_probability;
         self
     }
 
     #[allow(dead_code)]
-    pub fn with_initial_particle_velocity(mut self, initial_particle_velocity: u8) -> Self {
+    pub fn with_initial_particle_velocity(mut self, initial_particle_velocity: i16) -> Self {
         self.initial_particle_velocity = initial_particle_velocity;
         self
     }
@@ -1006,7 +1006,7 @@ mod random {
         for _ in 0..TEST_ITERATIONS {
             let sample = (r.velocity_probability)(&mut r);
             assert!(
-                (u8::MIN..=u8::MAX).contains(&sample),
+                (0..=i16::MAX).contains(&sample),
                 "sample {} not in range",
                 sample
             );

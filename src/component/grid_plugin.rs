@@ -111,7 +111,7 @@ pub struct ConfigResource {
     pub width: usize,
     pub height: usize,
     update_rate: f64,
-    initial_particle_velocity: u8,
+    initial_particle_velocity: i16,
 }
 
 impl ConfigResource {
@@ -119,7 +119,7 @@ impl ConfigResource {
         width: usize,
         height: usize,
         update_rate: f64,
-        initial_particle_velocity: u8,
+        initial_particle_velocity: i16,
     ) -> Self {
         Self {
             width,

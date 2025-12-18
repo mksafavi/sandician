@@ -307,7 +307,7 @@ mod tests {
                 Cell::new(Particle::from(Tap::with_particle(&Particle::from(
                     Water::new()
                 )))),
-                Cell::new(Particle::from(Water::with_capacity(0)).with_velocityy(254)),
+                Cell::new(Particle::from(Water::with_capacity(0)).with_velocityy(127)),
             ],
             *g.get_cells()
         );

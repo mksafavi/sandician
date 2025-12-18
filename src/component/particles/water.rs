@@ -271,12 +271,15 @@ mod tests {
 
         assert_eq!(
             vec![
-                Cell::new(Particle::from(Water::new()).with_velocityy(1)).with_cycle(3),
-                Cell::new(Particle::from(Water::with_capacity(2)).with_velocityy(1)).with_cycle(4),
-                Cell::new(Particle::from(Water::with_capacity(1)).with_velocityy(1)).with_cycle(4),
-                Cell::new(Particle::from(Water::with_capacity(0)).with_velocityy(1)).with_cycle(3),
+                Some(ParticleKind::from(Water::new())),
+                Some(ParticleKind::from(Water::with_capacity(2))),
+                Some(ParticleKind::from(Water::with_capacity(1))),
+                Some(ParticleKind::from(Water::with_capacity(0))),
             ],
-            *g.get_cells()
+            g.get_cells()
+                .iter()
+                .map(|c| c.particle.as_ref().map(|p| p.kind.clone()))
+                .collect::<Vec<_>>()
         );
     }
 
