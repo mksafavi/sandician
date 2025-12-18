@@ -97,7 +97,7 @@ pub struct Particle {
     pub kind: ParticleKind,
     pub seed: u8,
     pub velocityy: i16,
-    pub velocityx: i8,
+    pub velocityx: i16,
     pub health: u8,
 }
 
@@ -139,7 +139,7 @@ impl Particle {
         self
     }
 
-    pub fn with_velocityx(mut self, velocityx: i8) -> Self {
+    pub fn with_velocityx(mut self, velocityx: i16) -> Self {
         self.velocityx = velocityx;
         self
     }
@@ -326,22 +326,22 @@ impl Particle {
             (None, Some(i)) => {
                 if let Some(ref mut this) = grid.get_cell_mut(grid.to_index(position)).particle {
                     this.velocityx = 0;
-                    this.velocityx = this.velocityx.saturating_add(1);
+                    this.velocityx = this.velocityx.saturating_add(128);
                 };
                 Some(i)
             }
             (Some(i), None) => {
                 if let Some(ref mut this) = grid.get_cell_mut(grid.to_index(position)).particle {
                     this.velocityx = 0;
-                    this.velocityx = this.velocityx.saturating_sub(1);
+                    this.velocityx = this.velocityx.saturating_sub(128);
                 };
                 Some(i)
             }
             (Some(l), Some(r)) => {
                 let dir = match this.velocityx {
-                    i8::MIN..0 => ParticleHorizontalDirection::Left,
+                    i16::MIN..0 => ParticleHorizontalDirection::Left,
                     0 => grid.particle_direction(),
-                    1..=i8::MAX => ParticleHorizontalDirection::Right,
+                    1..=i16::MAX => ParticleHorizontalDirection::Right,
                 };
 
                 match dir {
@@ -349,7 +349,7 @@ impl Particle {
                         if let Some(ref mut this) =
                             grid.get_cell_mut(grid.to_index(position)).particle
                         {
-                            this.velocityx = this.velocityx.saturating_sub(1);
+                            this.velocityx = this.velocityx.saturating_sub(128);
                         };
                         Some(l)
                     }
@@ -357,7 +357,7 @@ impl Particle {
                         if let Some(ref mut this) =
                             grid.get_cell_mut(grid.to_index(position)).particle
                         {
-                            this.velocityx = this.velocityx.saturating_add(1);
+                            this.velocityx = this.velocityx.saturating_add(128);
                         };
                         Some(r)
                     }
@@ -1010,7 +1010,7 @@ mod liquid {
                         Cell::empty(),
                         Cell::new(particle.clone()),
                         Cell::empty().with_cycle(1),
-                        Cell::new(liquid_particle.clone().with_velocityx(1)).with_cycle(1),
+                        Cell::new(liquid_particle.clone().with_velocityx(128)).with_cycle(1),
                     ],
                     *g.get_cells()
                 );
@@ -1037,7 +1037,7 @@ mod liquid {
                         Cell::empty(),
                         Cell::empty(),
                         Cell::empty(),
-                        Cell::new(liquid_particle.clone().with_velocityx(-1)).with_cycle(1),
+                        Cell::new(liquid_particle.clone().with_velocityx(-128)).with_cycle(1),
                         Cell::empty().with_cycle(1),
                         Cell::new(particle.clone()),
                     ],
@@ -1068,7 +1068,7 @@ mod liquid {
                     Cell::empty(),
                     Cell::empty(),
                     Cell::empty().with_cycle(1),
-                    Cell::new(liquid_particle.clone().with_velocityx(1)).with_cycle(1),
+                    Cell::new(liquid_particle.clone().with_velocityx(128)).with_cycle(1),
                 ],
                 *g.get_cells()
             );
@@ -1094,7 +1094,7 @@ mod liquid {
                     Cell::empty(),
                     Cell::empty(),
                     Cell::empty(),
-                    Cell::new(liquid_particle.clone().with_velocityx(-1)).with_cycle(1),
+                    Cell::new(liquid_particle.clone().with_velocityx(-128)).with_cycle(1),
                     Cell::empty().with_cycle(1),
                     Cell::empty(),
                 ],
@@ -1124,7 +1124,7 @@ mod liquid {
                     Cell::empty(),
                     Cell::empty().with_cycle(1),
                     Cell::empty(),
-                    Cell::new(liquid_particle.clone().with_velocityx(1)).with_cycle(1),
+                    Cell::new(liquid_particle.clone().with_velocityx(128)).with_cycle(1),
                 ],
                 *g.get_cells()
             );
@@ -1150,7 +1150,7 @@ mod liquid {
                     Cell::empty(),
                     Cell::empty(),
                     Cell::empty(),
-                    Cell::new(liquid_particle.clone().with_velocityx(-1)).with_cycle(1),
+                    Cell::new(liquid_particle.clone().with_velocityx(-128)).with_cycle(1),
                     Cell::empty(),
                     Cell::empty().with_cycle(1),
                 ],
@@ -1177,7 +1177,7 @@ mod liquid {
                     Cell::empty(),
                     Cell::empty().with_cycle(1),
                     Cell::empty(),
-                    Cell::new(liquid_particle.clone().with_velocityx(1)).with_cycle(1),
+                    Cell::new(liquid_particle.clone().with_velocityx(128)).with_cycle(1),
                 ],
                 *g.get_cells()
             );
@@ -1187,7 +1187,7 @@ mod liquid {
             assert_eq!(
                 vec![
                     Cell::empty(),
-                    Cell::new(liquid_particle.clone().with_velocityx(-1)).with_cycle(2),
+                    Cell::new(liquid_particle.clone().with_velocityx(-128)).with_cycle(2),
                     Cell::empty(),
                     Cell::empty().with_cycle(2),
                 ],
@@ -1211,7 +1211,7 @@ mod liquid {
 
             assert_eq!(
                 vec![
-                    Cell::new(liquid_particle.clone().with_velocityx(-1)).with_cycle(1),
+                    Cell::new(liquid_particle.clone().with_velocityx(-128)).with_cycle(1),
                     Cell::empty(),
                     Cell::empty().with_cycle(1),
                     Cell::empty(),
@@ -1225,7 +1225,7 @@ mod liquid {
                 vec![
                     Cell::empty().with_cycle(2),
                     Cell::empty(),
-                    Cell::new(liquid_particle.clone().with_velocityx(1)).with_cycle(2),
+                    Cell::new(liquid_particle.clone().with_velocityx(128)).with_cycle(2),
                     Cell::empty(),
                 ],
                 *g.get_cells()
@@ -1272,7 +1272,7 @@ mod liquid {
                     Cell::empty(),
                     Cell::empty().with_cycle(1),
                     Cell::empty(),
-                    Cell::new(liquid_particle.clone().with_velocityx(1)).with_cycle(1),
+                    Cell::new(liquid_particle.clone().with_velocityx(128)).with_cycle(1),
                     Cell::empty(),
                     Cell::empty(),
                 ],
@@ -1288,7 +1288,7 @@ mod liquid {
                     Cell::empty(),
                     Cell::empty().with_cycle(2),
                     Cell::empty(),
-                    Cell::new(liquid_particle.clone().with_velocityx(2)).with_cycle(2),
+                    Cell::new(liquid_particle.clone().with_velocityx(256)).with_cycle(2),
                 ],
                 *g.get_cells()
             );
@@ -1333,7 +1333,7 @@ mod liquid {
                 vec![
                     Cell::empty(),
                     Cell::empty(),
-                    Cell::new(liquid_particle.clone().with_velocityx(-1)).with_cycle(1),
+                    Cell::new(liquid_particle.clone().with_velocityx(-128)).with_cycle(1),
                     Cell::empty(),
                     Cell::empty().with_cycle(1),
                     Cell::empty(),
@@ -1345,7 +1345,7 @@ mod liquid {
 
             assert_eq!(
                 vec![
-                    Cell::new(liquid_particle.clone().with_velocityx(-2)).with_cycle(2),
+                    Cell::new(liquid_particle.clone().with_velocityx(-256)).with_cycle(2),
                     Cell::empty(),
                     Cell::empty().with_cycle(2),
                     Cell::empty(),
@@ -1496,8 +1496,8 @@ mod liquid {
 
             assert_eq!(
                 vec![
-                    Cell::new(liquid_particle.clone().with_velocityx(-1)).with_cycle(1),
-                    Cell::new(liquid_particle.clone().with_velocityx(-1)).with_cycle(1),
+                    Cell::new(liquid_particle.clone().with_velocityx(-128)).with_cycle(1),
+                    Cell::new(liquid_particle.clone().with_velocityx(-128)).with_cycle(1),
                     Cell::empty().with_cycle(1),
                     Cell::empty(),
                 ],
@@ -1515,10 +1515,10 @@ mod liquid {
 
             assert_eq!(
                 vec![
-                    Cell::new(liquid_particle.clone().with_velocityx(-1)).with_cycle(1),
+                    Cell::new(liquid_particle.clone().with_velocityx(-128)).with_cycle(1),
                     Cell::empty().with_cycle(1),
                     Cell::empty().with_cycle(1),
-                    Cell::new(liquid_particle.clone().with_velocityx(1)).with_cycle(1),
+                    Cell::new(liquid_particle.clone().with_velocityx(128)).with_cycle(1),
                 ],
                 *g.get_cells()
             );
@@ -1544,8 +1544,8 @@ mod liquid {
                 vec![
                     Cell::empty(),
                     Cell::empty().with_cycle(1),
-                    Cell::new(liquid_particle.clone().with_velocityx(1)).with_cycle(1),
-                    Cell::new(liquid_particle.clone().with_velocityx(1)).with_cycle(1),
+                    Cell::new(liquid_particle.clone().with_velocityx(128)).with_cycle(1),
+                    Cell::new(liquid_particle.clone().with_velocityx(128)).with_cycle(1),
                 ],
                 *g.get_cells()
             );
@@ -1561,10 +1561,10 @@ mod liquid {
 
             assert_eq!(
                 vec![
-                    Cell::new(liquid_particle.clone().with_velocityx(-1)).with_cycle(1),
+                    Cell::new(liquid_particle.clone().with_velocityx(-128)).with_cycle(1),
                     Cell::empty().with_cycle(1),
                     Cell::empty().with_cycle(1),
-                    Cell::new(liquid_particle.clone().with_velocityx(1)).with_cycle(1),
+                    Cell::new(liquid_particle.clone().with_velocityx(128)).with_cycle(1),
                 ],
                 *g.get_cells()
             );
