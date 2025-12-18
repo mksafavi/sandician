@@ -747,7 +747,7 @@ mod powder {
     }
 
     #[test]
-    fn test_weighted_particle_fall_when_probability_is_max() {
+    fn test_weighted_particle_fall_with_maximum_velocity_probability() {
         /*
          * S -> -
          * -    S
@@ -762,7 +762,7 @@ mod powder {
             assert_eq!(
                 vec![
                     Cell::empty().with_cycle(1),
-                    Cell::new(particle.clone()).with_cycle(1),
+                    Cell::new(particle.clone().with_velocity(u8::MAX)).with_cycle(1),
                 ],
                 *g.get_cells()
             );
@@ -770,7 +770,7 @@ mod powder {
     }
 
     #[test]
-    fn test_weighted_particle_does_not_fall_when_velocity_is_zero() {
+    fn test_weighted_particle_does_not_fall_when_velocity_is_zero_but_increase_the_chance_of_falling() {
         /*
          * S -> S
          * -    -
@@ -790,7 +790,7 @@ mod powder {
     }
 
     #[test]
-    fn test_weighted_particle_does_not_fall_to_right_when_velocity_is_zero() {
+    fn test_weighted_particle_does_not_fall_to_right_when_velocity_is_zero_but_increase_the_chance_of_falling() {
         /*
          * S- -> S-
          * r-    r-
@@ -816,7 +816,7 @@ mod powder {
     }
 
     #[test]
-    fn test_weighted_particle_does_not_fall_to_left_when_velocity_is_zero() {
+    fn test_weighted_particle_does_not_fall_to_left_when_velocity_is_zero_but_increase_the_chance_of_falling() {
         /*
          * -S -> -S
          * -r    -r
