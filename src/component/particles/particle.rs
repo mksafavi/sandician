@@ -753,7 +753,7 @@ mod powder {
          * -    S
          */
         for particle in weighted_particle() {
-            let mut g = Grid::new(1, 2).with_rand_velocity(|_| 255);
+            let mut g = Grid::new(1, 2).with_rand_velocity(|_| u8::MAX);
 
             g.spawn_particle((0, 0), particle.clone());
 
@@ -776,7 +776,7 @@ mod powder {
          * -    -
          */
         for particle in weighted_particle() {
-            let mut g = Grid::new(1, 2).with_rand_velocity(|_| 255);
+            let mut g = Grid::new(1, 2).with_rand_velocity(|_| u8::MAX);
 
             g.spawn_particle((0, 0), particle.clone().with_velocity(0));
 
@@ -796,7 +796,7 @@ mod powder {
          * r-    r-
          */
         for particle in weighted_particle() {
-            let mut g = Grid::new(2, 2).with_rand_velocity(|_| 255);
+            let mut g = Grid::new(2, 2).with_rand_velocity(|_| u8::MAX);
 
             g.spawn_particle((0, 0), particle.clone().with_velocity(0));
             g.spawn_particle((0, 1), Particle::from(Rock::new()));
@@ -822,7 +822,7 @@ mod powder {
          * -r    -r
          */
         for particle in weighted_particle() {
-            let mut g = Grid::new(2, 2).with_rand_velocity(|_| 255);
+            let mut g = Grid::new(2, 2).with_rand_velocity(|_| u8::MAX);
 
             g.spawn_particle((1, 0), particle.clone().with_velocity(0));
             g.spawn_particle((1, 1), Particle::from(Rock::new()));
@@ -849,7 +849,7 @@ mod powder {
          * ---    ---
          */
         for particle in weighted_particle() {
-            static V: &[u8] = &[255, 0]; /*255 won't swap but 0 will*/
+            static V: &[u8] = &[u8::MAX, 0]; /*u8::MAX won't swap but 0 will*/
             static V_INDEX: AtomicUsize = AtomicUsize::new(0);
             V_INDEX.store(0, Ordering::SeqCst);
             fn velocity_probability(_: &mut Random) -> u8 {
@@ -1797,7 +1797,7 @@ mod liquid {
          * --    --
          */
         for liquid_particle in liquid_particle() {
-            static V: &[u8] = &[255]; /*255 won't swap*/
+            static V: &[u8] = &[u8::MAX]; /*u8::MAX won't swap*/
             static V_INDEX: AtomicUsize = AtomicUsize::new(0);
             V_INDEX.store(0, Ordering::SeqCst);
             fn velocity_probability(_: &mut Random) -> u8 {
@@ -1831,7 +1831,7 @@ mod liquid {
          * -r    -r
          */
         for liquid_particle in liquid_particle() {
-            static V: &[u8] = &[255]; /*255 won't swap*/
+            static V: &[u8] = &[u8::MAX]; /*u8::MAX won't swap*/
             static V_INDEX: AtomicUsize = AtomicUsize::new(0);
             V_INDEX.store(0, Ordering::SeqCst);
             fn velocity_probability(_: &mut Random) -> u8 {
@@ -1866,7 +1866,7 @@ mod liquid {
          * r-    r-
          */
         for liquid_particle in liquid_particle() {
-            static V: &[u8] = &[255]; /*255 won't swap*/
+            static V: &[u8] = &[u8::MAX]; /*u8::MAX won't swap*/
             static V_INDEX: AtomicUsize = AtomicUsize::new(0);
             V_INDEX.store(0, Ordering::SeqCst);
             fn velocity_probability(_: &mut Random) -> u8 {
@@ -1903,7 +1903,7 @@ mod liquid {
         for liquid_particle in liquid_particle() {
             for particle in weighted_particle() {
                 let mut g = Grid::new(1, 2)
-                    .with_rand_velocity(|_| 255)
+                    .with_rand_velocity(|_| u8::MAX)
                     .with_initial_particle_velocity(0);
 
                 g.spawn_particle((0, 0), particle.clone().with_velocity(0));
