@@ -47,7 +47,7 @@ fn dissolve_salt<T: GridAccess>(grid: &mut T, capacity: u8, position: (usize, us
                 cell.particle = Some(
                     Particle::from(Water::with_capacity(capacity - 1))
                         .with_seed(particle.seed)
-                        .with_velocity(particle.velocity),
+                        .with_velocityy(particle.velocityy),
                 );
                 cell.cycle = cycle;
             }
@@ -145,10 +145,10 @@ mod tests {
 
     #[test]
     fn test_water_can_only_dissolve_three_salt_particles() {
-        let mut g = Grid::new(1, 5).with_rand_velocity(|_| 0);
+        let mut g = Grid::new(1, 5).with_rand_velocityy(|_| 0);
 
-        let water = Particle::from(Water::new()).with_velocity(0);
-        let salt = Particle::from(Salt::new()).with_velocity(0);
+        let water = Particle::from(Water::new()).with_velocityy(0);
+        let salt = Particle::from(Salt::new()).with_velocityy(0);
 
         g.spawn_particle((0, 0), salt.clone());
         g.spawn_particle((0, 1), salt.clone());
@@ -247,22 +247,22 @@ mod tests {
          * 3    0
          */
         let mut g = Grid::new(1, 4)
-            .with_rand_velocity(|_| 0)
+            .with_rand_velocityy(|_| 0)
             .with_initial_particle_velocity(1);
 
         g.spawn_particle(
             (0, 0),
-            Particle::from(Water::with_capacity(0)).with_velocity(0),
+            Particle::from(Water::with_capacity(0)).with_velocityy(0),
         );
         g.spawn_particle(
             (0, 1),
-            Particle::from(Water::with_capacity(1)).with_velocity(0),
+            Particle::from(Water::with_capacity(1)).with_velocityy(0),
         );
         g.spawn_particle(
             (0, 2),
-            Particle::from(Water::with_capacity(2)).with_velocity(0),
+            Particle::from(Water::with_capacity(2)).with_velocityy(0),
         );
-        g.spawn_particle((0, 3), Particle::from(Water::new()).with_velocity(0));
+        g.spawn_particle((0, 3), Particle::from(Water::new()).with_velocityy(0));
 
         g.update_grid();
         g.update_grid();
@@ -271,10 +271,10 @@ mod tests {
 
         assert_eq!(
             vec![
-                Cell::new(Particle::from(Water::new()).with_velocity(1)).with_cycle(3),
-                Cell::new(Particle::from(Water::with_capacity(2)).with_velocity(1)).with_cycle(4),
-                Cell::new(Particle::from(Water::with_capacity(1)).with_velocity(1)).with_cycle(4),
-                Cell::new(Particle::from(Water::with_capacity(0)).with_velocity(1)).with_cycle(3),
+                Cell::new(Particle::from(Water::new()).with_velocityy(1)).with_cycle(3),
+                Cell::new(Particle::from(Water::with_capacity(2)).with_velocityy(1)).with_cycle(4),
+                Cell::new(Particle::from(Water::with_capacity(1)).with_velocityy(1)).with_cycle(4),
+                Cell::new(Particle::from(Water::with_capacity(0)).with_velocityy(1)).with_cycle(3),
             ],
             *g.get_cells()
         );

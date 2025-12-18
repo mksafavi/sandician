@@ -345,7 +345,7 @@ impl Grid {
                         position,
                         Particle::from(k.clone())
                             .with_seed(seed)
-                            .with_velocity(self.initial_particle_velocity),
+                            .with_velocityy(self.initial_particle_velocity),
                     )
                 }
                 None => self.despawn_particle(position),
@@ -400,7 +400,7 @@ impl Grid {
     }
 
     #[allow(dead_code)]
-    pub fn with_rand_velocity(mut self, velocity_probability: fn(r: &mut Random) -> u8) -> Self {
+    pub fn with_rand_velocityy(mut self, velocity_probability: fn(r: &mut Random) -> u8) -> Self {
         self.random.velocity_probability = velocity_probability;
         self
     }
@@ -574,7 +574,7 @@ mod tests {
 
         let particle = Particle::from(Sand::new());
         assert_eq!(
-            vec![Cell::new(particle.clone().with_velocity(111))],
+            vec![Cell::new(particle.clone().with_velocityy(111))],
             *g.get_cells()
         );
     }

@@ -58,7 +58,7 @@ impl Tap {
                     {
                         let cycle = grid.cycle();
                         let particle = Particle::from(particle_kind.clone())
-                            .with_velocity(grid.get_particle_initial_velocity())
+                            .with_velocityy(grid.get_particle_initial_velocity())
                             .with_seed(grid.particle_seed());
                         let cell = grid.get_cell_mut(i);
                         cell.particle = Some(particle);
@@ -297,7 +297,7 @@ mod tests {
         g.spawn_particle((0, 0), Particle::from(Tap::new()));
         g.spawn_particle(
             (0, 1),
-            Particle::from(Water::with_capacity(0)).with_velocity(255),
+            Particle::from(Water::with_capacity(0)).with_velocityy(255),
         );
 
         g.update_grid();
@@ -307,7 +307,7 @@ mod tests {
                 Cell::new(Particle::from(Tap::with_particle(&Particle::from(
                     Water::new()
                 )))),
-                Cell::new(Particle::from(Water::with_capacity(0)).with_velocity(254)),
+                Cell::new(Particle::from(Water::with_capacity(0)).with_velocityy(254)),
             ],
             *g.get_cells()
         );
@@ -322,7 +322,7 @@ mod tests {
                     Water::new()
                 ))))
                 .with_cycle(2),
-                Cell::new(Particle::from(Water::new()).with_velocity(111)).with_cycle(2)
+                Cell::new(Particle::from(Water::new()).with_velocityy(111)).with_cycle(2)
             ],
             *g.get_cells()
         );
