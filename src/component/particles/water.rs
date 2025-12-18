@@ -47,7 +47,8 @@ fn dissolve_salt<T: GridAccess>(grid: &mut T, capacity: u8, position: (usize, us
                 cell.particle = Some(
                     Particle::from(Water::with_capacity(capacity - 1))
                         .with_seed(particle.seed)
-                        .with_velocityy(particle.velocityy),
+                        .with_velocity(particle.velocity)
+                        .with_health(particle.health),
                 );
                 cell.cycle = cycle;
             }
@@ -147,8 +148,8 @@ mod tests {
     fn test_water_can_only_dissolve_three_salt_particles() {
         let mut g = Grid::new(1, 5).with_rand_velocityy(|_| 0);
 
-        let water = Particle::from(Water::new()).with_velocityy(0);
-        let salt = Particle::from(Salt::new()).with_velocityy(0);
+        let water = Particle::from(Water::new()).with_velocity((0, 0));
+        let salt = Particle::from(Salt::new()).with_velocity((0, 0));
 
         g.spawn_particle((0, 0), salt.clone());
         g.spawn_particle((0, 1), salt.clone());
@@ -248,21 +249,21 @@ mod tests {
          */
         let mut g = Grid::new(1, 4)
             .with_rand_velocityy(|_| 0)
-            .with_initial_particle_velocity(1);
+            .with_initial_particle_velocity((0, 1));
 
         g.spawn_particle(
             (0, 0),
-            Particle::from(Water::with_capacity(0)).with_velocityy(0),
+            Particle::from(Water::with_capacity(0)).with_velocity((0, 0)),
         );
         g.spawn_particle(
             (0, 1),
-            Particle::from(Water::with_capacity(1)).with_velocityy(0),
+            Particle::from(Water::with_capacity(1)).with_velocity((0, 0)),
         );
         g.spawn_particle(
             (0, 2),
-            Particle::from(Water::with_capacity(2)).with_velocityy(0),
+            Particle::from(Water::with_capacity(2)).with_velocity((0, 0)),
         );
-        g.spawn_particle((0, 3), Particle::from(Water::new()).with_velocityy(0));
+        g.spawn_particle((0, 3), Particle::from(Water::new()).with_velocity((0, 0)));
 
         g.update_grid();
         g.update_grid();
@@ -299,7 +300,8 @@ mod tests {
         assert_eq!(
             vec![
                 Cell::new(Particle::from(Water::new())).with_cycle(1),
-                Cell::new(Particle::from(Water::with_capacity(1)).with_velocityx(128)).with_cycle(1),
+                Cell::new(Particle::from(Water::with_capacity(1)).with_velocity((128, i16::MAX)))
+                    .with_cycle(1),
             ],
             *g.get_cells()
         );
@@ -321,7 +323,8 @@ mod tests {
 
         assert_eq!(
             vec![
-                Cell::new(Particle::from(Water::with_capacity(1)).with_velocityx(-128)).with_cycle(1),
+                Cell::new(Particle::from(Water::with_capacity(1)).with_velocity((-128, i16::MAX)))
+                    .with_cycle(1),
                 Cell::new(Particle::from(Water::new())).with_cycle(1),
             ],
             *g.get_cells()
@@ -329,18 +332,35 @@ mod tests {
     }
 
     #[test]
-    fn test_water_particle_keeps_its_seed_after_dissolving_salts() {
-        let mut g = Grid::new(2, 1);
+    fn test_water_particle_keeps_its_properties_after_dissolving_salts() {
+        let mut g = Grid::new(2, 1).with_initial_particle_velocity((222, 222));
 
-        g.spawn_particle((0, 0), Particle::from(Water::new()).with_seed(111));
-        g.spawn_particle((1, 0), Particle::from(Salt::new()));
+        g.spawn_particle(
+            (0, 0),
+            Particle::from(Water::new())
+                .with_seed(111)
+                .with_velocity((222, 222))
+                .with_health(55),
+        );
+        g.spawn_particle((1, 0), Particle::from(Salt::new()).with_velocity((0, 222)));
 
         g.update_grid();
 
         assert_eq!(
             vec![
-                Cell::new(Particle::from(Water::with_capacity(2)).with_seed(111)).with_cycle(1),
-                Cell::new(Particle::from(Salt::new()).with_health(0)).with_cycle(1)
+                Cell::new(
+                    Particle::from(Water::with_capacity(2))
+                        .with_seed(111)
+                        .with_velocity((222, 222))
+                        .with_health(55)
+                )
+                .with_cycle(1),
+                Cell::new(
+                    Particle::from(Salt::new())
+                        .with_health(0)
+                        .with_velocity((0, 222))
+                )
+                .with_cycle(1)
             ],
             *g.get_cells()
         );

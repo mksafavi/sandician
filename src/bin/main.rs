@@ -23,7 +23,7 @@ fn main() {
                     ..default()
                 }),
             GridPlugin {
-                config: ConfigResource::new(250, 360, 240., 50 * 128),
+                config: ConfigResource::new(250, 360, 240., (0, 50 * 128)),
             },
             RenderSimPlugin,
         ))

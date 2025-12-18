@@ -58,7 +58,7 @@ impl Tap {
                     {
                         let cycle = grid.cycle();
                         let particle = Particle::from(particle_kind.clone())
-                            .with_velocityy(grid.get_particle_initial_velocity())
+                            .with_velocity(grid.get_particle_initial_velocity())
                             .with_seed(grid.particle_seed());
                         let cell = grid.get_cell_mut(i);
                         cell.particle = Some(particle);
@@ -292,12 +292,12 @@ mod tests {
     fn test_tap_clones_a_new_particle_with_the_grid_initial_particle_velocity() {
         let mut g = Grid::new(1, 2)
             .with_rand_seed_with_cycle(|_| 127)
-            .with_initial_particle_velocity(111);
+            .with_initial_particle_velocity((222, 111));
 
         g.spawn_particle((0, 0), Particle::from(Tap::new()));
         g.spawn_particle(
             (0, 1),
-            Particle::from(Water::with_capacity(0)).with_velocityy(255),
+            Particle::from(Water::with_capacity(0)).with_velocity((0, 255)),
         );
 
         g.update_grid();
@@ -307,7 +307,7 @@ mod tests {
                 Cell::new(Particle::from(Tap::with_particle(&Particle::from(
                     Water::new()
                 )))),
-                Cell::new(Particle::from(Water::with_capacity(0)).with_velocityy(127)),
+                Cell::new(Particle::from(Water::with_capacity(0)).with_velocity((0, 127))),
             ],
             *g.get_cells()
         );
@@ -322,7 +322,7 @@ mod tests {
                     Water::new()
                 ))))
                 .with_cycle(2),
-                Cell::new(Particle::from(Water::new()).with_velocityy(111)).with_cycle(2)
+                Cell::new(Particle::from(Water::new()).with_velocity((222, 111))).with_cycle(2)
             ],
             *g.get_cells()
         );

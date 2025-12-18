@@ -75,7 +75,7 @@ pub struct Grid {
     cycle: u32,
     draw_cycle: u32,
     random: Random,
-    initial_particle_velocity: i16,
+    initial_particle_velocity: (i16, i16),
 }
 
 pub trait GridAccess {
@@ -95,7 +95,7 @@ pub trait GridAccess {
     fn is_empty(&self, position: (usize, usize), offset: (i32, i32)) -> Option<usize>;
     fn is_simulated(&self, c: &Cell) -> bool;
     fn cycle(&self) -> u32;
-    fn get_particle_initial_velocity(&self) -> i16;
+    fn get_particle_initial_velocity(&self) -> (i16, i16);
 }
 
 impl fmt::Display for Cell {
@@ -201,7 +201,7 @@ impl GridAccess for Grid {
         self.cycle() <= c.cycle
     }
 
-    fn get_particle_initial_velocity(&self) -> i16 {
+    fn get_particle_initial_velocity(&self) -> (i16, i16) {
         self.initial_particle_velocity
     }
 }
@@ -254,7 +254,7 @@ impl Grid {
             cycle: 0,
             draw_cycle: 0,
             random: Random::new(),
-            initial_particle_velocity: i16::MAX,
+            initial_particle_velocity: (0, i16::MAX),
         }
     }
 
@@ -345,7 +345,7 @@ impl Grid {
                         position,
                         Particle::from(k.clone())
                             .with_seed(seed)
-                            .with_velocityy(self.initial_particle_velocity),
+                            .with_velocity(self.initial_particle_velocity),
                     )
                 }
                 None => self.despawn_particle(position),
@@ -406,7 +406,7 @@ impl Grid {
     }
 
     #[allow(dead_code)]
-    pub fn with_initial_particle_velocity(mut self, initial_particle_velocity: i16) -> Self {
+    pub fn with_initial_particle_velocity(mut self, initial_particle_velocity: (i16, i16)) -> Self {
         self.initial_particle_velocity = initial_particle_velocity;
         self
     }
@@ -568,13 +568,13 @@ mod tests {
     fn test_spawn_particles_brush_sets_initial_velocity_to_particles() {
         let mut g = Grid::new(1, 1)
             .with_rand_seed(|_| 255)
-            .with_initial_particle_velocity(111);
+            .with_initial_particle_velocity((111, 222));
 
         g.spawn_brush((0, 0), 1, Some(&ParticleKind::from(Sand::new())));
 
         let particle = Particle::from(Sand::new());
         assert_eq!(
-            vec![Cell::new(particle.clone().with_velocityy(111))],
+            vec![Cell::new(particle.clone().with_velocity((111, 222)))],
             *g.get_cells()
         );
     }

@@ -96,8 +96,7 @@ pub struct Particle {
     pub cloneable: bool,
     pub kind: ParticleKind,
     pub seed: u8,
-    pub velocityy: i16,
-    pub velocityx: i16,
+    pub velocity: (i16, i16),
     pub health: u8,
 }
 
@@ -109,8 +108,7 @@ impl Particle {
             cloneable: true,
             kind,
             seed: 127,
-            velocityy: i16::MAX,
-            velocityx: 0,
+            velocity: (0, i16::MAX),
             health: u8::MAX,
         }
     }
@@ -134,13 +132,8 @@ impl Particle {
         self
     }
 
-    pub fn with_velocityy(mut self, velocity: i16) -> Self {
-        self.velocityy = velocity;
-        self
-    }
-
-    pub fn with_velocityx(mut self, velocityx: i16) -> Self {
-        self.velocityx = velocityx;
+    pub fn with_velocity(mut self, velocity: (i16, i16)) -> Self {
+        self.velocity = velocity;
         self
     }
 
@@ -325,20 +318,20 @@ impl Particle {
             (None, None) => None,
             (None, Some(i)) => {
                 if let Some(ref mut this) = grid.get_cell_mut(grid.to_index(position)).particle {
-                    this.velocityx = 0;
-                    this.velocityx = this.velocityx.saturating_add(128);
+                    this.velocity.0 = 0;
+                    this.velocity.0 = this.velocity.0.saturating_add(128);
                 };
                 Some(i)
             }
             (Some(i), None) => {
                 if let Some(ref mut this) = grid.get_cell_mut(grid.to_index(position)).particle {
-                    this.velocityx = 0;
-                    this.velocityx = this.velocityx.saturating_sub(128);
+                    this.velocity.0 = 0;
+                    this.velocity.0 = this.velocity.0.saturating_sub(128);
                 };
                 Some(i)
             }
             (Some(l), Some(r)) => {
-                let dir = match this.velocityx {
+                let dir = match this.velocity.0 {
                     i16::MIN..0 => ParticleHorizontalDirection::Left,
                     0 => grid.particle_direction(),
                     1..=i16::MAX => ParticleHorizontalDirection::Right,
@@ -349,7 +342,7 @@ impl Particle {
                         if let Some(ref mut this) =
                             grid.get_cell_mut(grid.to_index(position)).particle
                         {
-                            this.velocityx = this.velocityx.saturating_sub(128);
+                            this.velocity.0 = this.velocity.0.saturating_sub(128);
                         };
                         Some(l)
                     }
@@ -357,7 +350,7 @@ impl Particle {
                         if let Some(ref mut this) =
                             grid.get_cell_mut(grid.to_index(position)).particle
                         {
-                            this.velocityx = this.velocityx.saturating_add(128);
+                            this.velocity.0 = this.velocity.0.saturating_add(128);
                         };
                         Some(r)
                     }
@@ -376,7 +369,7 @@ impl Particle {
     fn gravity<T: GridAccess>(grid: &mut T, position: (usize, usize)) -> bool {
         let c = grid.get_cell(grid.to_index(position));
         let (weight, velocityy) = if let Some(p) = &c.particle {
-            (p.weight, p.velocityy)
+            (p.weight, p.velocity.1)
         } else {
             return false;
         };
@@ -401,7 +394,7 @@ impl Particle {
                             } else {
                                 velocityy
                             };
-                            this.velocityy = velocityy.saturating_add(128);
+                            this.velocity.1 = velocityy.saturating_add(128);
                         };
                         if velocityy_probability <= velocityy {
                             grid.swap_particles(grid.to_index(position), index_n);
@@ -412,7 +405,7 @@ impl Particle {
                 None => {
                     if let Some(ref mut this) = grid.get_cell_mut(grid.to_index(position)).particle
                     {
-                        this.velocityy = velocityy.saturating_add(128);
+                        this.velocity.1 = velocityy.saturating_add(128);
                     };
                     if velocityy_probability <= velocityy {
                         grid.swap_particles(grid.to_index(position), index_n);
@@ -460,16 +453,16 @@ impl Particle {
             },
         } {
             if let Some(ref mut this) = grid.get_cell_mut(grid.to_index(position)).particle {
-                this.velocityy = velocityy.saturating_add(128);
+                this.velocity.1 = velocityy.saturating_add(128);
             };
             if velocityy_probability <= velocityy {
                 grid.swap_particles(grid.to_index(position), index_n);
             }
             return true;
         }
-        let initial_velocityy = grid.get_particle_initial_velocity();
+        let initial_velocityy = grid.get_particle_initial_velocity().1;
         if let Some(ref mut this) = grid.get_cell_mut(grid.to_index(position)).particle {
-            this.velocityy = velocityy.saturating_sub(128).max(initial_velocityy);
+            this.velocity.1 = velocityy.saturating_sub(128).max(initial_velocityy);
         };
         false
     }
@@ -762,7 +755,7 @@ mod powder {
             assert_eq!(
                 vec![
                     Cell::empty().with_cycle(1),
-                    Cell::new(particle.clone().with_velocityy(i16::MAX)).with_cycle(1),
+                    Cell::new(particle.clone().with_velocity((0, i16::MAX))).with_cycle(1),
                 ],
                 *g.get_cells()
             );
@@ -779,13 +772,13 @@ mod powder {
         for particle in weighted_particle() {
             let mut g = Grid::new(1, 2).with_rand_velocityy(|_| i16::MAX);
 
-            g.spawn_particle((0, 0), particle.clone().with_velocityy(0));
+            g.spawn_particle((0, 0), particle.clone().with_velocity((0, 0)));
 
             g.update_grid();
 
             assert_eq!(
                 vec![
-                    Cell::new(particle.clone().with_velocityy(128)),
+                    Cell::new(particle.clone().with_velocity((0, 128))),
                     Cell::empty(),
                 ],
                 *g.get_cells()
@@ -803,14 +796,14 @@ mod powder {
         for particle in weighted_particle() {
             let mut g = Grid::new(2, 2).with_rand_velocityy(|_| i16::MAX);
 
-            g.spawn_particle((0, 0), particle.clone().with_velocityy(0));
+            g.spawn_particle((0, 0), particle.clone().with_velocity((0, 0)));
             g.spawn_particle((0, 1), Particle::from(Rock::new()));
 
             g.update_grid();
 
             assert_eq!(
                 vec![
-                    Cell::new(particle.clone().with_velocityy(128)),
+                    Cell::new(particle.clone().with_velocity((0, 128))),
                     Cell::empty(),
                     Cell::new(Particle::from(Rock::new())),
                     Cell::empty(),
@@ -830,7 +823,7 @@ mod powder {
         for particle in weighted_particle() {
             let mut g = Grid::new(2, 2).with_rand_velocityy(|_| i16::MAX);
 
-            g.spawn_particle((1, 0), particle.clone().with_velocityy(0));
+            g.spawn_particle((1, 0), particle.clone().with_velocity((0, 0)));
             g.spawn_particle((1, 1), Particle::from(Rock::new()));
 
             g.update_grid();
@@ -838,7 +831,7 @@ mod powder {
             assert_eq!(
                 vec![
                     Cell::empty(),
-                    Cell::new(particle.clone().with_velocityy(128)),
+                    Cell::new(particle.clone().with_velocity((0, 128))),
                     Cell::empty(),
                     Cell::new(Particle::from(Rock::new())),
                 ],
@@ -865,14 +858,14 @@ mod powder {
 
             let mut g = Grid::new(3, 2).with_rand_velocityy(velocityy_probability);
 
-            g.spawn_particle((1, 0), particle.clone().with_velocityy(0));
+            g.spawn_particle((1, 0), particle.clone().with_velocity((0, 0)));
 
             g.update_grid();
 
             assert_eq!(
                 vec![
                     Cell::empty(),
-                    Cell::new(particle.clone().with_velocityy(128)),
+                    Cell::new(particle.clone().with_velocity((0, 128))),
                     Cell::empty(),
                     Cell::empty(),
                     Cell::empty(),
@@ -892,14 +885,14 @@ mod powder {
         for particle in weighted_particle() {
             let mut g = Grid::new(1, 1)
                 .with_rand_velocityy(|_| 0)
-                .with_initial_particle_velocity(50);
+                .with_initial_particle_velocity((0, 50));
 
-            g.spawn_particle((0, 0), particle.clone().with_velocityy(255));
+            g.spawn_particle((0, 0), particle.clone().with_velocity((0, 255)));
 
             g.update_grid();
 
             assert_eq!(
-                vec![Cell::new(particle.clone().with_velocityy(127))],
+                vec![Cell::new(particle.clone().with_velocity((0, 127)))],
                 *g.get_cells()
             );
 
@@ -908,7 +901,7 @@ mod powder {
             }
 
             assert_eq!(
-                vec![Cell::new(particle.clone().with_velocityy(50))],
+                vec![Cell::new(particle.clone().with_velocity((0, 50)))],
                 *g.get_cells()
             );
         }
@@ -1010,7 +1003,8 @@ mod liquid {
                         Cell::empty(),
                         Cell::new(particle.clone()),
                         Cell::empty().with_cycle(1),
-                        Cell::new(liquid_particle.clone().with_velocityx(128)).with_cycle(1),
+                        Cell::new(liquid_particle.clone().with_velocity((128, i16::MAX)))
+                            .with_cycle(1),
                     ],
                     *g.get_cells()
                 );
@@ -1037,7 +1031,8 @@ mod liquid {
                         Cell::empty(),
                         Cell::empty(),
                         Cell::empty(),
-                        Cell::new(liquid_particle.clone().with_velocityx(-128)).with_cycle(1),
+                        Cell::new(liquid_particle.clone().with_velocity((-128, i16::MAX)))
+                            .with_cycle(1),
                         Cell::empty().with_cycle(1),
                         Cell::new(particle.clone()),
                     ],
@@ -1068,7 +1063,7 @@ mod liquid {
                     Cell::empty(),
                     Cell::empty(),
                     Cell::empty().with_cycle(1),
-                    Cell::new(liquid_particle.clone().with_velocityx(128)).with_cycle(1),
+                    Cell::new(liquid_particle.clone().with_velocity((128, i16::MAX))).with_cycle(1),
                 ],
                 *g.get_cells()
             );
@@ -1094,7 +1089,8 @@ mod liquid {
                     Cell::empty(),
                     Cell::empty(),
                     Cell::empty(),
-                    Cell::new(liquid_particle.clone().with_velocityx(-128)).with_cycle(1),
+                    Cell::new(liquid_particle.clone().with_velocity((-128, i16::MAX)))
+                        .with_cycle(1),
                     Cell::empty().with_cycle(1),
                     Cell::empty(),
                 ],
@@ -1124,7 +1120,7 @@ mod liquid {
                     Cell::empty(),
                     Cell::empty().with_cycle(1),
                     Cell::empty(),
-                    Cell::new(liquid_particle.clone().with_velocityx(128)).with_cycle(1),
+                    Cell::new(liquid_particle.clone().with_velocity((128, i16::MAX))).with_cycle(1),
                 ],
                 *g.get_cells()
             );
@@ -1150,7 +1146,8 @@ mod liquid {
                     Cell::empty(),
                     Cell::empty(),
                     Cell::empty(),
-                    Cell::new(liquid_particle.clone().with_velocityx(-128)).with_cycle(1),
+                    Cell::new(liquid_particle.clone().with_velocity((-128, i16::MAX)))
+                        .with_cycle(1),
                     Cell::empty(),
                     Cell::empty().with_cycle(1),
                 ],
@@ -1177,7 +1174,7 @@ mod liquid {
                     Cell::empty(),
                     Cell::empty().with_cycle(1),
                     Cell::empty(),
-                    Cell::new(liquid_particle.clone().with_velocityx(128)).with_cycle(1),
+                    Cell::new(liquid_particle.clone().with_velocity((128, i16::MAX))).with_cycle(1),
                 ],
                 *g.get_cells()
             );
@@ -1187,7 +1184,8 @@ mod liquid {
             assert_eq!(
                 vec![
                     Cell::empty(),
-                    Cell::new(liquid_particle.clone().with_velocityx(-128)).with_cycle(2),
+                    Cell::new(liquid_particle.clone().with_velocity((-128, i16::MAX)))
+                        .with_cycle(2),
                     Cell::empty(),
                     Cell::empty().with_cycle(2),
                 ],
@@ -1211,7 +1209,8 @@ mod liquid {
 
             assert_eq!(
                 vec![
-                    Cell::new(liquid_particle.clone().with_velocityx(-128)).with_cycle(1),
+                    Cell::new(liquid_particle.clone().with_velocity((-128, i16::MAX)))
+                        .with_cycle(1),
                     Cell::empty(),
                     Cell::empty().with_cycle(1),
                     Cell::empty(),
@@ -1225,7 +1224,7 @@ mod liquid {
                 vec![
                     Cell::empty().with_cycle(2),
                     Cell::empty(),
-                    Cell::new(liquid_particle.clone().with_velocityx(128)).with_cycle(2),
+                    Cell::new(liquid_particle.clone().with_velocity((128, i16::MAX))).with_cycle(2),
                     Cell::empty(),
                 ],
                 *g.get_cells()
@@ -1272,7 +1271,7 @@ mod liquid {
                     Cell::empty(),
                     Cell::empty().with_cycle(1),
                     Cell::empty(),
-                    Cell::new(liquid_particle.clone().with_velocityx(128)).with_cycle(1),
+                    Cell::new(liquid_particle.clone().with_velocity((128, i16::MAX))).with_cycle(1),
                     Cell::empty(),
                     Cell::empty(),
                 ],
@@ -1288,7 +1287,7 @@ mod liquid {
                     Cell::empty(),
                     Cell::empty().with_cycle(2),
                     Cell::empty(),
-                    Cell::new(liquid_particle.clone().with_velocityx(256)).with_cycle(2),
+                    Cell::new(liquid_particle.clone().with_velocity((256, i16::MAX))).with_cycle(2),
                 ],
                 *g.get_cells()
             );
@@ -1333,7 +1332,8 @@ mod liquid {
                 vec![
                     Cell::empty(),
                     Cell::empty(),
-                    Cell::new(liquid_particle.clone().with_velocityx(-128)).with_cycle(1),
+                    Cell::new(liquid_particle.clone().with_velocity((-128, i16::MAX)))
+                        .with_cycle(1),
                     Cell::empty(),
                     Cell::empty().with_cycle(1),
                     Cell::empty(),
@@ -1345,7 +1345,8 @@ mod liquid {
 
             assert_eq!(
                 vec![
-                    Cell::new(liquid_particle.clone().with_velocityx(-256)).with_cycle(2),
+                    Cell::new(liquid_particle.clone().with_velocity((-256, i16::MAX)))
+                        .with_cycle(2),
                     Cell::empty(),
                     Cell::empty().with_cycle(2),
                     Cell::empty(),
@@ -1496,8 +1497,10 @@ mod liquid {
 
             assert_eq!(
                 vec![
-                    Cell::new(liquid_particle.clone().with_velocityx(-128)).with_cycle(1),
-                    Cell::new(liquid_particle.clone().with_velocityx(-128)).with_cycle(1),
+                    Cell::new(liquid_particle.clone().with_velocity((-128, i16::MAX)))
+                        .with_cycle(1),
+                    Cell::new(liquid_particle.clone().with_velocity((-128, i16::MAX)))
+                        .with_cycle(1),
                     Cell::empty().with_cycle(1),
                     Cell::empty(),
                 ],
@@ -1515,10 +1518,11 @@ mod liquid {
 
             assert_eq!(
                 vec![
-                    Cell::new(liquid_particle.clone().with_velocityx(-128)).with_cycle(1),
+                    Cell::new(liquid_particle.clone().with_velocity((-128, i16::MAX)))
+                        .with_cycle(1),
                     Cell::empty().with_cycle(1),
                     Cell::empty().with_cycle(1),
-                    Cell::new(liquid_particle.clone().with_velocityx(128)).with_cycle(1),
+                    Cell::new(liquid_particle.clone().with_velocity((128, i16::MAX))).with_cycle(1),
                 ],
                 *g.get_cells()
             );
@@ -1544,8 +1548,8 @@ mod liquid {
                 vec![
                     Cell::empty(),
                     Cell::empty().with_cycle(1),
-                    Cell::new(liquid_particle.clone().with_velocityx(128)).with_cycle(1),
-                    Cell::new(liquid_particle.clone().with_velocityx(128)).with_cycle(1),
+                    Cell::new(liquid_particle.clone().with_velocity((128, i16::MAX))).with_cycle(1),
+                    Cell::new(liquid_particle.clone().with_velocity((128, i16::MAX))).with_cycle(1),
                 ],
                 *g.get_cells()
             );
@@ -1561,10 +1565,11 @@ mod liquid {
 
             assert_eq!(
                 vec![
-                    Cell::new(liquid_particle.clone().with_velocityx(-128)).with_cycle(1),
+                    Cell::new(liquid_particle.clone().with_velocity((-128, i16::MAX)))
+                        .with_cycle(1),
                     Cell::empty().with_cycle(1),
                     Cell::empty().with_cycle(1),
-                    Cell::new(liquid_particle.clone().with_velocityx(128)).with_cycle(1),
+                    Cell::new(liquid_particle.clone().with_velocity((128, i16::MAX))).with_cycle(1),
                 ],
                 *g.get_cells()
             );
@@ -1580,15 +1585,15 @@ mod liquid {
 
         for liquid_particle in liquid_particle() {
             for particle in weighted_particle() {
-                let particle = particle.with_velocityy(0);
+                let particle = particle.with_velocity((0, 0));
 
                 let mut g = Grid::new(3, 2)
                     .with_rand_velocityy(|_| 0)
-                    .with_initial_particle_velocity(0);
+                    .with_initial_particle_velocity((0, 0));
 
                 g.spawn_particle((1, 0), particle.clone());
                 g.spawn_particle((0, 1), particle.clone());
-                g.spawn_particle((1, 1), liquid_particle.clone().with_velocityy(0));
+                g.spawn_particle((1, 1), liquid_particle.clone().with_velocity((0, 0)));
                 g.spawn_particle((2, 1), particle.clone());
 
                 g.update_grid();
@@ -1596,10 +1601,10 @@ mod liquid {
                 assert_eq!(
                     vec![
                         Cell::empty(),
-                        Cell::new(liquid_particle.clone().with_velocityy(0)).with_cycle(1),
+                        Cell::new(liquid_particle.clone().with_velocity((0, 0))).with_cycle(1),
                         Cell::empty(),
                         Cell::new(particle.clone()),
-                        Cell::new(particle.clone().with_velocityy(128)).with_cycle(1),
+                        Cell::new(particle.clone().with_velocity((0, 128))).with_cycle(1),
                         Cell::new(particle.clone()),
                     ],
                     *g.get_cells()
@@ -1616,14 +1621,14 @@ mod liquid {
          */
         for liquid_particle in liquid_particle() {
             for particle in weighted_particle() {
-                let particle = particle.with_velocityy(0);
+                let particle = particle.with_velocity((0, 0));
 
                 let mut g = Grid::new(3, 2)
                     .with_rand_velocityy(|_| 0)
-                    .with_initial_particle_velocity(0);
+                    .with_initial_particle_velocity((0, 0));
 
                 g.spawn_particle((1, 0), particle.clone());
-                g.spawn_particle((0, 1), liquid_particle.clone().with_velocityy(0));
+                g.spawn_particle((0, 1), liquid_particle.clone().with_velocity((0, 0)));
                 g.spawn_particle((1, 1), particle.clone());
                 g.spawn_particle((2, 1), particle.clone());
 
@@ -1632,9 +1637,9 @@ mod liquid {
                 assert_eq!(
                     vec![
                         Cell::empty(),
-                        Cell::new(liquid_particle.clone().with_velocityy(0)).with_cycle(1),
+                        Cell::new(liquid_particle.clone().with_velocity((0, 0))).with_cycle(1),
                         Cell::empty(),
-                        Cell::new(particle.clone().with_velocityy(128)).with_cycle(1),
+                        Cell::new(particle.clone().with_velocity((0, 128))).with_cycle(1),
                         Cell::new(particle.clone()),
                         Cell::new(particle.clone()),
                     ],
@@ -1653,27 +1658,27 @@ mod liquid {
 
         for liquid_particle in liquid_particle() {
             for particle in weighted_particle() {
-                let particle = particle.with_velocityy(0);
+                let particle = particle.with_velocity((0, 0));
 
                 let mut g = Grid::new(3, 2)
                     .with_rand_velocityy(|_| 0)
-                    .with_initial_particle_velocity(0);
+                    .with_initial_particle_velocity((0, 0));
 
                 g.spawn_particle((1, 0), particle.clone());
                 g.spawn_particle((0, 1), particle.clone());
                 g.spawn_particle((1, 1), particle.clone());
-                g.spawn_particle((2, 1), liquid_particle.clone().with_velocityy(0));
+                g.spawn_particle((2, 1), liquid_particle.clone().with_velocity((0, 0)));
 
                 g.update_grid();
 
                 assert_eq!(
                     vec![
                         Cell::empty(),
-                        Cell::new(liquid_particle.clone().with_velocityy(0)).with_cycle(1),
+                        Cell::new(liquid_particle.clone().with_velocity((0, 0))).with_cycle(1),
                         Cell::empty(),
                         Cell::new(particle.clone()),
                         Cell::new(particle.clone()),
-                        Cell::new(particle.clone().with_velocityy(128)).with_cycle(1),
+                        Cell::new(particle.clone().with_velocity((0, 128))).with_cycle(1),
                     ],
                     *g.get_cells()
                 );
@@ -1691,21 +1696,21 @@ mod liquid {
          */
         for liquid_particle in liquid_particle() {
             for particle in weighted_particle() {
-                let particle = particle.with_velocityy(0);
+                let particle = particle.with_velocity((0, 0));
 
                 let mut g = Grid::new(1, 3)
                     .with_rand_velocityy(|_| 0)
-                    .with_initial_particle_velocity(0);
+                    .with_initial_particle_velocity((0, 0));
 
                 g.spawn_particle((0, 0), particle.clone());
                 g.spawn_particle((0, 1), particle.clone());
-                g.spawn_particle((0, 2), liquid_particle.clone().with_velocityy(0));
+                g.spawn_particle((0, 2), liquid_particle.clone().with_velocity((0, 0)));
 
                 assert_eq!(
                     vec![
                         Cell::new(particle.clone()),
                         Cell::new(particle.clone()),
-                        Cell::new(liquid_particle.clone().with_velocityy(0)),
+                        Cell::new(liquid_particle.clone().with_velocity((0, 0))),
                     ],
                     *g.get_cells()
                 );
@@ -1715,8 +1720,8 @@ mod liquid {
                 assert_eq!(
                     vec![
                         Cell::new(particle.clone()),
-                        Cell::new(liquid_particle.clone().with_velocityy(0)).with_cycle(1),
-                        Cell::new(particle.clone().with_velocityy(128)).with_cycle(1),
+                        Cell::new(liquid_particle.clone().with_velocity((0, 0))).with_cycle(1),
+                        Cell::new(particle.clone().with_velocity((0, 128))).with_cycle(1),
                     ],
                     *g.get_cells()
                 );
@@ -1725,9 +1730,9 @@ mod liquid {
 
                 assert_eq!(
                     vec![
-                        Cell::new(liquid_particle.clone().with_velocityy(0)).with_cycle(2),
-                        Cell::new(particle.clone().with_velocityy(128)).with_cycle(2),
-                        Cell::new(particle.clone().with_velocityy(0)).with_cycle(1),
+                        Cell::new(liquid_particle.clone().with_velocity((0, 0))).with_cycle(2),
+                        Cell::new(particle.clone().with_velocity((0, 128))).with_cycle(2),
+                        Cell::new(particle.clone().with_velocity((0, 0))).with_cycle(1),
                     ],
                     *g.get_cells()
                 );
@@ -1813,7 +1818,7 @@ mod liquid {
             }
 
             let mut g = Grid::new(2, 2).with_rand_velocityy(velocityy_probability);
-            let particle = liquid_particle.clone().with_velocityy(0);
+            let particle = liquid_particle.clone().with_velocity((0, 0));
 
             g.spawn_particle((0, 0), particle.clone());
 
@@ -1821,7 +1826,7 @@ mod liquid {
 
             assert_eq!(
                 vec![
-                    Cell::new(particle.clone().with_velocityy(128)),
+                    Cell::new(particle.clone().with_velocity((0, 128))),
                     Cell::empty(),
                     Cell::empty(),
                     Cell::empty(),
@@ -1847,7 +1852,7 @@ mod liquid {
             }
 
             let mut g = Grid::new(2, 2).with_rand_velocityy(velocityy_probability);
-            let particle = liquid_particle.clone().with_velocityy(0);
+            let particle = liquid_particle.clone().with_velocity((0, 0));
 
             g.spawn_particle((1, 0), particle.clone());
             g.spawn_particle((1, 1), Particle::from(Rock::new()));
@@ -1857,7 +1862,7 @@ mod liquid {
             assert_eq!(
                 vec![
                     Cell::empty(),
-                    Cell::new(particle.clone().with_velocityy(128)),
+                    Cell::new(particle.clone().with_velocity((0, 128))),
                     Cell::empty(),
                     Cell::new(Particle::from(Rock::new())),
                 ],
@@ -1882,7 +1887,7 @@ mod liquid {
             }
 
             let mut g = Grid::new(2, 2).with_rand_velocityy(velocityy_probability);
-            let particle = liquid_particle.clone().with_velocityy(0);
+            let particle = liquid_particle.clone().with_velocity((0, 0));
 
             g.spawn_particle((0, 0), particle.clone());
             g.spawn_particle((0, 1), Particle::from(Rock::new()));
@@ -1891,7 +1896,7 @@ mod liquid {
 
             assert_eq!(
                 vec![
-                    Cell::new(particle.clone().with_velocityy(128)),
+                    Cell::new(particle.clone().with_velocity((0, 128))),
                     Cell::empty(),
                     Cell::new(Particle::from(Rock::new())),
                     Cell::empty(),
@@ -1911,17 +1916,17 @@ mod liquid {
             for particle in weighted_particle() {
                 let mut g = Grid::new(1, 2)
                     .with_rand_velocityy(|_| i16::MAX)
-                    .with_initial_particle_velocity(0);
+                    .with_initial_particle_velocity((0, 0));
 
-                g.spawn_particle((0, 0), particle.clone().with_velocityy(0));
-                g.spawn_particle((0, 1), liquid_particle.clone().with_velocityy(255));
+                g.spawn_particle((0, 0), particle.clone().with_velocity((0, 0)));
+                g.spawn_particle((0, 1), liquid_particle.clone().with_velocity((0, 255)));
 
                 g.update_grid();
 
                 assert_eq!(
                     vec![
-                        Cell::new(particle.clone().with_velocityy(0)),
-                        Cell::new(liquid_particle.clone().with_velocityy(127))
+                        Cell::new(particle.clone().with_velocity((0, 0))),
+                        Cell::new(liquid_particle.clone().with_velocity((0, 127)))
                     ],
                     *g.get_cells()
                 );
@@ -1940,7 +1945,7 @@ mod liquid {
             for particle in weighted_particle() {
                 let mut g = Grid::new(1, 2).with_rand_velocityy(|_| 0);
 
-                g.spawn_particle((0, 0), particle.clone().with_velocityy(2000));
+                g.spawn_particle((0, 0), particle.clone().with_velocity((0, 2000)));
                 g.spawn_particle((0, 1), liquid_particle.clone());
 
                 g.update_grid();
@@ -1948,7 +1953,7 @@ mod liquid {
                 assert_eq!(
                     vec![
                         Cell::new(liquid_particle.clone()).with_cycle(1),
-                        Cell::new(particle.clone().with_velocityy(1928)).with_cycle(1),
+                        Cell::new(particle.clone().with_velocity((0, 1928))).with_cycle(1),
                     ],
                     *g.get_cells()
                 );

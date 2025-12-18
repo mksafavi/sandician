@@ -111,7 +111,7 @@ pub struct ConfigResource {
     pub width: usize,
     pub height: usize,
     update_rate: f64,
-    initial_particle_velocity: i16,
+    initial_particle_velocity: (i16, i16),
 }
 
 impl ConfigResource {
@@ -119,7 +119,7 @@ impl ConfigResource {
         width: usize,
         height: usize,
         update_rate: f64,
-        initial_particle_velocity: i16,
+        initial_particle_velocity: (i16, i16),
     ) -> Self {
         Self {
             width,
@@ -433,13 +433,13 @@ mod tests {
         let mut app = App::new();
         app.init_resource::<Assets<Image>>();
         app.add_plugins(GridPlugin {
-            config: ConfigResource::new(2, 3, 100., 50),
+            config: ConfigResource::new(2, 3, 100., (0, 50)),
         });
 
         app.update();
 
         assert_eq!(
-            50,
+            (0, 50),
             app.world_mut()
                 .query::<&Grid>()
                 .single(app.world())
@@ -453,7 +453,7 @@ mod tests {
         let mut app = App::new();
         app.init_resource::<Assets<Image>>();
         app.add_plugins(GridPlugin {
-            config: ConfigResource::new(2, 2, 100., 50),
+            config: ConfigResource::new(2, 2, 100., (0, 50)),
         });
 
         app.update();
@@ -491,7 +491,7 @@ mod tests {
         let mut app = App::new();
         app.init_resource::<Assets<Image>>();
         app.add_plugins(GridPlugin {
-            config: ConfigResource::new(2, 2, 100., 50),
+            config: ConfigResource::new(2, 2, 100., (0, 50)),
         });
 
         app.update();
@@ -545,7 +545,7 @@ mod tests {
         let mut app = App::new();
         app.init_resource::<Assets<Image>>();
         app.add_plugins(GridPlugin {
-            config: ConfigResource::new(2, 2, 100., 50),
+            config: ConfigResource::new(2, 2, 100., (0, 50)),
         });
 
         app.update();
@@ -601,7 +601,7 @@ mod tests {
             ..default()
         });
         app.add_plugins(GridPlugin {
-            config: ConfigResource::new(300, 200, 100., 50),
+            config: ConfigResource::new(300, 200, 100., (0, 50)),
         });
 
         app.update();
@@ -634,7 +634,7 @@ mod tests {
         });
 
         app.add_plugins(GridPlugin {
-            config: ConfigResource::new(300, 200, 100., 50),
+            config: ConfigResource::new(300, 200, 100., (0, 50)),
         });
 
         app.update();
@@ -673,7 +673,7 @@ mod tests {
             ..default()
         });
         app.add_plugins(GridPlugin {
-            config: ConfigResource::new(300, 200, 100., 50),
+            config: ConfigResource::new(300, 200, 100., (0, 50)),
         });
 
         app.update();
@@ -743,7 +743,7 @@ mod tests {
             ..default()
         });
         app.add_plugins(GridPlugin {
-            config: ConfigResource::new(300, 200, 100., 50),
+            config: ConfigResource::new(300, 200, 100., (0, 50)),
         });
 
         app.update();
@@ -786,7 +786,7 @@ mod tests {
             ..default()
         });
         app.add_plugins(GridPlugin {
-            config: ConfigResource::new(300, 200, 100., 50),
+            config: ConfigResource::new(300, 200, 100., (0, 50)),
         });
 
         app.update();
@@ -857,7 +857,7 @@ mod tests {
             ..default()
         });
         app.add_plugins(GridPlugin {
-            config: ConfigResource::new(2, 2, 100., 50),
+            config: ConfigResource::new(2, 2, 100., (0, 50)),
         });
 
         app.update();
