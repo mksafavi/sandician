@@ -17,11 +17,13 @@ pub enum GridError {
 
 pub const BACKGROUND_COLOR: bevy::prelude::Color = Color::srgb(0.82, 0.93, 1.);
 
+#[derive(Clone, PartialEq, Debug)]
 pub enum ParticleHorizontalDirection {
     Left = -1,
     Right = 1,
 }
 
+#[derive(Clone, PartialEq, Debug)]
 pub enum RowUpdateDirection {
     Forward = 0,
     Reverse = 1,
@@ -970,5 +972,84 @@ mod tests {
         g.update_grid();
 
         assert_eq!(0, g.cycle);
+    }
+}
+
+#[cfg(test)]
+mod random {
+    use crate::component::grid::RowUpdateDirection;
+
+    use super::{ParticleHorizontalDirection, Random};
+
+    const TEST_ITERATIONS: i32 = 100000;
+
+    #[test]
+    fn test_random_particle_direction() {
+        let mut r = Random::new();
+        for _ in 0..TEST_ITERATIONS {
+            let sample = (r.particle_direction)(&mut r);
+            assert!(
+                [
+                    ParticleHorizontalDirection::Left,
+                    ParticleHorizontalDirection::Right,
+                ]
+                .contains(&sample),
+                "sample {:?} not in range",
+                sample
+            );
+        }
+    }
+
+    #[test]
+    fn test_random_particle_velocity() {
+        let mut r = Random::new();
+        for _ in 0..TEST_ITERATIONS {
+            let sample = (r.velocity_probability)(&mut r);
+            assert!(
+                (u8::MIN..=u8::MAX).contains(&sample),
+                "sample {} not in range",
+                sample
+            );
+        }
+    }
+
+    #[test]
+    fn test_random_row_update_direction() {
+        let mut r = Random::new();
+        for _ in 0..TEST_ITERATIONS {
+            let sample = (r.row_update_direction)(&mut r);
+            assert!(
+                [RowUpdateDirection::Forward, RowUpdateDirection::Reverse].contains(&sample),
+                "sample {:?} not in range",
+                sample
+            );
+        }
+    }
+
+    #[test]
+    fn test_random_particle_seed() {
+        let mut r = Random::new();
+        for _ in 0..TEST_ITERATIONS {
+            let sample = (r.particle_seed)(&mut r);
+            assert!(
+                (0..=u8::MAX).contains(&sample),
+                "sample {:?} not in range",
+                sample
+            );
+        }
+    }
+
+    #[test]
+    fn test_random_particle_seed_with_cycle() {
+        let mut r = Random::new();
+        r.cycle = 0;
+        for _ in 0..TEST_ITERATIONS {
+            let sample = (r.particle_seed_with_cycle)(&mut r);
+            assert!(
+                (0..=u8::MAX / 2).contains(&sample),
+                "sample {:?} not in range",
+                sample
+            );
+        }
     }
 }
