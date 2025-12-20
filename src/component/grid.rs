@@ -220,20 +220,20 @@ impl Random {
     }
 
     fn random_particle_direction(r: &mut Random) -> ParticleHorizontalDirection {
-        match r.rng.random_range(0..=1) {
-            0 => ParticleHorizontalDirection::Left,
-            _ => ParticleHorizontalDirection::Right,
+        match r.rng.random::<i32>().is_positive() {
+            true => ParticleHorizontalDirection::Left,
+            false => ParticleHorizontalDirection::Right,
         }
     }
     fn random_row_update_direction(r: &mut Random) -> RowUpdateDirection {
-        match r.rng.random_range(0..=1) {
-            0 => RowUpdateDirection::Forward,
-            _ => RowUpdateDirection::Reverse,
+        match r.rng.random::<i32>().is_positive() {
+            true => RowUpdateDirection::Forward,
+            false => RowUpdateDirection::Reverse,
         }
     }
 
     fn random_particle_seed(r: &mut Random) -> u8 {
-        r.rng.random_range(u8::MIN..=u8::MAX)
+        r.rng.random::<u8>()
     }
 
     fn random_particle_seed_with_cycle(r: &mut Random) -> u8 {
@@ -241,7 +241,7 @@ impl Random {
     }
 
     fn random_velocity_probability(r: &mut Random) -> u8 {
-        r.rng.random_range(u8::MIN..=u8::MAX)
+        r.rng.random::<u8>()
     }
 }
 
