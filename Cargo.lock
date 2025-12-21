@@ -3441,6 +3441,7 @@ dependencies = [
  "bevy",
  "bevy_embedded_assets",
  "criterion",
+ "fastrand",
  "pretty_assertions",
  "rand",
  "wasm-bindgen",
