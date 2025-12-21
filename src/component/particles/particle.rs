@@ -313,18 +313,11 @@ impl Particle {
             }
             Err(_) => None,
         };
-        let mut velocity_x_delta = 0;
 
-        let index = match (index_left, index_right) {
-            (None, None) => None,
-            (None, Some(i)) => {
-                velocity_x_delta = 128 - this.velocity.0;
-                Some(i)
-            }
-            (Some(i), None) => {
-                velocity_x_delta = -128 - this.velocity.0;
-                Some(i)
-            }
+        let (index, velocity_x_delta) = match (index_left, index_right) {
+            (None, None) => (None, 0),
+            (None, Some(i)) => (Some(i), 128 - this.velocity.0),
+            (Some(i), None) => (Some(i), -128 - this.velocity.0),
             (Some(l), Some(r)) => {
                 let dir = match this.velocity.0 {
                     i16::MIN..0 => ParticleHorizontalDirection::Left,
@@ -333,14 +326,8 @@ impl Particle {
                 };
 
                 match dir {
-                    ParticleHorizontalDirection::Left => {
-                        velocity_x_delta = -128;
-                        Some(l)
-                    }
-                    ParticleHorizontalDirection::Right => {
-                        velocity_x_delta = 128;
-                        Some(r)
-                    }
+                    ParticleHorizontalDirection::Left => (Some(l), -128),
+                    ParticleHorizontalDirection::Right => (Some(r), 128),
                 }
             }
         };
