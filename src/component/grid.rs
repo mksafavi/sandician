@@ -7,7 +7,6 @@ use bevy::{
     image::Image,
     render::render_resource::{Extent3d, TextureDimension, TextureFormat},
 };
-use rand::{Rng, SeedableRng};
 
 use super::particles::particle::{Particle, ParticleKind};
 
@@ -63,7 +62,7 @@ pub struct Random {
     particle_seed: fn(r: &mut Random) -> u8,
     particle_seed_with_cycle: fn(&mut Random) -> u8,
     velocity_probability: fn(r: &mut Random) -> i16,
-    rng: rand::prelude::SmallRng,
+    rng: fastrand::Rng,
     cycle: u32,
 }
 
@@ -214,26 +213,26 @@ impl Random {
             particle_seed: Random::random_particle_seed,
             particle_seed_with_cycle: Random::random_particle_seed_with_cycle,
             velocity_probability: Random::random_velocity_probability,
-            rng: rand::prelude::SmallRng::from_os_rng(),
+            rng: fastrand::Rng::new(),
             cycle: 0,
         }
     }
 
     fn random_particle_direction(r: &mut Random) -> ParticleHorizontalDirection {
-        match r.rng.random::<i32>().is_positive() {
+        match r.rng.i32(..).is_positive() {
             true => ParticleHorizontalDirection::Left,
             false => ParticleHorizontalDirection::Right,
         }
     }
     fn random_row_update_direction(r: &mut Random) -> RowUpdateDirection {
-        match r.rng.random::<i32>().is_positive() {
+        match r.rng.i32(..).is_positive() {
             true => RowUpdateDirection::Forward,
             false => RowUpdateDirection::Reverse,
         }
     }
 
     fn random_particle_seed(r: &mut Random) -> u8 {
-        r.rng.random::<u8>()
+        r.rng.u8(..)
     }
 
     fn random_particle_seed_with_cycle(r: &mut Random) -> u8 {
@@ -241,8 +240,7 @@ impl Random {
     }
 
     fn random_velocity_probability(r: &mut Random) -> i16 {
-        let s = r.rng.random::<i16>();
-        if s == i16::MIN { i16::MAX } else { s.abs() }
+        r.rng.i16(0..=i16::MAX)
     }
 }
 
