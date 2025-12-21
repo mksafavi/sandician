@@ -2,7 +2,7 @@ use criterion::{Criterion, criterion_group, criterion_main};
 use rand::{Rng, SeedableRng, rng, rngs::SmallRng};
 
 fn criterion_benchmark(c: &mut Criterion) {
-    const ITERATIONS: u32 = u32::MAX;
+    const ITERATIONS: u16 = u16::MAX;
     let mut c = c.benchmark_group("rand");
     c.sample_size(50);
 
