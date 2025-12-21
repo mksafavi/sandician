@@ -3443,6 +3443,7 @@ dependencies = [
  "criterion",
  "fastrand",
  "pretty_assertions",
+ "rand",
  "wasm-bindgen",
 ]
 
