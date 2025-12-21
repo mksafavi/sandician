@@ -252,74 +252,60 @@ impl Particle {
         }
     }
 
+    fn check_flow_neighbor<T: GridAccess>(
+        grid: &mut T,
+        position: (usize, usize),
+        offset_sign: i32,
+        viscosity: u8,
+    ) -> Option<usize> {
+        match grid.get_neighbor_index(position, (offset_sign, 0)) {
+            Ok(i) => {
+                let c = grid.get_cell(i);
+                match &c.particle {
+                    Some(p) => {
+                        if p.viscosity < viscosity {
+                            Some(i)
+                        } else {
+                            None
+                        }
+                    }
+                    None => match grid.get_neighbor_index(position, (2 * offset_sign, 0)) {
+                        Ok(ii) => {
+                            let c = grid.get_cell(ii);
+                            match &c.particle {
+                                Some(_) => Some(i),
+                                None => Some(ii),
+                            }
+                        }
+                        Err(_) => Some(i),
+                    },
+                }
+            }
+            Err(_) => None,
+        }
+    }
+
     fn flow<T: GridAccess>(grid: &mut T, position: (usize, usize)) -> bool {
         let c = grid.get_cell(grid.to_index(position));
-        let Some(ref this) = c.particle else {
+        let (viscosity, velocity_x) = if let Some(p) = &c.particle {
+            (p.viscosity, p.velocity.0)
+        } else {
             return false;
         };
 
-        if this.viscosity == u8::MAX {
+        if viscosity == u8::MAX {
             return false;
         }
 
-        let index_left = match grid.get_neighbor_index(position, (-1, 0)) {
-            Ok(i) => {
-                let c = grid.get_cell(i);
-                match &c.particle {
-                    Some(p) => {
-                        if p.viscosity < this.viscosity {
-                            Some(i)
-                        } else {
-                            None
-                        }
-                    }
-                    None => match grid.get_neighbor_index(position, (-2, 0)) {
-                        Ok(ii) => {
-                            let c = grid.get_cell(ii);
-                            match &c.particle {
-                                Some(_) => Some(i),
-                                None => Some(ii),
-                            }
-                        }
-                        Err(_) => Some(i),
-                    },
-                }
-            }
-            Err(_) => None,
-        };
-
-        let index_right = match grid.get_neighbor_index(position, (1, 0)) {
-            Ok(i) => {
-                let c = grid.get_cell(i);
-                match &c.particle {
-                    Some(p) => {
-                        if p.viscosity < this.viscosity {
-                            Some(i)
-                        } else {
-                            None
-                        }
-                    }
-                    None => match grid.get_neighbor_index(position, (2, 0)) {
-                        Ok(ii) => {
-                            let c = grid.get_cell(ii);
-                            match &c.particle {
-                                Some(_) => Some(i),
-                                None => Some(ii),
-                            }
-                        }
-                        Err(_) => Some(i),
-                    },
-                }
-            }
-            Err(_) => None,
-        };
+        let index_left = Self::check_flow_neighbor(grid, position, -1, viscosity);
+        let index_right = Self::check_flow_neighbor(grid, position, 1, viscosity);
 
         let (index, velocity_x_delta) = match (index_left, index_right) {
             (None, None) => (None, 0),
-            (None, Some(i)) => (Some(i), 128 - this.velocity.0),
-            (Some(i), None) => (Some(i), -128 - this.velocity.0),
+            (None, Some(i)) => (Some(i), 128 - velocity_x),
+            (Some(i), None) => (Some(i), -128 - velocity_x),
             (Some(l), Some(r)) => {
-                let dir = match this.velocity.0 {
+                let dir = match velocity_x {
                     i16::MIN..0 => ParticleHorizontalDirection::Left,
                     0 => grid.particle_direction(),
                     1..=i16::MAX => ParticleHorizontalDirection::Right,
