@@ -241,7 +241,8 @@ impl Random {
     }
 
     fn random_velocity_probability(r: &mut Random) -> i16 {
-        r.rng.random::<i16>().abs()
+        let s = r.rng.random::<i16>();
+        if s == i16::MIN { i16::MAX } else { s.abs() }
     }
 }
 
