@@ -61,7 +61,7 @@ fn dissolve_salt<T: GridAccess>(grid: &mut T, capacity: u8, position: (usize, us
 #[cfg(test)]
 mod tests {
     use crate::component::{
-        grid::{Cell, Grid, GridAccess, ParticleHorizontalDirection},
+        grid::{Cell, Grid, GridAccess},
         particles::{
             particle::{Particle, ParticleKind},
             rock::Rock,
@@ -146,7 +146,7 @@ mod tests {
 
     #[test]
     fn test_water_can_only_dissolve_three_salt_particles() {
-        let mut g = Grid::new(1, 5).with_rand_velocityy(|_| 0);
+        let mut g = Grid::new(1, 5).with_rand_vertical_velocity_probability(|_| 0);
 
         let water = Particle::from(Water::new()).with_velocity((0, 0));
         let salt = Particle::from(Salt::new()).with_velocity((0, 0));
@@ -248,7 +248,7 @@ mod tests {
          * 3    0
          */
         let mut g = Grid::new(1, 4)
-            .with_rand_velocityy(|_| 0)
+            .with_rand_vertical_velocity_probability(|_| 0)
             .with_initial_particle_velocity((0, 1));
 
         g.spawn_particle(
@@ -289,8 +289,7 @@ mod tests {
         /*
          * Ww -> wW
          */
-        let mut g =
-            Grid::new(2, 1).with_rand_particle_direction(|_| ParticleHorizontalDirection::Left);
+        let mut g = Grid::new(2, 1).with_rand_horizontal_velocity_probability(|_| i16::MIN);
 
         g.spawn_particle((0, 0), Particle::from(Water::with_capacity(1)));
         g.spawn_particle((1, 0), Particle::from(Water::new()));
@@ -313,8 +312,7 @@ mod tests {
          * wW -> Ww
          */
         // TODO: this should be generalized around liquids with different viscosities
-        let mut g =
-            Grid::new(2, 1).with_rand_particle_direction(|_| ParticleHorizontalDirection::Right);
+        let mut g = Grid::new(2, 1).with_rand_horizontal_velocity_probability(|_| i16::MAX);
 
         g.spawn_particle((0, 0), Particle::from(Water::new()));
         g.spawn_particle((1, 0), Particle::from(Water::with_capacity(1)));

@@ -5,7 +5,7 @@ use bevy::{
     prelude::{Color, Saturation},
 };
 
-use crate::component::grid::{GridAccess, ParticleHorizontalDirection};
+use crate::component::grid::GridAccess;
 
 use super::{acid::Acid, drain::Drain, rock::Rock, salt::Salt, sand::Sand, tap::Tap, water::Water};
 
@@ -305,15 +305,14 @@ impl Particle {
             (None, Some(i)) => (Some(i), 128 - velocity_x),
             (Some(i), None) => (Some(i), -128 - velocity_x),
             (Some(l), Some(r)) => {
-                let dir = match velocity_x {
-                    i16::MIN..0 => ParticleHorizontalDirection::Left,
-                    0 => grid.particle_direction(),
-                    1..=i16::MAX => ParticleHorizontalDirection::Right,
+                let velocity_probability = match velocity_x {
+                    0 => grid.horizontal_velocity_probability(),
+                    v => v,
                 };
 
-                match dir {
-                    ParticleHorizontalDirection::Left => (Some(l), -128),
-                    ParticleHorizontalDirection::Right => (Some(r), 128),
+                match velocity_probability {
+                    i16::MIN..=0 => (Some(l), -128),
+                    1..=i16::MAX => (Some(r), 128),
                 }
             }
         };
@@ -341,7 +340,7 @@ impl Particle {
             return false;
         }
 
-        let velocityy_probability = grid.velocity_probability();
+        let velocityy_probability = grid.vertical_velocity_probability();
 
         if let Ok(index_n) = grid.get_neighbor_index(position, (0, 1)) {
             let cell = grid.get_cell(index_n);
@@ -410,9 +409,9 @@ impl Particle {
             (None, None) => None,
             (None, Some(r)) => Some(r),
             (Some(l), None) => Some(l),
-            (Some(l), Some(r)) => match grid.particle_direction() {
-                ParticleHorizontalDirection::Left => Some(l),
-                ParticleHorizontalDirection::Right => Some(r),
+            (Some(l), Some(r)) => match grid.horizontal_velocity_probability() {
+                i16::MIN..=0 => Some(l),
+                1..=i16::MAX => Some(r),
             },
         } {
             if let Some(ref mut this) = grid.get_cell_mut(grid.to_index(position)).particle {
@@ -650,8 +649,7 @@ mod powder {
          * -S-    SS-
          */
         for particle in weighted_particle() {
-            let mut g =
-                Grid::new(3, 2).with_rand_particle_direction(|_| ParticleHorizontalDirection::Left);
+            let mut g = Grid::new(3, 2).with_rand_horizontal_velocity_probability(|_| i16::MIN);
 
             g.spawn_particle((1, 0), particle.clone());
             g.spawn_particle((1, 1), particle.clone());
@@ -680,8 +678,7 @@ mod powder {
          * -S-    -SS
          */
         for particle in weighted_particle() {
-            let mut g = Grid::new(3, 2)
-                .with_rand_particle_direction(|_| ParticleHorizontalDirection::Right);
+            let mut g = Grid::new(3, 2).with_rand_horizontal_velocity_probability(|_| i16::MAX);
 
             g.spawn_particle((1, 0), particle.clone());
             g.spawn_particle((1, 1), particle.clone());
@@ -709,7 +706,7 @@ mod powder {
          * -    S
          */
         for particle in weighted_particle() {
-            let mut g = Grid::new(1, 2).with_rand_velocityy(|_| i16::MAX);
+            let mut g = Grid::new(1, 2).with_rand_vertical_velocity_probability(|_| i16::MAX);
 
             g.spawn_particle((0, 0), particle.clone());
 
@@ -733,7 +730,7 @@ mod powder {
          * -    -
          */
         for particle in weighted_particle() {
-            let mut g = Grid::new(1, 2).with_rand_velocityy(|_| i16::MAX);
+            let mut g = Grid::new(1, 2).with_rand_vertical_velocity_probability(|_| i16::MAX);
 
             g.spawn_particle((0, 0), particle.clone().with_velocity((0, 0)));
 
@@ -757,7 +754,7 @@ mod powder {
          * r-    r-
          */
         for particle in weighted_particle() {
-            let mut g = Grid::new(2, 2).with_rand_velocityy(|_| i16::MAX);
+            let mut g = Grid::new(2, 2).with_rand_vertical_velocity_probability(|_| i16::MAX);
 
             g.spawn_particle((0, 0), particle.clone().with_velocity((0, 0)));
             g.spawn_particle((0, 1), Particle::from(Rock::new()));
@@ -784,7 +781,7 @@ mod powder {
          * -r    -r
          */
         for particle in weighted_particle() {
-            let mut g = Grid::new(2, 2).with_rand_velocityy(|_| i16::MAX);
+            let mut g = Grid::new(2, 2).with_rand_vertical_velocity_probability(|_| i16::MAX);
 
             g.spawn_particle((1, 0), particle.clone().with_velocity((0, 0)));
             g.spawn_particle((1, 1), Particle::from(Rock::new()));
@@ -819,7 +816,8 @@ mod powder {
                 V[idx]
             }
 
-            let mut g = Grid::new(3, 2).with_rand_velocityy(velocityy_probability);
+            let mut g =
+                Grid::new(3, 2).with_rand_vertical_velocity_probability(velocityy_probability);
 
             g.spawn_particle((1, 0), particle.clone().with_velocity((0, 0)));
 
@@ -847,7 +845,7 @@ mod powder {
          */
         for particle in weighted_particle() {
             let mut g = Grid::new(1, 1)
-                .with_rand_velocityy(|_| 0)
+                .with_rand_vertical_velocity_probability(|_| 0)
                 .with_initial_particle_velocity((0, 50));
 
             g.spawn_particle((0, 0), particle.clone().with_velocity((0, 255)));
@@ -890,7 +888,7 @@ mod powder {
 #[cfg(test)]
 mod liquid {
     use crate::component::{
-        grid::{Cell, Grid, ParticleHorizontalDirection, Random, RowUpdateDirection},
+        grid::{Cell, Grid, Random, RowUpdateDirection},
         particles::{acid::Acid, particle::Particle, rock::Rock, salt::Salt, sand::Sand},
     };
     use pretty_assertions::assert_eq;
@@ -1012,8 +1010,7 @@ mod liquid {
          * -w-    --w
          */
         for liquid_particle in liquid_particle() {
-            let mut g = Grid::new(3, 2)
-                .with_rand_particle_direction(|_| ParticleHorizontalDirection::Right);
+            let mut g = Grid::new(3, 2).with_rand_horizontal_velocity_probability(|_| i16::MAX);
 
             g.spawn_particle((1, 1), liquid_particle.clone());
 
@@ -1040,8 +1037,7 @@ mod liquid {
          * -w-    w--
          */
         for liquid_particle in liquid_particle() {
-            let mut g =
-                Grid::new(3, 2).with_rand_particle_direction(|_| ParticleHorizontalDirection::Left);
+            let mut g = Grid::new(3, 2).with_rand_horizontal_velocity_probability(|_| i16::MIN);
 
             g.spawn_particle((1, 1), liquid_particle.clone());
 
@@ -1069,8 +1065,7 @@ mod liquid {
          * w--    --w
          */
         for liquid_particle in liquid_particle() {
-            let mut g = Grid::new(3, 2)
-                .with_rand_particle_direction(|_| ParticleHorizontalDirection::Right);
+            let mut g = Grid::new(3, 2).with_rand_horizontal_velocity_probability(|_| i16::MAX);
 
             g.spawn_particle((0, 1), liquid_particle.clone());
 
@@ -1097,8 +1092,7 @@ mod liquid {
          * --w    w--
          */
         for liquid_particle in liquid_particle() {
-            let mut g =
-                Grid::new(3, 2).with_rand_particle_direction(|_| ParticleHorizontalDirection::Left);
+            let mut g = Grid::new(3, 2).with_rand_horizontal_velocity_probability(|_| i16::MIN);
 
             g.spawn_particle((2, 1), liquid_particle.clone());
 
@@ -1125,8 +1119,7 @@ mod liquid {
          * -w-- -> ---w -> -w--
          */
         for liquid_particle in liquid_particle() {
-            let mut g = Grid::new(4, 1)
-                .with_rand_particle_direction(|_| ParticleHorizontalDirection::Right);
+            let mut g = Grid::new(4, 1).with_rand_horizontal_velocity_probability(|_| i16::MAX);
 
             g.spawn_particle((1, 0), liquid_particle.clone());
 
@@ -1163,8 +1156,7 @@ mod liquid {
          * --w- -> w--- -> --w-
          */
         for liquid_particle in liquid_particle() {
-            let mut g =
-                Grid::new(4, 1).with_rand_particle_direction(|_| ParticleHorizontalDirection::Left);
+            let mut g = Grid::new(4, 1).with_rand_horizontal_velocity_probability(|_| i16::MIN);
 
             g.spawn_particle((2, 0), liquid_particle.clone());
 
@@ -1201,17 +1193,15 @@ mod liquid {
          * -w---- -> ---w-- -> -----w
          */
         for liquid_particle in liquid_particle() {
-            static V: &[ParticleHorizontalDirection] = &[
-                ParticleHorizontalDirection::Right,
-                ParticleHorizontalDirection::Left,
-            ];
+            static V: &[i16] = &[i16::MAX, i16::MIN];
             static V_INDEX: AtomicUsize = AtomicUsize::new(0);
             V_INDEX.store(0, Ordering::SeqCst);
-            fn particle_direction(_: &mut Random) -> ParticleHorizontalDirection {
+            fn particle_direction(_: &mut Random) -> i16 {
                 let idx = V_INDEX.fetch_add(1, Ordering::SeqCst);
-                V[idx].clone()
+                V[idx]
             }
-            let mut g = Grid::new(6, 1).with_rand_particle_direction(particle_direction);
+            let mut g =
+                Grid::new(6, 1).with_rand_horizontal_velocity_probability(particle_direction);
 
             g.spawn_particle((1, 0), liquid_particle.clone());
 
@@ -1263,17 +1253,15 @@ mod liquid {
          * ----w- -> --w--- -> w-----
          */
         for liquid_particle in liquid_particle() {
-            static V: &[ParticleHorizontalDirection] = &[
-                ParticleHorizontalDirection::Left,
-                ParticleHorizontalDirection::Right,
-            ];
+            static V: &[i16] = &[i16::MIN, i16::MAX];
             static V_INDEX: AtomicUsize = AtomicUsize::new(0);
             V_INDEX.store(0, Ordering::SeqCst);
-            fn particle_direction(_: &mut Random) -> ParticleHorizontalDirection {
+            fn particle_direction(_: &mut Random) -> i16 {
                 let idx = V_INDEX.fetch_add(1, Ordering::SeqCst);
-                V[idx].clone()
+                V[idx]
             }
-            let mut g = Grid::new(6, 1).with_rand_particle_direction(particle_direction);
+            let mut g =
+                Grid::new(6, 1).with_rand_horizontal_velocity_probability(particle_direction);
 
             g.spawn_particle((4, 0), liquid_particle.clone());
 
@@ -1388,8 +1376,7 @@ mod liquid {
          */
         for liquid_particle in liquid_particle() {
             for particle in weighted_particle() {
-                let mut g = Grid::new(3, 2)
-                    .with_rand_particle_direction(|_| ParticleHorizontalDirection::Left);
+                let mut g = Grid::new(3, 2).with_rand_horizontal_velocity_probability(|_| i16::MIN);
 
                 g.spawn_particle((1, 0), liquid_particle.clone());
                 g.spawn_particle((1, 1), particle.clone());
@@ -1420,8 +1407,7 @@ mod liquid {
          */
         for liquid_particle in liquid_particle() {
             for particle in weighted_particle() {
-                let mut g = Grid::new(3, 2)
-                    .with_rand_particle_direction(|_| ParticleHorizontalDirection::Right);
+                let mut g = Grid::new(3, 2).with_rand_horizontal_velocity_probability(|_| i16::MAX);
 
                 g.spawn_particle((1, 0), liquid_particle.clone());
                 g.spawn_particle((1, 1), particle.clone());
@@ -1450,7 +1436,7 @@ mod liquid {
          */
         for liquid_particle in liquid_particle() {
             let mut g = Grid::new(4, 1)
-                .with_rand_particle_direction(|_| ParticleHorizontalDirection::Left)
+                .with_rand_horizontal_velocity_probability(|_| i16::MIN)
                 .with_rand_row_update_direction(|_| RowUpdateDirection::Forward);
 
             g.spawn_particle((1, 0), liquid_particle.clone());
@@ -1471,7 +1457,7 @@ mod liquid {
             );
 
             let mut g = Grid::new(4, 1)
-                .with_rand_particle_direction(|_| ParticleHorizontalDirection::Right)
+                .with_rand_horizontal_velocity_probability(|_| i16::MAX)
                 .with_rand_row_update_direction(|_| RowUpdateDirection::Forward);
 
             g.spawn_particle((1, 0), liquid_particle.clone());
@@ -1499,7 +1485,7 @@ mod liquid {
          */
         for liquid_particle in liquid_particle() {
             let mut g = Grid::new(4, 1)
-                .with_rand_particle_direction(|_| ParticleHorizontalDirection::Right)
+                .with_rand_horizontal_velocity_probability(|_| i16::MAX)
                 .with_rand_row_update_direction(|_| RowUpdateDirection::Reverse);
 
             g.spawn_particle((1, 0), liquid_particle.clone());
@@ -1518,7 +1504,7 @@ mod liquid {
             );
 
             let mut g = Grid::new(4, 1)
-                .with_rand_particle_direction(|_| ParticleHorizontalDirection::Left)
+                .with_rand_horizontal_velocity_probability(|_| i16::MIN)
                 .with_rand_row_update_direction(|_| RowUpdateDirection::Reverse);
 
             g.spawn_particle((1, 0), liquid_particle.clone());
@@ -1551,7 +1537,7 @@ mod liquid {
                 let particle = particle.with_velocity((0, 0));
 
                 let mut g = Grid::new(3, 2)
-                    .with_rand_velocityy(|_| 0)
+                    .with_rand_vertical_velocity_probability(|_| 0)
                     .with_initial_particle_velocity((0, 0));
 
                 g.spawn_particle((1, 0), particle.clone());
@@ -1587,7 +1573,7 @@ mod liquid {
                 let particle = particle.with_velocity((0, 0));
 
                 let mut g = Grid::new(3, 2)
-                    .with_rand_velocityy(|_| 0)
+                    .with_rand_vertical_velocity_probability(|_| 0)
                     .with_initial_particle_velocity((0, 0));
 
                 g.spawn_particle((1, 0), particle.clone());
@@ -1624,7 +1610,7 @@ mod liquid {
                 let particle = particle.with_velocity((0, 0));
 
                 let mut g = Grid::new(3, 2)
-                    .with_rand_velocityy(|_| 0)
+                    .with_rand_vertical_velocity_probability(|_| 0)
                     .with_initial_particle_velocity((0, 0));
 
                 g.spawn_particle((1, 0), particle.clone());
@@ -1662,7 +1648,7 @@ mod liquid {
                 let particle = particle.with_velocity((0, 0));
 
                 let mut g = Grid::new(1, 3)
-                    .with_rand_velocityy(|_| 0)
+                    .with_rand_vertical_velocity_probability(|_| 0)
                     .with_initial_particle_velocity((0, 0));
 
                 g.spawn_particle((0, 0), particle.clone());
@@ -1780,7 +1766,8 @@ mod liquid {
                 V[idx]
             }
 
-            let mut g = Grid::new(2, 2).with_rand_velocityy(velocityy_probability);
+            let mut g =
+                Grid::new(2, 2).with_rand_vertical_velocity_probability(velocityy_probability);
             let particle = liquid_particle.clone().with_velocity((0, 0));
 
             g.spawn_particle((0, 0), particle.clone());
@@ -1814,7 +1801,8 @@ mod liquid {
                 V[idx]
             }
 
-            let mut g = Grid::new(2, 2).with_rand_velocityy(velocityy_probability);
+            let mut g =
+                Grid::new(2, 2).with_rand_vertical_velocity_probability(velocityy_probability);
             let particle = liquid_particle.clone().with_velocity((0, 0));
 
             g.spawn_particle((1, 0), particle.clone());
@@ -1849,7 +1837,8 @@ mod liquid {
                 V[idx]
             }
 
-            let mut g = Grid::new(2, 2).with_rand_velocityy(velocityy_probability);
+            let mut g =
+                Grid::new(2, 2).with_rand_vertical_velocity_probability(velocityy_probability);
             let particle = liquid_particle.clone().with_velocity((0, 0));
 
             g.spawn_particle((0, 0), particle.clone());
@@ -1878,7 +1867,7 @@ mod liquid {
         for liquid_particle in liquid_particle() {
             for particle in weighted_particle() {
                 let mut g = Grid::new(1, 2)
-                    .with_rand_velocityy(|_| i16::MAX)
+                    .with_rand_vertical_velocity_probability(|_| i16::MAX)
                     .with_initial_particle_velocity((0, 0));
 
                 g.spawn_particle((0, 0), particle.clone().with_velocity((0, 0)));
@@ -1906,7 +1895,7 @@ mod liquid {
          */
         for liquid_particle in liquid_particle() {
             for particle in weighted_particle() {
-                let mut g = Grid::new(1, 2).with_rand_velocityy(|_| 0);
+                let mut g = Grid::new(1, 2).with_rand_vertical_velocity_probability(|_| 0);
 
                 g.spawn_particle((0, 0), particle.clone().with_velocity((0, 2000)));
                 g.spawn_particle((0, 1), liquid_particle.clone());

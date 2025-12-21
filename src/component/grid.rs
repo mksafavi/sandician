@@ -17,12 +17,6 @@ pub enum GridError {
 pub const BACKGROUND_COLOR: bevy::prelude::Color = Color::srgb(0.82, 0.93, 1.);
 
 #[derive(Clone, PartialEq, Debug)]
-pub enum ParticleHorizontalDirection {
-    Left = -1,
-    Right = 1,
-}
-
-#[derive(Clone, PartialEq, Debug)]
 pub enum RowUpdateDirection {
     Forward = 0,
     Reverse = 1,
@@ -57,11 +51,11 @@ impl Cell {
 
 #[derive(Debug)]
 pub struct Random {
-    particle_direction: fn(r: &mut Random) -> ParticleHorizontalDirection,
     row_update_direction: fn(r: &mut Random) -> RowUpdateDirection,
     particle_seed: fn(r: &mut Random) -> u8,
     particle_seed_with_cycle: fn(&mut Random) -> u8,
-    velocity_probability: fn(r: &mut Random) -> i16,
+    horizontal_velocity_probability: fn(r: &mut Random) -> i16,
+    vertical_velocity_probability: fn(r: &mut Random) -> i16,
     rng: fastrand::Rng,
     cycle: u32,
 }
@@ -78,9 +72,9 @@ pub struct Grid {
 }
 
 pub trait GridAccess {
-    fn particle_direction(&mut self) -> ParticleHorizontalDirection;
     fn particle_seed(&mut self) -> u8;
-    fn velocity_probability(&mut self) -> i16;
+    fn horizontal_velocity_probability(&mut self) -> i16;
+    fn vertical_velocity_probability(&mut self) -> i16;
     fn get_neighbor_index(
         &self,
         position: (usize, usize),
@@ -160,16 +154,16 @@ impl GridAccess for Grid {
         }
     }
 
-    fn particle_direction(&mut self) -> ParticleHorizontalDirection {
-        (self.random.particle_direction)(&mut self.random)
+    fn horizontal_velocity_probability(&mut self) -> i16 {
+        (self.random.horizontal_velocity_probability)(&mut self.random)
     }
 
     fn particle_seed(&mut self) -> u8 {
         (self.random.particle_seed_with_cycle)(&mut self.random)
     }
 
-    fn velocity_probability(&mut self) -> i16 {
-        (self.random.velocity_probability)(&mut self.random)
+    fn vertical_velocity_probability(&mut self) -> i16 {
+        (self.random.vertical_velocity_probability)(&mut self.random)
     }
 
     fn get_cells(&self) -> &Vec<Cell> {
@@ -208,21 +202,18 @@ impl GridAccess for Grid {
 impl Random {
     fn new() -> Self {
         Self {
-            particle_direction: Random::random_particle_direction,
+            horizontal_velocity_probability: Random::random_horizontal_velocity_probability,
             row_update_direction: Random::random_row_update_direction,
             particle_seed: Random::random_particle_seed,
             particle_seed_with_cycle: Random::random_particle_seed_with_cycle,
-            velocity_probability: Random::random_velocity_probability,
+            vertical_velocity_probability: Random::random_vertical_velocity_probability,
             rng: fastrand::Rng::new(),
             cycle: 0,
         }
     }
 
-    fn random_particle_direction(r: &mut Random) -> ParticleHorizontalDirection {
-        match r.rng.i32(..).is_positive() {
-            true => ParticleHorizontalDirection::Left,
-            false => ParticleHorizontalDirection::Right,
-        }
+    fn random_horizontal_velocity_probability(r: &mut Random) -> i16 {
+        r.rng.i16(..)
     }
     fn random_row_update_direction(r: &mut Random) -> RowUpdateDirection {
         match r.rng.i32(..).is_positive() {
@@ -239,7 +230,7 @@ impl Random {
         ((r.particle_seed)(r) / 2) + (r.cycle as u8 / 2)
     }
 
-    fn random_velocity_probability(r: &mut Random) -> i16 {
+    fn random_vertical_velocity_probability(r: &mut Random) -> i16 {
         r.rng.i16(0..=i16::MAX)
     }
 }
@@ -366,11 +357,11 @@ impl Grid {
     }
 
     #[allow(dead_code)]
-    pub fn with_rand_particle_direction(
+    pub fn with_rand_horizontal_velocity_probability(
         mut self,
-        particle_direction: fn(&mut Random) -> ParticleHorizontalDirection,
+        particle_direction: fn(&mut Random) -> i16,
     ) -> Self {
-        self.random.particle_direction = particle_direction;
+        self.random.horizontal_velocity_probability = particle_direction;
         self
     }
 
@@ -399,8 +390,11 @@ impl Grid {
     }
 
     #[allow(dead_code)]
-    pub fn with_rand_velocityy(mut self, velocity_probability: fn(r: &mut Random) -> i16) -> Self {
-        self.random.velocity_probability = velocity_probability;
+    pub fn with_rand_vertical_velocity_probability(
+        mut self,
+        veritical_velocity_probability: fn(r: &mut Random) -> i16,
+    ) -> Self {
+        self.random.vertical_velocity_probability = veritical_velocity_probability;
         self
     }
 
@@ -978,21 +972,17 @@ mod tests {
 mod random {
     use crate::component::grid::RowUpdateDirection;
 
-    use super::{ParticleHorizontalDirection, Random};
+    use super::Random;
 
     const TEST_ITERATIONS: i32 = 100000;
 
     #[test]
-    fn test_random_particle_direction() {
+    fn test_random_particle_horizontal_velocity() {
         let mut r = Random::new();
         for _ in 0..TEST_ITERATIONS {
-            let sample = (r.particle_direction)(&mut r);
+            let sample = (r.horizontal_velocity_probability)(&mut r);
             assert!(
-                [
-                    ParticleHorizontalDirection::Left,
-                    ParticleHorizontalDirection::Right,
-                ]
-                .contains(&sample),
+                (i16::MIN..=i16::MAX).contains(&sample),
                 "sample {:?} not in range",
                 sample
             );
@@ -1000,10 +990,10 @@ mod random {
     }
 
     #[test]
-    fn test_random_particle_velocity() {
+    fn test_random_particle_vertical_velocity() {
         let mut r = Random::new();
         for _ in 0..TEST_ITERATIONS {
-            let sample = (r.velocity_probability)(&mut r);
+            let sample = (r.vertical_velocity_probability)(&mut r);
             assert!(
                 (0..=i16::MAX).contains(&sample),
                 "sample {} not in range",
