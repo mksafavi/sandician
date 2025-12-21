@@ -313,21 +313,16 @@ impl Particle {
             }
             Err(_) => None,
         };
+        let mut velocity_x_delta = 0;
 
         let index = match (index_left, index_right) {
             (None, None) => None,
             (None, Some(i)) => {
-                if let Some(ref mut this) = grid.get_cell_mut(grid.to_index(position)).particle {
-                    this.velocity.0 = 0;
-                    this.velocity.0 = this.velocity.0.saturating_add(128);
-                };
+                velocity_x_delta = 128 - this.velocity.0;
                 Some(i)
             }
             (Some(i), None) => {
-                if let Some(ref mut this) = grid.get_cell_mut(grid.to_index(position)).particle {
-                    this.velocity.0 = 0;
-                    this.velocity.0 = this.velocity.0.saturating_sub(128);
-                };
+                velocity_x_delta = -128 - this.velocity.0;
                 Some(i)
             }
             (Some(l), Some(r)) => {
@@ -339,19 +334,11 @@ impl Particle {
 
                 match dir {
                     ParticleHorizontalDirection::Left => {
-                        if let Some(ref mut this) =
-                            grid.get_cell_mut(grid.to_index(position)).particle
-                        {
-                            this.velocity.0 = this.velocity.0.saturating_sub(128);
-                        };
+                        velocity_x_delta = -128;
                         Some(l)
                     }
                     ParticleHorizontalDirection::Right => {
-                        if let Some(ref mut this) =
-                            grid.get_cell_mut(grid.to_index(position)).particle
-                        {
-                            this.velocity.0 = this.velocity.0.saturating_add(128);
-                        };
+                        velocity_x_delta = 128;
                         Some(r)
                     }
                 }
@@ -359,6 +346,9 @@ impl Particle {
         };
 
         if let Some(index) = index {
+            if let Some(this) = &mut grid.get_cell_mut(grid.to_index(position)).particle {
+                this.velocity.0 = this.velocity.0.saturating_add(velocity_x_delta);
+            };
             grid.swap_particles(grid.to_index(position), index);
             true
         } else {
