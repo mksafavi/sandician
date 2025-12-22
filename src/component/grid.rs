@@ -64,11 +64,28 @@ pub struct Random {
 struct Window {
     start: (usize, usize),
     end: (usize, usize),
+    active: bool,
 }
 
 impl Window {
     fn new(start: (usize, usize), end: (usize, usize)) -> Self {
-        Self { start, end }
+        Self {
+            start,
+            end,
+            active: false,
+        }
+    }
+
+    fn activate(&mut self) {
+        self.active = true;
+    }
+
+    fn is_active(&self) -> bool {
+        self.active
+    }
+
+    fn in_window(&self, (x, y): (usize, usize)) -> bool {
+        (self.start.0 <= x && x <= self.end.0) && (self.start.1 <= y && y <= self.end.1)
     }
 }
 
@@ -267,6 +284,12 @@ impl Grid {
             let index = self.to_index((x, y));
             if self.cells[index].particle.is_none() {
                 self.cells[index] = Cell::new(particle).with_cycle(self.cycle);
+
+                for w in &mut self.windows {
+                    if w.in_window((x, y)) {
+                        w.activate();
+                    }
+                }
             }
         }
     }
@@ -1098,6 +1121,25 @@ mod windowing {
                 Window::new((2, 2), (3, 3)),
             ],
             g.windows
+        );
+    }
+
+    #[test]
+    fn test_spawning_particle_in_grid_sets_the_window_as_active() {
+        let mut g = Grid::new(4, 4).with_window_size(2);
+
+        assert_eq!(
+            vec![false, false, false, false],
+            g.windows.iter().map(|w| w.is_active()).collect::<Vec<_>>()
+        );
+
+        g.spawn_particle((0, 0), Particle::from(Rock::new()));
+
+        g.spawn_particle((3, 3), Particle::from(Rock::new()));
+
+        assert_eq!(
+            vec![true, false, false, true],
+            g.windows.iter().map(|w| w.is_active()).collect::<Vec<_>>()
         );
     }
 }
