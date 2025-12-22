@@ -442,12 +442,12 @@ impl Grid {
     }
 
     #[allow(dead_code)]
-    fn with_window_size(mut self, window_size: usize) -> Self {
-        self.windows = (0..self.height / window_size)
+    fn with_window_size(mut self, window_size: (usize, usize)) -> Self {
+        self.windows = (0..self.height / window_size.1)
             .flat_map(|y| {
-                (0..self.width / window_size).map(move |x| {
-                    let s = (x * window_size, y * window_size);
-                    let e = (s.0 + window_size - 1, s.1 + window_size - 1);
+                (0..self.width / window_size.0).map(move |x| {
+                    let s = (x * window_size.0, y * window_size.1);
+                    let e = (s.0 + window_size.0 - 1, s.1 + window_size.1 - 1);
                     Window::new(s, e)
                 })
             })
@@ -1111,7 +1111,7 @@ mod windowing {
 
     #[test]
     fn test_grid_split_windows_by_the_window_size() {
-        let g = Grid::new(4, 4).with_window_size(2);
+        let g = Grid::new(4, 4).with_window_size((2, 2));
 
         assert_eq!(
             vec![
@@ -1125,8 +1125,23 @@ mod windowing {
     }
 
     #[test]
+    fn test_grid_split_windows_by_the_window_size_into_rectangles() {
+        let g = Grid::new(6, 4).with_window_size((3, 2));
+
+        assert_eq!(
+            vec![
+                Window::new((0, 0), (2, 1)),
+                Window::new((3, 0), (5, 1)),
+                Window::new((0, 2), (2, 3)),
+                Window::new((3, 2), (5, 3)),
+            ],
+            g.windows
+        );
+    }
+
+    #[test]
     fn test_spawning_particle_in_grid_sets_the_window_as_active() {
-        let mut g = Grid::new(4, 4).with_window_size(2);
+        let mut g = Grid::new(4, 4).with_window_size((2, 2));
 
         assert_eq!(
             vec![false, false, false, false],
