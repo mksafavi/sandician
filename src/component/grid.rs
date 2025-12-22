@@ -60,6 +60,18 @@ pub struct Random {
     cycle: u32,
 }
 
+#[derive(Debug, PartialEq)]
+struct Window {
+    start: (usize, usize),
+    end: (usize, usize),
+}
+
+impl Window {
+    fn new(start: (usize, usize), end: (usize, usize)) -> Self {
+        Self { start, end }
+    }
+}
+
 #[derive(Component, Debug)]
 pub struct Grid {
     cells: Vec<Cell>,
@@ -69,6 +81,7 @@ pub struct Grid {
     draw_cycle: u32,
     random: Random,
     initial_particle_velocity: (i16, i16),
+    windows: Vec<Window>,
 }
 
 pub trait GridAccess {
@@ -245,6 +258,7 @@ impl Grid {
             draw_cycle: 0,
             random: Random::new(),
             initial_particle_velocity: (0, i16::MAX),
+            windows: vec![Window::new((0, 0), (width - 1, height - 1))],
         }
     }
 
@@ -401,6 +415,20 @@ impl Grid {
     #[allow(dead_code)]
     pub fn with_initial_particle_velocity(mut self, initial_particle_velocity: (i16, i16)) -> Self {
         self.initial_particle_velocity = initial_particle_velocity;
+        self
+    }
+
+    #[allow(dead_code)]
+    fn with_window_size(mut self, window_size: usize) -> Self {
+        self.windows = (0..self.height / window_size)
+            .flat_map(|y| {
+                (0..self.width / window_size).map(move |x| {
+                    let s = (x * window_size, y * window_size);
+                    let e = (s.0 + window_size - 1, s.1 + window_size - 1);
+                    Window::new(s, e)
+                })
+            })
+            .collect();
         self
     }
 }
@@ -1040,5 +1068,36 @@ mod random {
                 sample
             );
         }
+    }
+}
+
+#[cfg(test)]
+mod windowing {
+
+    use crate::component::{
+        grid::{Grid, Window},
+        particles::{particle::Particle, rock::Rock},
+    };
+
+    #[test]
+    fn test_grid_set_default_window_to_the_whole_grid() {
+        let g = Grid::new(3, 3);
+
+        assert_eq!(vec![Window::new((0, 0), (2, 2))], g.windows);
+    }
+
+    #[test]
+    fn test_grid_split_windows_by_the_window_size() {
+        let g = Grid::new(4, 4).with_window_size(2);
+
+        assert_eq!(
+            vec![
+                Window::new((0, 0), (1, 1)),
+                Window::new((2, 0), (3, 1)),
+                Window::new((0, 2), (1, 3)),
+                Window::new((2, 2), (3, 3)),
+            ],
+            g.windows
+        );
     }
 }
