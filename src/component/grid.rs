@@ -476,7 +476,7 @@ impl Grid {
     }
 
     #[allow(dead_code)]
-    fn with_window_size(mut self, window_size: (usize, usize)) -> Self {
+    pub fn with_window_size(mut self, window_size: (usize, usize)) -> Self {
         self.windows = (0..self.height / window_size.1)
             .flat_map(|y| {
                 (0..self.width / window_size.0).map(move |x| {
