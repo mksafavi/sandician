@@ -80,6 +80,10 @@ impl Window {
         self.active = true;
     }
 
+    fn deactivate(&mut self) {
+        self.active = false;
+    }
+
     fn is_active(&self) -> bool {
         self.active
     }
@@ -307,6 +311,9 @@ impl Grid {
     }
 
     pub fn update_grid(&mut self) {
+        for w in &mut self.windows {
+            w.deactivate();
+        }
         self.increment_cycle();
         for y in (0..self.height).rev() {
             let x_direction = (self.random.row_update_direction)(&mut self.random);
@@ -1157,4 +1164,24 @@ mod windowing {
             g.windows.iter().map(|w| w.is_active()).collect::<Vec<_>>()
         );
     }
+
+    #[test]
+    fn test_mark_window_as_deactive_when_nothing_changes_in_that_window() {
+        let mut g = Grid::new(4, 4).with_window_size((2, 2));
+
+        g.spawn_particle((0, 0), Particle::from(Rock::new()));
+
+        assert_eq!(
+            vec![true, false, false, false],
+            g.windows.iter().map(|w| w.is_active()).collect::<Vec<_>>()
+        );
+
+        g.update_grid();
+
+        assert_eq!(
+            vec![false, false, false, false],
+            g.windows.iter().map(|w| w.is_active()).collect::<Vec<_>>()
+        );
+    }
+
 }
