@@ -318,6 +318,12 @@ impl Grid {
         if y < self.height && x < self.width {
             let index = self.to_index((x, y));
             self.cells[index] = Cell::empty().with_cycle(self.cycle);
+
+            for w in &mut self.windows {
+                if w.in_window((x, y)) {
+                    w.activate();
+                }
+            }
         }
     }
 
@@ -1184,6 +1190,32 @@ mod windowing {
 
         assert_eq!(
             vec![true, false, false, true],
+            g.windows.iter().map(|w| w.is_active()).collect::<Vec<_>>()
+        );
+    }
+
+    #[test]
+    fn test_despawning_particle_in_grid_sets_the_window_as_active() {
+        let mut g = Grid::new(4, 4).with_window_size((2, 2));
+
+        g.spawn_particle((0, 0), Particle::from(Rock::new()));
+
+        assert_eq!(
+            vec![true, false, false, false],
+            g.windows.iter().map(|w| w.is_active()).collect::<Vec<_>>()
+        );
+
+        g.update_grid();
+
+        assert_eq!(
+            vec![false, false, false, false],
+            g.windows.iter().map(|w| w.is_active()).collect::<Vec<_>>()
+        );
+
+        g.despawn_particle((0, 0));
+
+        assert_eq!(
+            vec![true, false, false, false],
             g.windows.iter().map(|w| w.is_active()).collect::<Vec<_>>()
         );
     }
