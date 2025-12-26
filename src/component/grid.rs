@@ -335,11 +335,12 @@ impl Grid {
         for w in windows {
             if w.is_active() {
                 for y in (w.start.1..=w.end.1).rev() {
-                    let xrange = match (self.random.row_update_direction)(&mut self.random) {
-                        RowUpdateDirection::Forward => (w.start.0..=w.end.0).collect::<Vec<_>>(),
-                        RowUpdateDirection::Reverse => (w.start.0..=w.end.0).rev().collect::<Vec<_>>()
-                    };
-                    for x in xrange {
+                    let x_direction = (self.random.row_update_direction)(&mut self.random);
+                    for x in w.start.0..=w.end.0 {
+                        let x = match x_direction {
+                            RowUpdateDirection::Forward => x,
+                            RowUpdateDirection::Reverse => w.end.0 + w.start.0 - x,
+                        };
                         let c = self.get_cell(self.to_index((x, y)));
                         if !self.is_simulated(c) && c.particle.is_some() {
                             Particle::update(self, (x, y));
@@ -1124,8 +1125,10 @@ mod random {
 #[cfg(test)]
 mod windowing {
 
+    use pretty_assertions::assert_eq;
+
     use crate::component::{
-        grid::{Grid, Window},
+        grid::{Cell, Grid, GridAccess, Window},
         particles::{particle::Particle, rock::Rock, sand::Sand},
     };
 
@@ -1243,6 +1246,30 @@ mod windowing {
         assert_eq!(
             vec![false, false, false, false],
             g.windows.iter().map(|w| w.is_active()).collect::<Vec<_>>()
+        );
+    }
+
+    #[test]
+    fn test_update_particle_on_second_window() {
+        let mut g = Grid::new(4, 2)
+            .with_window_size((2, 2))
+            .with_rand_vertical_velocity_probability(|_| 0);
+
+        g.spawn_particle((3, 0), Particle::from(Sand::new()));
+        g.update_grid();
+
+        assert_eq!(
+            vec![
+                Cell::empty(),
+                Cell::empty(),
+                Cell::empty(),
+                Cell::empty().with_cycle(1),
+                Cell::empty(),
+                Cell::empty(),
+                Cell::empty(),
+                Cell::new(Particle::from(Sand::new())).with_cycle(1),
+            ],
+            *g.get_cells()
         );
     }
 }
