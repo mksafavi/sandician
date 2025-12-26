@@ -60,7 +60,7 @@ pub struct Random {
     cycle: u32,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 struct Window {
     start: (usize, usize),
     end: (usize, usize),
@@ -327,21 +327,25 @@ impl Grid {
     }
 
     pub fn update_grid(&mut self) {
+        let windows = self.windows.clone();
         for w in &mut self.windows {
             w.deactivate();
         }
         self.increment_cycle();
-        for y in (0..self.height).rev() {
-            let x_direction = (self.random.row_update_direction)(&mut self.random);
-            for x in 0..self.width {
-                let x = match x_direction {
-                    RowUpdateDirection::Forward => x,
-                    RowUpdateDirection::Reverse => self.width - 1 - x,
-                };
-                let c = self.get_cell(self.to_index((x, y)));
-                if !self.is_simulated(c) && c.particle.is_some() {
-                    Particle::update(self, (x, y));
-                };
+        for w in windows {
+            if w.is_active() {
+                for y in (w.start.1..=w.end.1).rev() {
+                    let xrange = match (self.random.row_update_direction)(&mut self.random) {
+                        RowUpdateDirection::Forward => (w.start.0..=w.end.0).collect::<Vec<_>>(),
+                        RowUpdateDirection::Reverse => (w.start.0..=w.end.0).rev().collect::<Vec<_>>()
+                    };
+                    for x in xrange {
+                        let c = self.get_cell(self.to_index((x, y)));
+                        if !self.is_simulated(c) && c.particle.is_some() {
+                            Particle::update(self, (x, y));
+                        };
+                    }
+                }
             }
         }
     }
