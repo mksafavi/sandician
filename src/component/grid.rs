@@ -299,6 +299,24 @@ impl Grid {
         }
     }
 
+    fn get_window(&self, position: (usize, usize)) -> Option<&Window> {
+        for w in &self.windows {
+            if w.in_window(position) {
+                return Some(w);
+            }
+        }
+        None
+    }
+
+    fn get_window_mut(&mut self, position: (usize, usize)) -> Option<&mut Window> {
+        for w in &mut self.windows {
+            if w.in_window(position) {
+                return Some(w);
+            }
+        }
+        None
+    }
+
     pub fn spawn_particle(&mut self, (x, y): (usize, usize), particle: Particle) {
         if y < self.height && x < self.width {
             let index = self.to_index((x, y));
@@ -1173,6 +1191,36 @@ mod windowing {
             ],
             g.windows
         );
+    }
+
+    #[test]
+    fn test_get_particle_window_from_position() {
+        let g = Grid::new(4, 4).with_window_size((2, 2));
+
+        assert_eq!(Some(&Window::new((0, 0), (1, 1))), g.get_window((0, 0)));
+        assert_eq!(Some(&Window::new((0, 0), (1, 1))), g.get_window((1, 0)));
+        assert_eq!(Some(&Window::new((0, 0), (1, 1))), g.get_window((0, 1)));
+        assert_eq!(Some(&Window::new((0, 0), (1, 1))), g.get_window((1, 1)));
+
+        assert_eq!(Some(&Window::new((2, 2), (3, 3))), g.get_window((2, 2)));
+        assert_eq!(Some(&Window::new((2, 2), (3, 3))), g.get_window((3, 2)));
+        assert_eq!(Some(&Window::new((2, 2), (3, 3))), g.get_window((2, 3)));
+        assert_eq!(Some(&Window::new((2, 2), (3, 3))), g.get_window((3, 3)));
+    }
+
+    #[test]
+    fn test_get_mutable_particle_window_from_position() {
+        let mut g = Grid::new(4, 4).with_window_size((2, 2));
+
+        assert_eq!(Some(&mut Window::new((0, 0), (1, 1))), g.get_window_mut((0, 0)));
+        assert_eq!(Some(&mut Window::new((0, 0), (1, 1))), g.get_window_mut((1, 0)));
+        assert_eq!(Some(&mut Window::new((0, 0), (1, 1))), g.get_window_mut((0, 1)));
+        assert_eq!(Some(&mut Window::new((0, 0), (1, 1))), g.get_window_mut((1, 1)));
+
+        assert_eq!(Some(&mut Window::new((2, 2), (3, 3))), g.get_window_mut((2, 2)));
+        assert_eq!(Some(&mut Window::new((2, 2), (3, 3))), g.get_window_mut((3, 2)));
+        assert_eq!(Some(&mut Window::new((2, 2), (3, 3))), g.get_window_mut((2, 3)));
+        assert_eq!(Some(&mut Window::new((2, 2), (3, 3))), g.get_window_mut((3, 3)));
     }
 
     #[test]
