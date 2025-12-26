@@ -208,6 +208,22 @@ impl GridAccess for Grid {
         self.cells.swap(index, next_location_index);
         self.cells[index].cycle = self.cycle;
         self.cells[next_location_index].cycle = self.cycle;
+
+        for w in &mut self.windows {
+            if w.in_window((
+                index % self.width,
+                (index - index % self.width) / self.width,
+            )) {
+                w.activate();
+            }
+
+            if w.in_window((
+                next_location_index % self.width,
+                (next_location_index - next_location_index % self.width) / self.width,
+            )) {
+                w.activate();
+            }
+        }
     }
 
     fn is_empty(&self, position: (usize, usize), offset: (i32, i32)) -> Option<usize> {
@@ -1106,7 +1122,7 @@ mod windowing {
 
     use crate::component::{
         grid::{Grid, Window},
-        particles::{particle::Particle, rock::Rock},
+        particles::{particle::Particle, rock::Rock, sand::Sand},
     };
 
     #[test]
@@ -1184,4 +1200,45 @@ mod windowing {
         );
     }
 
+    #[test]
+    fn test_mark_window_as_active_when_swap_particles() {
+        let mut g = Grid::new(4, 4)
+            .with_window_size((2, 2))
+            .with_rand_vertical_velocity_probability(|_| 0);
+
+        g.spawn_particle((0, 0), Particle::from(Sand::new()));
+
+        assert_eq!(
+            vec![true, false, false, false],
+            g.windows.iter().map(|w| w.is_active()).collect::<Vec<_>>()
+        );
+
+        g.update_grid();
+
+        assert_eq!(
+            vec![true, false, false, false],
+            g.windows.iter().map(|w| w.is_active()).collect::<Vec<_>>()
+        );
+
+        g.update_grid();
+
+        assert_eq!(
+            vec![true, false, true, false],
+            g.windows.iter().map(|w| w.is_active()).collect::<Vec<_>>()
+        );
+
+        g.update_grid();
+
+        assert_eq!(
+            vec![false, false, true, false],
+            g.windows.iter().map(|w| w.is_active()).collect::<Vec<_>>()
+        );
+
+        g.update_grid();
+
+        assert_eq!(
+            vec![false, false, false, false],
+            g.windows.iter().map(|w| w.is_active()).collect::<Vec<_>>()
+        );
+    }
 }
