@@ -32,6 +32,17 @@ fn criterion_benchmark(c: &mut Criterion) {
     let mut c = c.benchmark_group("bench");
     c.sample_size(50);
 
+    c.bench_function("spawn grid sand", |b| {
+        b.iter(|| {
+            let mut g = Grid::new(x, y);
+            for y in 0..y {
+                for x in 0..x {
+                    g.spawn_particle((x, y), Particle::from(Sand::new()));
+                }
+            }
+        });
+    });
+
     c.bench_function("update grid sand", |b| {
         let mut g = Grid::new(x, y);
         for y in 0..y {
