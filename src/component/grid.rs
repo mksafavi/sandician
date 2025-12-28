@@ -342,15 +342,6 @@ impl Grid {
         }
     }
 
-    fn get_window(&self, position: (usize, usize)) -> Option<&Window> {
-        for w in &self.window_grid.windows {
-            if w.in_window(position) {
-                return Some(w);
-            }
-        }
-        None
-    }
-
     fn get_window_mut(&mut self, position: (usize, usize)) -> Option<&mut Window> {
         for w in &mut self.window_grid.windows {
             if w.in_window(position) {
@@ -1216,21 +1207,6 @@ mod windowing {
             ],
             g.window_grid.windows
         );
-    }
-
-    #[test]
-    fn test_get_particle_window_from_position() {
-        let g = Grid::new(4, 4).with_window_size((2, 2));
-
-        assert_eq!(Some(&Window::new((0, 0), (1, 1))), g.get_window((0, 0)));
-        assert_eq!(Some(&Window::new((0, 0), (1, 1))), g.get_window((1, 0)));
-        assert_eq!(Some(&Window::new((0, 0), (1, 1))), g.get_window((0, 1)));
-        assert_eq!(Some(&Window::new((0, 0), (1, 1))), g.get_window((1, 1)));
-
-        assert_eq!(Some(&Window::new((2, 2), (3, 3))), g.get_window((2, 2)));
-        assert_eq!(Some(&Window::new((2, 2), (3, 3))), g.get_window((3, 2)));
-        assert_eq!(Some(&Window::new((2, 2), (3, 3))), g.get_window((2, 3)));
-        assert_eq!(Some(&Window::new((2, 2), (3, 3))), g.get_window((3, 3)));
     }
 
     #[test]
