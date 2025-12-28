@@ -51,6 +51,7 @@ fn dissolve_salt<T: GridAccess>(grid: &mut T, capacity: u8, position: (usize, us
                         .with_health(particle.health),
                 );
                 cell.cycle = cycle;
+                grid.activate_window(position);
             }
             return true;
         }
