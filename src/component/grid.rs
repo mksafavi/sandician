@@ -128,6 +128,7 @@ pub trait GridAccess {
     fn is_simulated(&self, c: &Cell) -> bool;
     fn cycle(&self) -> u32;
     fn get_particle_initial_velocity(&self) -> (i16, i16);
+    fn activate_window(&mut self, position: (usize, usize));
 }
 
 impl fmt::Display for Cell {
@@ -252,6 +253,17 @@ impl GridAccess for Grid {
     fn get_particle_initial_velocity(&self) -> (i16, i16) {
         self.initial_particle_velocity
     }
+
+    fn activate_window(&mut self, (x, y): (usize, usize)) {
+        for yo in -1..=1 {
+            for xo in -1..=1 {
+                let position = ((x as i32 + xo) as usize, (y as i32 + yo) as usize);
+                if let Some(w) = self.get_window_mut(position) {
+                    w.activate();
+                }
+            }
+        }
+    }
 }
 
 impl Random {
@@ -320,17 +332,6 @@ impl Grid {
             }
         }
         None
-    }
-
-    fn activate_window(&mut self, (x, y): (usize, usize)) {
-        for yo in -1..=1 {
-            for xo in -1..=1 {
-                let position = ((x as i32 + xo) as usize, (y as i32 + yo) as usize);
-                if let Some(w) = self.get_window_mut(position) {
-                    w.activate();
-                }
-            }
-        }
     }
 
     pub fn spawn_particle(&mut self, (x, y): (usize, usize), particle: Particle) {
