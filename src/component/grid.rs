@@ -114,6 +114,11 @@ pub trait GridAccess {
         position: (usize, usize),
         offset: (i32, i32),
     ) -> Result<usize, GridError>;
+    fn get_neighbor_position(
+        &self,
+        position: (usize, usize),
+        offset: (i32, i32),
+    ) -> Result<(usize, usize), GridError>;
     fn get_cell(&self, index: usize) -> &Cell;
     fn get_cell_mut(&mut self, index: usize) -> &mut Cell;
     fn get_cells(&self) -> &Vec<Cell>;
@@ -170,11 +175,11 @@ impl GridAccess for Grid {
         y * self.width + x
     }
 
-    fn get_neighbor_index(
+    fn get_neighbor_position(
         &self,
         (x, y): (usize, usize),
         (ox, oy): (i32, i32),
-    ) -> Result<usize, GridError> {
+    ) -> Result<(usize, usize), GridError> {
         let y = y as i32;
         let x = x as i32;
         if (0 <= y + oy)
@@ -182,10 +187,18 @@ impl GridAccess for Grid {
             && ((x + ox) < self.width as i32)
             && (0 <= x + ox)
         {
-            Ok(self.to_index(((x + ox) as usize, (y + oy) as usize)))
+            Ok(((x + ox) as usize, (y + oy) as usize))
         } else {
             Err(GridError::OutOfBound)
         }
+    }
+
+    fn get_neighbor_index(
+        &self,
+        position: (usize, usize),
+        offset: (i32, i32),
+    ) -> Result<usize, GridError> {
+        Ok(self.to_index(self.get_neighbor_position(position, offset)?))
     }
 
     fn horizontal_velocity_probability(&mut self) -> i16 {
