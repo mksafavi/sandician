@@ -208,19 +208,14 @@ impl GridAccess for Grid {
         self.cells.swap(index, next_location_index);
         self.cells[index].cycle = self.cycle;
         self.cells[next_location_index].cycle = self.cycle;
-
-        if let Some(w) = self.get_window_mut((
+        self.activate_window((
             index % self.width,
             (index - index % self.width) / self.width,
-        )) {
-            w.activate();
-        }
-        if let Some(w) = self.get_window_mut((
+        ));
+        self.activate_window((
             next_location_index % self.width,
             (next_location_index - next_location_index % self.width) / self.width,
-        )) {
-            w.activate();
-        }
+        ));
     }
 
     fn is_empty(&self, position: (usize, usize), offset: (i32, i32)) -> Option<usize> {
@@ -314,14 +309,19 @@ impl Grid {
         None
     }
 
+    fn activate_window(&mut self, (x, y): (usize, usize)) {
+        let position = ((x as i32) as usize, (y as i32) as usize);
+        if let Some(w) = self.get_window_mut(position) {
+            w.activate();
+        }
+    }
+
     pub fn spawn_particle(&mut self, (x, y): (usize, usize), particle: Particle) {
         if y < self.height && x < self.width {
             let index = self.to_index((x, y));
             if self.cells[index].particle.is_none() {
                 self.cells[index] = Cell::new(particle).with_cycle(self.cycle);
-                if let Some(w) = self.get_window_mut((x, y)) {
-                    w.activate();
-                }
+                self.activate_window((x, y));
             }
         }
     }
@@ -330,9 +330,7 @@ impl Grid {
         if y < self.height && x < self.width {
             let index = self.to_index((x, y));
             self.cells[index] = Cell::empty().with_cycle(self.cycle);
-            if let Some(w) = self.get_window_mut((x, y)) {
-                w.activate();
-            }
+            self.activate_window((x, y));
         }
     }
 
