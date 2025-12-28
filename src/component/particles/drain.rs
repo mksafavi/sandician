@@ -40,6 +40,7 @@ impl Drain {
                         }
                         let cell = grid.get_cell_mut(grid.to_index(position));
                         cell.cycle = cycle;
+                        grid.activate_window(position);
                         return;
                     }
                 }
