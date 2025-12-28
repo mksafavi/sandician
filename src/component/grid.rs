@@ -87,10 +87,6 @@ impl Window {
     fn is_active(&self) -> bool {
         self.active
     }
-
-    fn in_window(&self, (x, y): (usize, usize)) -> bool {
-        (self.start.0 <= x && x <= self.end.0) && (self.start.1 <= y && y <= self.end.1)
-    }
 }
 
 #[derive(Clone, Debug)]
