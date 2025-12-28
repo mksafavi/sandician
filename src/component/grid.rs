@@ -310,9 +310,13 @@ impl Grid {
     }
 
     fn activate_window(&mut self, (x, y): (usize, usize)) {
-        let position = ((x as i32) as usize, (y as i32) as usize);
-        if let Some(w) = self.get_window_mut(position) {
-            w.activate();
+        for yo in -1..=1 {
+            for xo in -1..=1 {
+                let position = ((x as i32 + xo) as usize, (y as i32 + yo) as usize);
+                if let Some(w) = self.get_window_mut(position) {
+                    w.activate();
+                }
+            }
         }
     }
 
@@ -1316,8 +1320,9 @@ mod windowing {
         g.update_grid();
 
         assert_eq!(
-            vec![true, false, false, false],
-            g.windows.iter().map(|w| w.is_active()).collect::<Vec<_>>()
+            vec![true, false, true, false],
+            g.windows.iter().map(|w| w.is_active()).collect::<Vec<_>>(),
+            "also activates the neighboring bottom window"
         );
 
         g.update_grid();
@@ -1330,8 +1335,9 @@ mod windowing {
         g.update_grid();
 
         assert_eq!(
-            vec![false, false, true, false],
-            g.windows.iter().map(|w| w.is_active()).collect::<Vec<_>>()
+            vec![true, false, true, false],
+            g.windows.iter().map(|w| w.is_active()).collect::<Vec<_>>(),
+            "also activates the neighboring top window"
         );
 
         g.update_grid();
@@ -1363,6 +1369,27 @@ mod windowing {
                 Cell::new(Particle::from(Sand::new())).with_cycle(1),
             ],
             *g.get_cells()
+        );
+    }
+
+    #[test]
+    fn test_activate_window_should_activate_neighboring_windows() {
+        let mut g = Grid::new(3, 3)
+            .with_window_size((1, 1))
+            .with_rand_vertical_velocity_probability(|_| 0);
+
+        assert_eq!(
+            vec![
+                false, false, false, false, false, false, false, false, false
+            ],
+            g.windows.iter().map(|w| w.is_active()).collect::<Vec<_>>()
+        );
+
+        g.spawn_particle((1, 1), Particle::from(Sand::new()));
+
+        assert_eq!(
+            vec![true, true, true, true, true, true, true, true, true],
+            g.windows.iter().map(|w| w.is_active()).collect::<Vec<_>>()
         );
     }
 }
