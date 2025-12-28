@@ -96,6 +96,8 @@ impl Window {
 #[derive(Clone, Debug)]
 pub struct WindowGrid {
     windows: Vec<Window>,
+    window_width: usize,
+    window_height: usize,
     width: usize,
     height: usize,
 }
@@ -322,18 +324,17 @@ impl WindowGrid {
             .collect();
         Self {
             windows,
-            width: window_size.0,
-            height: window_size.1,
+            window_width: window_size.0,
+            window_height: window_size.1,
+            width,
+            height,
         }
     }
 
     fn get_window_mut(&mut self, position: (usize, usize)) -> Option<&mut Window> {
-        for w in &mut self.windows {
-            if w.in_window(position) {
-                return Some(w);
-            }
-        }
-        None
+        let x = position.0 / self.window_width;
+        let y = position.1 / self.window_height;
+        self.windows.get_mut(y * (self.width / self.window_width) + x)
     }
 }
 
@@ -1211,40 +1212,105 @@ mod windowing {
 
     #[test]
     fn test_get_mutable_particle_window_from_position() {
-        let mut g = Grid::new(4, 4).with_window_size((2, 2));
+        let mut g = Grid::new(6, 6).with_window_size((2, 2));
 
-        assert_eq!(
-            Some(&mut Window::new((0, 0), (1, 1))),
-            g.window_grid.get_window_mut((0, 0))
-        );
-        assert_eq!(
-            Some(&mut Window::new((0, 0), (1, 1))),
-            g.window_grid.get_window_mut((1, 0))
-        );
-        assert_eq!(
-            Some(&mut Window::new((0, 0), (1, 1))),
-            g.window_grid.get_window_mut((0, 1))
-        );
-        assert_eq!(
-            Some(&mut Window::new((0, 0), (1, 1))),
-            g.window_grid.get_window_mut((1, 1))
+        assert!(
+            [
+                g.window_grid.get_window_mut((0, 0)).unwrap().clone(),
+                g.window_grid.get_window_mut((1, 0)).unwrap().clone(),
+                g.window_grid.get_window_mut((0, 1)).unwrap().clone(),
+                g.window_grid.get_window_mut((1, 1)).unwrap().clone(),
+            ]
+            .iter()
+            .all(|x| *x == Window::new((0, 0), (1, 1)))
         );
 
-        assert_eq!(
-            Some(&mut Window::new((2, 2), (3, 3))),
-            g.window_grid.get_window_mut((2, 2))
+        assert!(
+            [
+                g.window_grid.get_window_mut((2, 0)).unwrap().clone(),
+                g.window_grid.get_window_mut((3, 0)).unwrap().clone(),
+                g.window_grid.get_window_mut((2, 1)).unwrap().clone(),
+                g.window_grid.get_window_mut((3, 1)).unwrap().clone(),
+            ]
+            .iter()
+            .all(|x| *x == Window::new((2, 0), (3, 1)))
         );
-        assert_eq!(
-            Some(&mut Window::new((2, 2), (3, 3))),
-            g.window_grid.get_window_mut((3, 2))
+
+        assert!(
+            [
+                g.window_grid.get_window_mut((4, 0)).unwrap().clone(),
+                g.window_grid.get_window_mut((5, 0)).unwrap().clone(),
+                g.window_grid.get_window_mut((4, 1)).unwrap().clone(),
+                g.window_grid.get_window_mut((5, 1)).unwrap().clone(),
+            ]
+            .iter()
+            .all(|x| *x == Window::new((4, 0), (5, 1)))
         );
-        assert_eq!(
-            Some(&mut Window::new((2, 2), (3, 3))),
-            g.window_grid.get_window_mut((2, 3))
+
+        assert!(
+            [
+                g.window_grid.get_window_mut((0, 2)).unwrap().clone(),
+                g.window_grid.get_window_mut((1, 2)).unwrap().clone(),
+                g.window_grid.get_window_mut((0, 3)).unwrap().clone(),
+                g.window_grid.get_window_mut((1, 3)).unwrap().clone(),
+            ]
+            .iter()
+            .all(|x| *x == Window::new((0, 2), (1, 3)))
         );
-        assert_eq!(
-            Some(&mut Window::new((2, 2), (3, 3))),
-            g.window_grid.get_window_mut((3, 3))
+
+        assert!(
+            [
+                g.window_grid.get_window_mut((2, 2)).unwrap().clone(),
+                g.window_grid.get_window_mut((3, 2)).unwrap().clone(),
+                g.window_grid.get_window_mut((2, 3)).unwrap().clone(),
+                g.window_grid.get_window_mut((3, 3)).unwrap().clone(),
+            ]
+            .iter()
+            .all(|x| *x == Window::new((2, 2), (3, 3)))
+        );
+
+        assert!(
+            [
+                g.window_grid.get_window_mut((4, 2)).unwrap().clone(),
+                g.window_grid.get_window_mut((5, 2)).unwrap().clone(),
+                g.window_grid.get_window_mut((4, 3)).unwrap().clone(),
+                g.window_grid.get_window_mut((5, 3)).unwrap().clone(),
+            ]
+            .iter()
+            .all(|x| *x == Window::new((4, 2), (5, 3)))
+        );
+
+        assert!(
+            [
+                g.window_grid.get_window_mut((0, 4)).unwrap().clone(),
+                g.window_grid.get_window_mut((1, 4)).unwrap().clone(),
+                g.window_grid.get_window_mut((0, 5)).unwrap().clone(),
+                g.window_grid.get_window_mut((1, 5)).unwrap().clone(),
+            ]
+            .iter()
+            .all(|x| *x == Window::new((0, 4), (1, 5)))
+        );
+
+        assert!(
+            [
+                g.window_grid.get_window_mut((2, 4)).unwrap().clone(),
+                g.window_grid.get_window_mut((3, 4)).unwrap().clone(),
+                g.window_grid.get_window_mut((2, 5)).unwrap().clone(),
+                g.window_grid.get_window_mut((3, 5)).unwrap().clone(),
+            ]
+            .iter()
+            .all(|x| *x == Window::new((2, 4), (3, 5)))
+        );
+
+        assert!(
+            [
+                g.window_grid.get_window_mut((4, 4)).unwrap().clone(),
+                g.window_grid.get_window_mut((5, 4)).unwrap().clone(),
+                g.window_grid.get_window_mut((4, 5)).unwrap().clone(),
+                g.window_grid.get_window_mut((5, 5)).unwrap().clone(),
+            ]
+            .iter()
+            .all(|x| *x == Window::new((4, 4), (5, 5)))
         );
     }
 
