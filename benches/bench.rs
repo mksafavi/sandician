@@ -1,8 +1,14 @@
 use criterion::{Criterion, criterion_group, criterion_main};
 use sandsim::component::{
-    grid::Grid,
+    grid::{Grid, GridAccess},
     particles::{
-        acid::Acid, drain::Drain, particle::Particle, rock::Rock, salt::Salt, sand::Sand, tap::Tap,
+        acid::Acid,
+        drain::Drain,
+        particle::{Particle, ParticleKind},
+        rock::Rock,
+        salt::Salt,
+        sand::Sand,
+        tap::Tap,
         water::Water,
     },
 };
@@ -31,6 +37,34 @@ fn criterion_benchmark(c: &mut Criterion) {
 
     let mut c = c.benchmark_group("bench");
     c.sample_size(50);
+
+    c.bench_function("moving grid sand", |b| {
+        let mut g = Grid::new(x, y);
+        for x in 0..x {
+            g.spawn_brush((x, 0), 5, Some(&ParticleKind::from(Tap::new())));
+            g.spawn_brush((x, y - 1), 5, Some(&ParticleKind::from(Drain::new())));
+        }
+        for x in 0..x {
+            g.spawn_brush((x, 5), 5, Some(&ParticleKind::from(Sand::new())));
+        }
+        b.iter(|| {
+            g.update_grid();
+        });
+    });
+
+    c.bench_function("moving half grid sand", |b| {
+        let mut g = Grid::new(x, y);
+        for x in 0..x / 2 {
+            g.spawn_brush((x, 0), 5, Some(&ParticleKind::from(Tap::new())));
+            g.spawn_brush((x, y - 1), 5, Some(&ParticleKind::from(Drain::new())));
+        }
+        for x in 0..x / 2 {
+            g.spawn_brush((x, 5), 5, Some(&ParticleKind::from(Sand::new())));
+        }
+        b.iter(|| {
+            g.update_grid();
+        });
+    });
 
     c.bench_function("spawn grid sand", |b| {
         b.iter(|| {
