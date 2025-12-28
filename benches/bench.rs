@@ -66,7 +66,7 @@ fn criterion_benchmark(c: &mut Criterion) {
         });
     });
 
-    c.bench_function("spawn grid sand", |b| {
+    c.bench_function("spawn particles in grid", |b| {
         b.iter(|| {
             let mut g = Grid::new(x, y);
             for y in 0..y {
@@ -78,137 +78,137 @@ fn criterion_benchmark(c: &mut Criterion) {
     });
 
     c.bench_function("update grid sand", |b| {
-        let mut g = Grid::new(x, y);
-        for y in 0..y {
-            for x in 0..x {
-                g.spawn_particle((x, y), Particle::from(Sand::new()));
-            }
-        }
         b.iter(|| {
+            let mut g = Grid::new(x, y);
+            for y in 0..y {
+                for x in 0..x {
+                    g.spawn_particle((x, y), Particle::from(Sand::new()));
+                }
+            }
             g.update_grid();
         });
     });
 
     c.bench_function("update grid water", |b| {
-        let mut g = Grid::new(x, y);
-        for y in 0..y {
-            for x in 0..x {
-                g.spawn_particle((x, y), Particle::from(Water::new()));
-            }
-        }
         b.iter(|| {
+            let mut g = Grid::new(x, y);
+            for y in 0..y {
+                for x in 0..x {
+                    g.spawn_particle((x, y), Particle::from(Water::new()));
+                }
+            }
             g.update_grid();
         });
     });
 
     c.bench_function("update grid salt", |b| {
-        let mut g = Grid::new(x, y);
-        for y in 0..y {
-            for x in 0..x {
-                g.spawn_particle((x, y), Particle::from(Salt::new()));
-            }
-        }
         b.iter(|| {
+            let mut g = Grid::new(x, y);
+            for y in 0..y {
+                for x in 0..x {
+                    g.spawn_particle((x, y), Particle::from(Salt::new()));
+                }
+            }
             g.update_grid();
         });
     });
 
     c.bench_function("update grid salt and water", |b| {
-        let mut g = Grid::new(x, y);
-        for y in 0..y / 2 {
-            for x in 0..x {
-                g.spawn_particle((x, y), Particle::from(Salt::new()));
-            }
-        }
-        for y in y / 2..y {
-            for x in 0..x {
-                g.spawn_particle((x, y), Particle::from(Water::new()));
-            }
-        }
         b.iter(|| {
+            let mut g = Grid::new(x, y);
+            for y in 0..y / 2 {
+                for x in 0..x {
+                    g.spawn_particle((x, y), Particle::from(Salt::new()));
+                }
+            }
+            for y in y / 2..y {
+                for x in 0..x {
+                    g.spawn_particle((x, y), Particle::from(Water::new()));
+                }
+            }
             g.update_grid();
         });
     });
     c.bench_function("update grid rock", |b| {
-        let mut g = Grid::new(x, y);
-        for y in 0..y {
-            for x in 0..x {
-                g.spawn_particle((x, y), Particle::from(Rock::new()));
-            }
-        }
         b.iter(|| {
+            let mut g = Grid::new(x, y);
+            for y in 0..y {
+                for x in 0..x {
+                    g.spawn_particle((x, y), Particle::from(Rock::new()));
+                }
+            }
             g.update_grid();
         });
     });
 
     c.bench_function("update grid drain", |b| {
-        let mut g = Grid::new(x, y);
-        for y in 0..y {
-            for x in 0..x {
-                g.spawn_particle((x, y), Particle::from(Drain::new()));
-            }
-        }
         b.iter(|| {
+            let mut g = Grid::new(x, y);
+            for y in 0..y {
+                for x in 0..x {
+                    g.spawn_particle((x, y), Particle::from(Drain::new()));
+                }
+            }
             g.update_grid();
         });
     });
 
     c.bench_function("update grid tap", |b| {
-        let mut g = Grid::new(x, y);
-        for y in 0..y {
-            for x in 0..x {
-                g.spawn_particle((x, y), Particle::from(Tap::new()));
-            }
-        }
         b.iter(|| {
+            let mut g = Grid::new(x, y);
+            for y in 0..y {
+                for x in 0..x {
+                    g.spawn_particle((x, y), Particle::from(Tap::new()));
+                }
+            }
             g.update_grid();
         });
     });
 
     c.bench_function("update grid acid and sand", |b| {
-        let mut g = Grid::new(x, y);
-        for y in 0..y / 2 {
-            for x in 0..x {
-                g.spawn_particle((x, y), Particle::from(Acid::new()));
-            }
-        }
-        for y in y / 2..y {
-            for x in 0..x {
-                g.spawn_particle((x, y), Particle::from(Sand::new()));
-            }
-        }
         b.iter(|| {
+            let mut g = Grid::new(x, y);
+            for y in 0..y / 2 {
+                for x in 0..x {
+                    g.spawn_particle((x, y), Particle::from(Acid::new()));
+                }
+            }
+            for y in y / 2..y {
+                for x in 0..x {
+                    g.spawn_particle((x, y), Particle::from(Sand::new()));
+                }
+            }
             g.update_grid();
         });
     });
 
     c.bench_function("update grid", |b| {
-        let mut g = Grid::new(x, y);
-        fill_grid_mixed(&mut g, (x, y));
         b.iter(|| {
+            let mut g = Grid::new(x, y);
+            fill_grid_mixed(&mut g, (x, y));
             g.update_grid();
         });
     });
 
     c.bench_function("draw half grid", |b| {
-        let mut g = Grid::new(x, y);
-        let mut image = Grid::create_output_frame(x, y);
-        for y in 0..y {
-            for x in 0..x / 2 {
-                g.spawn_particle((x, y), Particle::from(Sand::new()));
-            }
-        }
         b.iter(|| {
+            let mut g = Grid::new(x, y);
+            let mut image = Grid::create_output_frame(x, y);
+            for y in 0..y {
+                for x in 0..x / 2 {
+                    g.spawn_particle((x, y), Particle::from(Sand::new()));
+                }
+            }
             g.update_grid();
             g.draw_grid(&mut image);
         });
     });
 
     c.bench_function("draw grid", |b| {
-        let mut g = Grid::new(x, y);
-        let mut image = Grid::create_output_frame(x, y);
-        fill_grid_mixed(&mut g, (x, y));
         b.iter(|| {
+            let mut g = Grid::new(x, y);
+            let mut image = Grid::create_output_frame(x, y);
+            fill_grid_mixed(&mut g, (x, y));
             g.update_grid();
             g.draw_grid(&mut image);
         });
