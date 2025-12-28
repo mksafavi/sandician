@@ -42,6 +42,7 @@ impl Acid {
                         if let Some(particle) = &mut cell.particle {
                             particle.health = particle.health.saturating_sub(self.acidity);
                             cell.cycle = cycle;
+                            grid.activate_window(position);
                         }
                     }
                 }
