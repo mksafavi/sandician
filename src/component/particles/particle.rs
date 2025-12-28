@@ -423,9 +423,12 @@ impl Particle {
             return true;
         }
         let initial_velocityy = grid.get_particle_initial_velocity().1;
-        if let Some(ref mut this) = grid.get_cell_mut(grid.to_index(position)).particle {
-            this.velocity.1 = velocityy.saturating_sub(128).max(initial_velocityy);
-        };
+        if initial_velocityy < velocityy {
+            if let Some(ref mut this) = grid.get_cell_mut(grid.to_index(position)).particle {
+                this.velocity.1 = velocityy.saturating_sub(128).max(initial_velocityy);
+            };
+            grid.activate_window(position);
+        }
         false
     }
 
@@ -1859,7 +1862,8 @@ mod liquid {
     }
 
     #[test]
-    fn test_weighted_particle_does_not_sink_into_liquid_particles_when_vertical_velocity_is_zero() {
+    fn test_weighted_particle_does_not_sink_into_liquid_particles_when_vertical_velocity_reaches_zero()
+     {
         /*
          * S -> S
          * w    w
@@ -1870,7 +1874,7 @@ mod liquid {
                     .with_rand_vertical_velocity_probability(|_| i16::MAX)
                     .with_initial_particle_velocity((0, 0));
 
-                g.spawn_particle((0, 0), particle.clone().with_velocity((0, 0)));
+                g.spawn_particle((0, 0), particle.clone().with_velocity((0, 128)));
                 g.spawn_particle((0, 1), liquid_particle.clone().with_velocity((0, 255)));
 
                 g.update_grid();

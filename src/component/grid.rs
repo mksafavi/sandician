@@ -1321,10 +1321,11 @@ mod windowing {
     #[test]
     fn test_mark_window_as_active_when_swap_particles() {
         let mut g = Grid::new(4, 4)
+            .with_initial_particle_velocity((0, 0))
             .with_window_size((2, 2))
             .with_rand_vertical_velocity_probability(|_| 0);
 
-        g.spawn_particle((0, 0), Particle::from(Sand::new()));
+        g.spawn_particle((0, 0), Particle::from(Sand::new()).with_velocity((0, 0)));
 
         assert_eq!(
             vec![true, false, false, false],
@@ -1354,7 +1355,9 @@ mod windowing {
             "also activates the neighboring top window"
         );
 
-        g.update_grid();
+        for _ in 0..4 {
+            g.update_grid(); // drain velocity
+        }
 
         assert_eq!(
             vec![false, false, false, false],
