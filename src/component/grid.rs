@@ -96,6 +96,8 @@ impl Window {
 #[derive(Clone, Debug)]
 pub struct WindowGrid {
     windows: Vec<Window>,
+    width: usize,
+    height: usize,
 }
 
 #[derive(Component, Debug)]
@@ -307,6 +309,25 @@ impl Random {
     }
 }
 
+impl WindowGrid {
+    fn new((width, height): (usize, usize), window_size: (usize, usize)) -> Self {
+        let windows = (0..height / window_size.1)
+            .flat_map(|y| {
+                (0..width / window_size.0).map(move |x| {
+                    let s = (x * window_size.0, y * window_size.1);
+                    let e = (s.0 + window_size.0 - 1, s.1 + window_size.1 - 1);
+                    Window::new(s, e)
+                })
+            })
+            .collect();
+        Self {
+            windows: windows,
+            width: window_size.0,
+            height: window_size.1,
+        }
+    }
+}
+
 impl Grid {
     pub fn new(width: usize, height: usize) -> Self {
         Self {
@@ -317,9 +338,7 @@ impl Grid {
             draw_cycle: 0,
             random: Random::new(),
             initial_particle_velocity: (0, i16::MAX),
-            window_grid: WindowGrid {
-                windows: vec![Window::new((0, 0), (width - 1, height - 1))],
-            },
+            window_grid: WindowGrid::new((width, height),(width, height)),
         }
     }
 
@@ -509,17 +528,7 @@ impl Grid {
 
     #[allow(dead_code)]
     pub fn with_window_size(mut self, window_size: (usize, usize)) -> Self {
-        self.window_grid = WindowGrid {
-            windows: (0..self.height / window_size.1)
-                .flat_map(|y| {
-                    (0..self.width / window_size.0).map(move |x| {
-                        let s = (x * window_size.0, y * window_size.1);
-                        let e = (s.0 + window_size.0 - 1, s.1 + window_size.1 - 1);
-                        Window::new(s, e)
-                    })
-                })
-                .collect(),
-        };
+        self.window_grid = WindowGrid::new((self.width, self.height), window_size);
         self
     }
 }
