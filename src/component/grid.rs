@@ -321,7 +321,7 @@ impl WindowGrid {
             })
             .collect();
         Self {
-            windows: windows,
+            windows,
             width: window_size.0,
             height: window_size.1,
         }
@@ -338,7 +338,7 @@ impl Grid {
             draw_cycle: 0,
             random: Random::new(),
             initial_particle_velocity: (0, i16::MAX),
-            window_grid: WindowGrid::new((width, height),(width, height)),
+            window_grid: WindowGrid::new((width, height), (width, height)),
         }
     }
 

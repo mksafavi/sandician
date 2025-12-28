@@ -1,6 +1,6 @@
 use criterion::{Criterion, criterion_group, criterion_main};
 use sandsim::component::{
-    grid::{Grid, GridAccess},
+    grid::Grid,
     particles::{
         acid::Acid,
         drain::Drain,
