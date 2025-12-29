@@ -232,10 +232,6 @@ impl GridAccess for Grid {
             index % self.width,
             (index - index % self.width) / self.width,
         ));
-        self.activate_window((
-            next_location_index % self.width,
-            (next_location_index - next_location_index % self.width) / self.width,
-        ));
     }
 
     fn is_empty(&self, position: (usize, usize), offset: (i32, i32)) -> Option<usize> {
@@ -1518,15 +1514,14 @@ mod windowing {
             HashMap::from([
                 (&(0, 0), true),
                 (&(1, 0), false),
-                (&(0, 1), true),
+                (&(0, 1), false),
                 (&(1, 1), false),
             ]),
             g.window_grid
                 .windows
                 .iter()
                 .map(|(k, w)| (k, w.is_active(g.cycle)))
-                .collect::<HashMap<_, _>>(),
-            "also activates the neighboring bottom window"
+                .collect::<HashMap<_, _>>()
         );
 
         g.update_grid();
