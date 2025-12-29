@@ -65,6 +65,7 @@ struct Window {
     start: (usize, usize),
     end: (usize, usize),
     cycle: u32,
+    threshold: u32,
 }
 
 impl Window {
@@ -73,6 +74,7 @@ impl Window {
             start,
             end,
             cycle: 0,
+            threshold: 0,
         }
     }
 
@@ -81,7 +83,12 @@ impl Window {
     }
 
     fn is_active(&self, cycle: u32) -> bool {
-        cycle <= self.cycle + 1
+        cycle <= self.cycle + 1 + self.threshold
+    }
+
+    fn with_threshold(&mut self, threhsold: u32) -> Self {
+        self.threshold = threhsold;
+        self.clone()
     }
 }
 
@@ -302,7 +309,7 @@ impl Random {
 }
 
 impl WindowGrid {
-    fn new((width, height): (usize, usize), window_size: (usize, usize)) -> Self {
+    pub fn new((width, height): (usize, usize), window_size: (usize, usize)) -> Self {
         let mut windows = HashMap::new();
         for y in 0..height / window_size.1 {
             for x in 0..width / window_size.0 {
@@ -323,6 +330,13 @@ impl WindowGrid {
         let x = (position.0) / self.window_width;
         let y = (position.1) / self.window_height;
         self.windows.get_mut(&(x, y))
+    }
+
+    pub fn with_window_threshold(mut self, threshold: u32) -> WindowGrid {
+        for w in self.windows.values_mut() {
+            *w = w.with_threshold(threshold);
+        }
+        self
     }
 }
 
@@ -506,6 +520,12 @@ impl Grid {
     #[allow(dead_code)]
     pub fn with_window_size(mut self, window_size: (usize, usize)) -> Self {
         self.window_grid = WindowGrid::new((self.width, self.height), window_size);
+        self
+    }
+
+    #[allow(dead_code)]
+    pub fn with_window_grid(mut self, window_grid: WindowGrid) -> Self {
+        self.window_grid = window_grid;
         self
     }
 }
@@ -1156,17 +1176,36 @@ mod windowing {
     use pretty_assertions::assert_eq;
 
     use crate::component::{
-        grid::{Cell, Grid, GridAccess, Window},
+        grid::{Cell, Grid, GridAccess, Window, WindowGrid},
         particles::{particle::Particle, rock::Rock, sand::Sand},
     };
 
     #[test]
-    fn test_window_is_active_for_two_cycles() {
-        let mut w = Window::new((0, 0), (2, 2));
+    fn test_window_is_active_for_n_cycles_from_threshold() {
+        let mut w = Window::new((0, 0), (2, 2)).with_threshold(2);
+
         w.activate(0);
         assert!(w.is_active(0));
         assert!(w.is_active(1));
-        assert_eq!(false, w.is_active(2));
+        assert!(w.is_active(2));
+        assert!(w.is_active(3));
+        assert_eq!(false, w.is_active(4));
+    }
+
+    #[test]
+    fn test_grid_with_window_grid() {
+        let g = Grid::new(4, 4)
+            .with_window_grid(WindowGrid::new((4, 4), (2, 2)).with_window_threshold(3));
+
+        assert_eq!(
+            HashMap::from([
+                ((0, 0), Window::new((0, 0), (1, 1)).with_threshold(3)),
+                ((1, 0), Window::new((2, 0), (3, 1)).with_threshold(3)),
+                ((0, 1), Window::new((0, 2), (1, 3)).with_threshold(3)),
+                ((1, 1), Window::new((2, 2), (3, 3)).with_threshold(3))
+            ]),
+            g.window_grid.windows
+        );
     }
 
     #[test]
