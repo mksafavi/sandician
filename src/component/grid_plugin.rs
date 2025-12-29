@@ -30,7 +30,10 @@ use bevy::{
     utils::default,
 };
 
-use crate::component::{grid::BACKGROUND_COLOR, particles::rock::Rock};
+use crate::component::{
+    grid::{BACKGROUND_COLOR, WindowGrid},
+    particles::rock::Rock,
+};
 
 use super::{
     grid::Grid,
@@ -112,6 +115,9 @@ pub struct ConfigResource {
     pub height: usize,
     update_rate: f64,
     initial_particle_velocity: (i16, i16),
+    window_width: usize,
+    window_height: usize,
+    window_threshold: u32,
 }
 
 impl ConfigResource {
@@ -126,7 +132,22 @@ impl ConfigResource {
             height,
             update_rate,
             initial_particle_velocity,
+            window_width: width,
+            window_height: height,
+            window_threshold: 0,
         }
+    }
+
+    pub fn with_window_config(
+        mut self,
+        window_width: usize,
+        window_height: usize,
+        window_threshold: u32,
+    ) -> ConfigResource {
+        self.window_width = window_width;
+        self.window_height = window_height;
+        self.window_threshold = window_threshold;
+        self
     }
 }
 
@@ -155,6 +176,13 @@ fn init_grid_system(
 ) {
     commands.spawn(
         Grid::new(config.width, config.height)
+            .with_window_grid(
+                WindowGrid::new(
+                    (config.width, config.height),
+                    (config.window_width, config.window_height),
+                )
+                .with_window_threshold(config.window_threshold),
+            )
             .with_initial_particle_velocity(config.initial_particle_velocity),
     );
     let handle = images.add(Grid::create_output_frame(config.width, config.height));
