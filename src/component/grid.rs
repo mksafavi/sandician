@@ -260,9 +260,10 @@ impl GridAccess for Grid {
         for yo in -1..=1 {
             for xo in -1..=1 {
                 if let Ok(position) = self.get_neighbor_position((x, y), (xo, yo))
-                    && let Some(w) = self.window_grid.get_window_mut(position) {
-                        w.activate(self.cycle);
-                    }
+                    && let Some(w) = self.window_grid.get_window_mut(position)
+                {
+                    w.activate(self.cycle);
+                }
             }
         }
     }
