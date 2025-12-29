@@ -259,11 +259,10 @@ impl GridAccess for Grid {
     fn activate_window(&mut self, (x, y): (usize, usize)) {
         for yo in -1..=1 {
             for xo in -1..=1 {
-                if let Ok(position) = self.get_neighbor_position((x, y), (xo, yo)) {
-                    if let Some(w) = self.window_grid.get_window_mut(position) {
+                if let Ok(position) = self.get_neighbor_position((x, y), (xo, yo))
+                    && let Some(w) = self.window_grid.get_window_mut(position) {
                         w.activate(self.cycle);
                     }
-                }
             }
         }
     }
