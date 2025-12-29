@@ -64,7 +64,7 @@ pub struct Random {
 struct Window {
     start: (usize, usize),
     end: (usize, usize),
-    active: bool,
+    cycle: u32,
 }
 
 impl Window {
@@ -72,20 +72,16 @@ impl Window {
         Self {
             start,
             end,
-            active: false,
+            cycle: 0,
         }
     }
 
-    fn activate(&mut self) {
-        self.active = true;
+    fn activate(&mut self, cycle: u32) {
+        self.cycle = cycle;
     }
 
-    fn deactivate(&mut self) {
-        self.active = false;
-    }
-
-    fn is_active(&self) -> bool {
-        self.active
+    fn is_active(&self, cycle: u32) -> bool {
+        cycle <= self.cycle + 1
     }
 }
 
@@ -264,7 +260,7 @@ impl GridAccess for Grid {
             for xo in -1..=1 {
                 let position = ((x as i32 + xo) as usize, (y as i32 + yo) as usize);
                 if let Some(w) = self.window_grid.get_window_mut(position) {
-                    w.activate();
+                    w.activate(self.cycle);
                 }
             }
         }
@@ -330,7 +326,8 @@ impl WindowGrid {
     fn get_window_mut(&mut self, position: (usize, usize)) -> Option<&mut Window> {
         let x = position.0 / self.window_width;
         let y = position.1 / self.window_height;
-        self.windows.get_mut(y * (self.width / self.window_width) + x)
+        self.windows
+            .get_mut(y * (self.width / self.window_width) + x)
     }
 }
 
@@ -373,12 +370,9 @@ impl Grid {
 
     pub fn update_grid(&mut self) {
         let window_grid = self.window_grid.clone();
-        for w in &mut self.window_grid.windows {
-            w.deactivate();
-        }
         self.increment_cycle();
         for w in window_grid.windows {
-            if w.is_active() {
+            if w.is_active(self.cycle) {
                 for y in (w.start.1..=w.end.1).rev() {
                     let x_direction = (self.random.row_update_direction)(&mut self.random);
                     for x in w.start.0..=w.end.0 {
@@ -1170,6 +1164,15 @@ mod windowing {
     };
 
     #[test]
+    fn test_window_is_active_for_two_cycles() {
+        let mut w = Window::new((0, 0), (2, 2));
+        w.activate(0);
+        assert!(w.is_active(0));
+        assert!(w.is_active(1));
+        assert_eq!(false, w.is_active(2));
+    }
+
+    #[test]
     fn test_grid_set_default_window_to_the_whole_grid() {
         let g = Grid::new(3, 3);
 
@@ -1314,12 +1317,14 @@ mod windowing {
     fn test_spawning_particle_in_grid_sets_the_window_as_active() {
         let mut g = Grid::new(4, 4).with_window_size((2, 2));
 
+        g.cycle = 2; // first cycle that's deactive
+
         assert_eq!(
             vec![false, false, false, false],
             g.window_grid
                 .windows
                 .iter()
-                .map(|w| w.is_active())
+                .map(|w| w.is_active(g.cycle))
                 .collect::<Vec<_>>()
         );
 
@@ -1332,7 +1337,7 @@ mod windowing {
             g.window_grid
                 .windows
                 .iter()
-                .map(|w| w.is_active())
+                .map(|w| w.is_active(g.cycle))
                 .collect::<Vec<_>>()
         );
     }
@@ -1341,6 +1346,8 @@ mod windowing {
     fn test_despawning_particle_in_grid_sets_the_window_as_active() {
         let mut g = Grid::new(4, 4).with_window_size((2, 2));
 
+        g.cycle = 2; // first cycle that's deactive
+
         g.spawn_particle((0, 0), Particle::from(Rock::new()));
 
         assert_eq!(
@@ -1348,10 +1355,11 @@ mod windowing {
             g.window_grid
                 .windows
                 .iter()
-                .map(|w| w.is_active())
+                .map(|w| w.is_active(g.cycle))
                 .collect::<Vec<_>>()
         );
 
+        g.update_grid();
         g.update_grid();
 
         assert_eq!(
@@ -1359,7 +1367,7 @@ mod windowing {
             g.window_grid
                 .windows
                 .iter()
-                .map(|w| w.is_active())
+                .map(|w| w.is_active(g.cycle))
                 .collect::<Vec<_>>()
         );
 
@@ -1370,7 +1378,7 @@ mod windowing {
             g.window_grid
                 .windows
                 .iter()
-                .map(|w| w.is_active())
+                .map(|w| w.is_active(g.cycle))
                 .collect::<Vec<_>>()
         );
     }
@@ -1379,6 +1387,8 @@ mod windowing {
     fn test_mark_window_as_deactive_when_nothing_changes_in_that_window() {
         let mut g = Grid::new(4, 4).with_window_size((2, 2));
 
+        g.cycle = 2; // first cycle that's deactive
+
         g.spawn_particle((0, 0), Particle::from(Rock::new()));
 
         assert_eq!(
@@ -1386,10 +1396,11 @@ mod windowing {
             g.window_grid
                 .windows
                 .iter()
-                .map(|w| w.is_active())
+                .map(|w| w.is_active(g.cycle))
                 .collect::<Vec<_>>()
         );
 
+        g.update_grid();
         g.update_grid();
 
         assert_eq!(
@@ -1397,7 +1408,7 @@ mod windowing {
             g.window_grid
                 .windows
                 .iter()
-                .map(|w| w.is_active())
+                .map(|w| w.is_active(g.cycle))
                 .collect::<Vec<_>>()
         );
     }
@@ -1409,6 +1420,8 @@ mod windowing {
             .with_window_size((2, 2))
             .with_rand_vertical_velocity_probability(|_| 0);
 
+        g.cycle = 2; // first cycle that's deactive
+
         g.spawn_particle((0, 0), Particle::from(Sand::new()).with_velocity((0, 0)));
 
         assert_eq!(
@@ -1416,7 +1429,7 @@ mod windowing {
             g.window_grid
                 .windows
                 .iter()
-                .map(|w| w.is_active())
+                .map(|w| w.is_active(g.cycle))
                 .collect::<Vec<_>>()
         );
 
@@ -1427,7 +1440,7 @@ mod windowing {
             g.window_grid
                 .windows
                 .iter()
-                .map(|w| w.is_active())
+                .map(|w| w.is_active(g.cycle))
                 .collect::<Vec<_>>(),
             "also activates the neighboring bottom window"
         );
@@ -1439,7 +1452,7 @@ mod windowing {
             g.window_grid
                 .windows
                 .iter()
-                .map(|w| w.is_active())
+                .map(|w| w.is_active(g.cycle))
                 .collect::<Vec<_>>()
         );
 
@@ -1450,12 +1463,12 @@ mod windowing {
             g.window_grid
                 .windows
                 .iter()
-                .map(|w| w.is_active())
+                .map(|w| w.is_active(g.cycle))
                 .collect::<Vec<_>>(),
             "also activates the neighboring top window"
         );
 
-        for _ in 0..4 {
+        for _ in 0..5 {
             g.update_grid(); // drain velocity
         }
 
@@ -1464,7 +1477,7 @@ mod windowing {
             g.window_grid
                 .windows
                 .iter()
-                .map(|w| w.is_active())
+                .map(|w| w.is_active(g.cycle))
                 .collect::<Vec<_>>()
         );
     }
@@ -1499,6 +1512,8 @@ mod windowing {
             .with_window_size((1, 1))
             .with_rand_vertical_velocity_probability(|_| 0);
 
+        g.cycle = 2; // first cycle that's deactive
+
         assert_eq!(
             vec![
                 false, false, false, false, false, false, false, false, false
@@ -1506,7 +1521,7 @@ mod windowing {
             g.window_grid
                 .windows
                 .iter()
-                .map(|w| w.is_active())
+                .map(|w| w.is_active(g.cycle))
                 .collect::<Vec<_>>()
         );
 
@@ -1517,7 +1532,7 @@ mod windowing {
             g.window_grid
                 .windows
                 .iter()
-                .map(|w| w.is_active())
+                .map(|w| w.is_active(g.cycle))
                 .collect::<Vec<_>>()
         );
     }
