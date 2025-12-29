@@ -1,4 +1,4 @@
-use std::fmt;
+use std::{collections::HashMap, fmt};
 
 use bevy::{
     asset::RenderAssetUsages,
@@ -87,11 +87,9 @@ impl Window {
 
 #[derive(Clone, Debug)]
 pub struct WindowGrid {
-    windows: Vec<Window>,
+    windows: HashMap<(usize, usize), Window>,
     window_width: usize,
     window_height: usize,
-    width: usize,
-    height: usize,
 }
 
 #[derive(Component, Debug)]
@@ -305,29 +303,26 @@ impl Random {
 
 impl WindowGrid {
     fn new((width, height): (usize, usize), window_size: (usize, usize)) -> Self {
-        let windows = (0..height / window_size.1)
-            .flat_map(|y| {
-                (0..width / window_size.0).map(move |x| {
-                    let s = (x * window_size.0, y * window_size.1);
-                    let e = (s.0 + window_size.0 - 1, s.1 + window_size.1 - 1);
-                    Window::new(s, e)
-                })
-            })
-            .collect();
+        let mut windows = HashMap::new();
+        for y in 0..height / window_size.1 {
+            for x in 0..width / window_size.0 {
+                let s = (x * window_size.0, y * window_size.1);
+                let e = (s.0 + window_size.0 - 1, s.1 + window_size.1 - 1);
+                let v = Window::new(s, e);
+                windows.insert((x, y), v);
+            }
+        }
         Self {
             windows,
             window_width: window_size.0,
             window_height: window_size.1,
-            width,
-            height,
         }
     }
 
     fn get_window_mut(&mut self, position: (usize, usize)) -> Option<&mut Window> {
-        let x = position.0 / self.window_width;
-        let y = position.1 / self.window_height;
-        self.windows
-            .get_mut(y * (self.width / self.window_width) + x)
+        let x = (position.0) / self.window_width;
+        let y = (position.1) / self.window_height;
+        self.windows.get_mut(&(x, y))
     }
 }
 
@@ -371,7 +366,7 @@ impl Grid {
     pub fn update_grid(&mut self) {
         let window_grid = self.window_grid.clone();
         self.increment_cycle();
-        for w in window_grid.windows {
+        for (_, w) in window_grid.windows {
             if w.is_active(self.cycle) {
                 for y in (w.start.1..=w.end.1).rev() {
                     let x_direction = (self.random.row_update_direction)(&mut self.random);
@@ -1156,6 +1151,8 @@ mod random {
 #[cfg(test)]
 mod windowing {
 
+    use std::collections::HashMap;
+
     use pretty_assertions::assert_eq;
 
     use crate::component::{
@@ -1176,7 +1173,10 @@ mod windowing {
     fn test_grid_set_default_window_to_the_whole_grid() {
         let g = Grid::new(3, 3);
 
-        assert_eq!(vec![Window::new((0, 0), (2, 2))], g.window_grid.windows);
+        assert_eq!(
+            HashMap::from([((0, 0), Window::new((0, 0), (2, 2)))]),
+            g.window_grid.windows
+        );
     }
 
     #[test]
@@ -1184,12 +1184,12 @@ mod windowing {
         let g = Grid::new(4, 4).with_window_size((2, 2));
 
         assert_eq!(
-            vec![
-                Window::new((0, 0), (1, 1)),
-                Window::new((2, 0), (3, 1)),
-                Window::new((0, 2), (1, 3)),
-                Window::new((2, 2), (3, 3)),
-            ],
+            HashMap::from([
+                ((0, 0), Window::new((0, 0), (1, 1))),
+                ((1, 0), Window::new((2, 0), (3, 1))),
+                ((0, 1), Window::new((0, 2), (1, 3))),
+                ((1, 1), Window::new((2, 2), (3, 3)))
+            ]),
             g.window_grid.windows
         );
     }
@@ -1199,12 +1199,12 @@ mod windowing {
         let g = Grid::new(6, 4).with_window_size((3, 2));
 
         assert_eq!(
-            vec![
-                Window::new((0, 0), (2, 1)),
-                Window::new((3, 0), (5, 1)),
-                Window::new((0, 2), (2, 3)),
-                Window::new((3, 2), (5, 3)),
-            ],
+            HashMap::from([
+                ((0, 0), Window::new((0, 0), (2, 1))),
+                ((1, 0), Window::new((3, 0), (5, 1))),
+                ((0, 1), Window::new((0, 2), (2, 3))),
+                ((1, 1), Window::new((3, 2), (5, 3)))
+            ]),
             g.window_grid.windows
         );
     }
@@ -1320,12 +1320,17 @@ mod windowing {
         g.cycle = 2; // first cycle that's deactive
 
         assert_eq!(
-            vec![false, false, false, false],
+            HashMap::from([
+                (&(0, 0), false),
+                (&(1, 0), false),
+                (&(0, 1), false),
+                (&(1, 1), false),
+            ]),
             g.window_grid
                 .windows
                 .iter()
-                .map(|w| w.is_active(g.cycle))
-                .collect::<Vec<_>>()
+                .map(|(k, w)| (k, w.is_active(g.cycle)))
+                .collect::<HashMap<_, _>>()
         );
 
         g.spawn_particle((0, 0), Particle::from(Rock::new()));
@@ -1333,12 +1338,17 @@ mod windowing {
         g.spawn_particle((3, 3), Particle::from(Rock::new()));
 
         assert_eq!(
-            vec![true, false, false, true],
+            HashMap::from([
+                (&(0, 0), true),
+                (&(1, 0), false),
+                (&(0, 1), false),
+                (&(1, 1), true),
+            ]),
             g.window_grid
                 .windows
                 .iter()
-                .map(|w| w.is_active(g.cycle))
-                .collect::<Vec<_>>()
+                .map(|(k, w)| (k, w.is_active(g.cycle)))
+                .collect::<HashMap<_, _>>()
         );
     }
 
@@ -1351,35 +1361,50 @@ mod windowing {
         g.spawn_particle((0, 0), Particle::from(Rock::new()));
 
         assert_eq!(
-            vec![true, false, false, false],
+            HashMap::from([
+                (&(0, 0), true),
+                (&(1, 0), false),
+                (&(0, 1), false),
+                (&(1, 1), false),
+            ]),
             g.window_grid
                 .windows
                 .iter()
-                .map(|w| w.is_active(g.cycle))
-                .collect::<Vec<_>>()
+                .map(|(k, w)| (k, w.is_active(g.cycle)))
+                .collect::<HashMap<_, _>>()
         );
 
         g.update_grid();
         g.update_grid();
 
         assert_eq!(
-            vec![false, false, false, false],
+            HashMap::from([
+                (&(0, 0), false),
+                (&(1, 0), false),
+                (&(0, 1), false),
+                (&(1, 1), false),
+            ]),
             g.window_grid
                 .windows
                 .iter()
-                .map(|w| w.is_active(g.cycle))
-                .collect::<Vec<_>>()
+                .map(|(k, w)| (k, w.is_active(g.cycle)))
+                .collect::<HashMap<_, _>>()
         );
 
         g.despawn_particle((0, 0));
 
         assert_eq!(
-            vec![true, false, false, false],
+            HashMap::from([
+                (&(0, 0), true),
+                (&(1, 0), false),
+                (&(0, 1), false),
+                (&(1, 1), false),
+            ]),
             g.window_grid
                 .windows
                 .iter()
-                .map(|w| w.is_active(g.cycle))
-                .collect::<Vec<_>>()
+                .map(|(k, w)| (k, w.is_active(g.cycle)))
+                .collect::<HashMap<_, _>>()
         );
     }
 
@@ -1392,24 +1417,34 @@ mod windowing {
         g.spawn_particle((0, 0), Particle::from(Rock::new()));
 
         assert_eq!(
-            vec![true, false, false, false],
+            HashMap::from([
+                (&(0, 0), true),
+                (&(1, 0), false),
+                (&(0, 1), false),
+                (&(1, 1), false),
+            ]),
             g.window_grid
                 .windows
                 .iter()
-                .map(|w| w.is_active(g.cycle))
-                .collect::<Vec<_>>()
+                .map(|(k, w)| (k, w.is_active(g.cycle)))
+                .collect::<HashMap<_, _>>()
         );
 
         g.update_grid();
         g.update_grid();
 
         assert_eq!(
-            vec![false, false, false, false],
+            HashMap::from([
+                (&(0, 0), false),
+                (&(1, 0), false),
+                (&(0, 1), false),
+                (&(1, 1), false),
+            ]),
             g.window_grid
                 .windows
                 .iter()
-                .map(|w| w.is_active(g.cycle))
-                .collect::<Vec<_>>()
+                .map(|(k, w)| (k, w.is_active(g.cycle)))
+                .collect::<HashMap<_, _>>()
         );
     }
 
@@ -1425,46 +1460,66 @@ mod windowing {
         g.spawn_particle((0, 0), Particle::from(Sand::new()).with_velocity((0, 0)));
 
         assert_eq!(
-            vec![true, false, false, false],
+            HashMap::from([
+                (&(0, 0), true),
+                (&(1, 0), false),
+                (&(0, 1), false),
+                (&(1, 1), false),
+            ]),
             g.window_grid
                 .windows
                 .iter()
-                .map(|w| w.is_active(g.cycle))
-                .collect::<Vec<_>>()
+                .map(|(k, w)| (k, w.is_active(g.cycle)))
+                .collect::<HashMap<_, _>>()
         );
 
         g.update_grid();
 
         assert_eq!(
-            vec![true, false, true, false],
+            HashMap::from([
+                (&(0, 0), true),
+                (&(1, 0), false),
+                (&(0, 1), true),
+                (&(1, 1), false),
+            ]),
             g.window_grid
                 .windows
                 .iter()
-                .map(|w| w.is_active(g.cycle))
-                .collect::<Vec<_>>(),
+                .map(|(k, w)| (k, w.is_active(g.cycle)))
+                .collect::<HashMap<_, _>>(),
             "also activates the neighboring bottom window"
         );
 
         g.update_grid();
 
         assert_eq!(
-            vec![true, false, true, false],
+            HashMap::from([
+                (&(0, 0), true),
+                (&(1, 0), false),
+                (&(0, 1), true),
+                (&(1, 1), false),
+            ]),
             g.window_grid
                 .windows
                 .iter()
-                .map(|w| w.is_active(g.cycle))
-                .collect::<Vec<_>>()
+                .map(|(k, w)| (k, w.is_active(g.cycle)))
+                .collect::<HashMap<_, _>>()
         );
 
         g.update_grid();
 
         assert_eq!(
-            vec![true, false, true, false],
+            HashMap::from([
+                (&(0, 0), true),
+                (&(1, 0), false),
+                (&(0, 1), true),
+                (&(1, 1), false),
+            ]),
             g.window_grid
                 .windows
                 .iter()
-                .map(|w| w.is_active(g.cycle))
-                .collect::<Vec<_>>(),
+                .map(|(k, w)| (k, w.is_active(g.cycle)))
+                .collect::<HashMap<_, _>>(),
             "also activates the neighboring top window"
         );
 
@@ -1473,12 +1528,17 @@ mod windowing {
         }
 
         assert_eq!(
-            vec![false, false, false, false],
+            HashMap::from([
+                (&(0, 0), false),
+                (&(1, 0), false),
+                (&(0, 1), false),
+                (&(1, 1), false),
+            ]),
             g.window_grid
                 .windows
                 .iter()
-                .map(|w| w.is_active(g.cycle))
-                .collect::<Vec<_>>()
+                .map(|(k, w)| (k, w.is_active(g.cycle)))
+                .collect::<HashMap<_, _>>()
         );
     }
 
@@ -1515,25 +1575,43 @@ mod windowing {
         g.cycle = 2; // first cycle that's deactive
 
         assert_eq!(
-            vec![
-                false, false, false, false, false, false, false, false, false
-            ],
+            HashMap::from([
+                (&(0, 0), false),
+                (&(1, 0), false),
+                (&(2, 0), false),
+                (&(0, 1), false),
+                (&(1, 1), false),
+                (&(2, 1), false),
+                (&(0, 2), false),
+                (&(1, 2), false),
+                (&(2, 2), false),
+            ]),
             g.window_grid
                 .windows
                 .iter()
-                .map(|w| w.is_active(g.cycle))
-                .collect::<Vec<_>>()
+                .map(|(k, w)| (k, w.is_active(g.cycle)))
+                .collect::<HashMap<_, _>>()
         );
 
         g.spawn_particle((1, 1), Particle::from(Sand::new()));
 
         assert_eq!(
-            vec![true, true, true, true, true, true, true, true, true],
+            HashMap::from([
+                (&(0, 0), true),
+                (&(1, 0), true),
+                (&(2, 0), true),
+                (&(0, 1), true),
+                (&(1, 1), true),
+                (&(2, 1), true),
+                (&(0, 2), true),
+                (&(1, 2), true),
+                (&(2, 2), true),
+            ]),
             g.window_grid
                 .windows
                 .iter()
-                .map(|w| w.is_active(g.cycle))
-                .collect::<Vec<_>>()
+                .map(|(k, w)| (k, w.is_active(g.cycle)))
+                .collect::<HashMap<_, _>>()
         );
     }
 }
