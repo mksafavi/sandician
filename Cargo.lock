@@ -3436,7 +3436,7 @@ dependencies = [
 
 [[package]]
 name = "sandsim"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "bevy",
  "bevy_embedded_assets",
