@@ -64,9 +64,19 @@ jobs:
       - name: List Artifacts
         run: ls ./public
 
+      - name: Set Tag as Deployment Branch Name
+        if: ${{ github.ref_type == 'tag' }}
+        run: |
+          echo "BRANCH_NAME=production" >> $GITHUB_ENV
+
+      - name: Set Branch Name as Deployment Branch Name
+        if: ${{ github.ref_type == 'branch' }}
+        run: |
+          echo "BRANCH_NAME=${{ github.ref_name }}" >> $GITHUB_ENV
+
       - name: Deploy
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy ./public --project-name=${{ secrets.CLOUDFLARE_PAGES_PROJECT_NAME }}
+          command: pages deploy ./public --branch ${{env.BRANCH_NAME}} --project-name=${{ secrets.CLOUDFLARE_PAGES_PROJECT_NAME }}
