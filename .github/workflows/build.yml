@@ -79,4 +79,4 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy ./public --branch ${{env.BRANCH_NAME}} --project-name=${{ secrets.CLOUDFLARE_PAGES_PROJECT_NAME }}
+          command: pages deploy ./public --branch ${{env.BRANCH_NAME}} --project-name=${{ vars.CLOUDFLARE_PAGES_PROJECT_NAME }}
