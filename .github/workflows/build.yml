@@ -8,7 +8,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           lfs: 'true'
       - uses: DeterminateSystems/nix-installer-action@main
@@ -18,7 +18,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           lfs: 'true'
       - uses: DeterminateSystems/nix-installer-action@main
@@ -28,7 +28,7 @@ jobs:
   build-linux:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           lfs: 'true'
       - uses: DeterminateSystems/nix-installer-action@main
@@ -38,7 +38,7 @@ jobs:
   build-wasm:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           lfs: 'true'
       - uses: DeterminateSystems/nix-installer-action@main
@@ -55,7 +55,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [lint, test, build-wasm]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/download-artifact@v8
         with:
           name: pages
