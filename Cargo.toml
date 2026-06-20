@@ -3,7 +3,7 @@ name = "sandsim"
 edition = "2024"
 
 [dependencies]
-bevy_embedded_assets = "0.14.0"
+bevy_embedded_assets = "0.15.0"
 fastrand = "2.3.0"
 
 [build-dependencies]
